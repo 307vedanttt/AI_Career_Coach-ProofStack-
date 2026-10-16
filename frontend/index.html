@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProofStack — AI Career Coach & Evidence Engine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header>
+            <div class="brand">
+                <div class="logo-badge">PS</div>
+                <div>
+                    <h1>ProofStack — AI Career Coach</h1>
+                    <p>Deterministic Evidence Engine & Commit Contracts for Engineering Careers</p>
+                </div>
+            </div>
+            <div class="system-status">
+                <span id="sseStatus" class="live-indicator">
+                    <span class="pulse-dot"></span> Live Pipeline SSE
+                </span>
+                <span id="systemVersion" class="badge badge-required">Loading...</span>
+            </div>
+        </header>
+
+        <!-- Top Row: Job Intake & Repo Connection -->
+        <div class="grid-main">
+            <!-- 1. Job Intake Card -->
+            <div class="card">
+                <div class="card-title">
+                    <span>1. Job Description & Requirements</span>
+                    <button id="btnSampleJob" class="btn btn-secondary btn-sm" type="button">Load Sample Job</button>
+                </div>
+                <div class="card-desc">
+                    Extract structured requirements with verbatim supporting quotes and taxonomy normalization.
+                </div>
+
+                <form id="jobForm">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                        <div class="form-group">
+                            <label for="jobTitle">Job Title</label>
+                            <input type="text" id="jobTitle" value="Senior Backend Engineer">
+                        </div>
+                        <div class="form-group">
+                            <label for="jobCompany">Company</label>
+                            <input type="text" id="jobCompany" value="HyperScale AI">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="jobUrl">Job Posting URL (Optional SSRF-protected)</label>
+                        <input type="text" id="jobUrl" placeholder="https://jobs.example.com/posting">
+                    </div>
+                    <div class="form-group">
+                        <label for="jobDescription">Or Paste Job Description Text</label>
+                        <textarea id="jobDescription" placeholder="Paste full job posting text here..."></textarea>
+                    </div>
+                    <button type="submit" class="btn" style="width: 100%;">Extract Requirements</button>
+                </form>
+
+                <div style="margin-top: 20px;">
+                    <div style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px;">
+                        Extracted Requirements:
+                    </div>
+                    <div id="requirementsList" style="max-height: 240px; overflow-y: auto;">
+                        <div style="text-align: center; color: var(--text-sub); padding: 24px;">
+                            No requirements extracted yet. Paste a job description or load sample.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Repo Connection & Automation Card -->
+            <div class="card">
+                <div class="card-title">
+                    <span>2. Connect Repository & Assess</span>
+                </div>
+                <div class="card-desc">
+                    Read-only repository tree retrieval, AST reachability analysis, and hollow-evidence guard.
+                </div>
+
+                <form id="repoForm">
+                    <div class="form-group">
+                        <label for="repoUrl">GitHub Repository URL</label>
+                        <input type="text" id="repoUrl" value="https://github.com/tiangolo/fastapi" placeholder="https://github.com/owner/repo">
+                    </div>
+                    <div class="actions-row">
+                        <button type="submit" class="btn btn-secondary" style="flex: 1;">Connect Repository</button>
+                    </div>
+                </form>
+
+                <div id="connectedRepoInfo" style="margin-top: 12px; font-size: 13px; color: #34d399; font-weight: 500;"></div>
+
+                <div style="margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--border-color);">
+                    <div class="actions-row">
+                        <button id="btnAnalyze" class="btn" style="flex: 2;" disabled>Run Full Assessment</button>
+                        <button id="btnDryRun" class="btn btn-secondary" style="flex: 1;" disabled>Dry Run / What-If</button>
+                    </div>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-top: 8px;">
+                        Runs deterministic detectors (API, SQL, Testing, CI/CD) and guards against hollow evidence.
+                    </p>
+                </div>
+
+                <!-- Live Agent Trace -->
+                <div style="margin-top: 24px;">
+                    <div style="font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px;">
+                        Live Agent Trace & SSE Stream:
+                    </div>
+                    <div id="traceTimeline" class="trace-timeline">
+                        <div style="text-align: center; color: var(--text-sub); padding: 18px;">
+                            Waiting for assessment trigger or push event...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Middle Row: Evidence Coverage & ProofMap -->
+        <div class="grid-main">
+            <!-- 3. Evidence Coverage Card -->
+            <div class="card">
+                <div class="card-title">
+                    <span>Evidence Coverage & Sensitivity</span>
+                </div>
+                <div class="card-desc">
+                    Deterministic calculation: Required (weight 3), Preferred (weight 1). Unclear and non-code skills excluded.
+                </div>
+
+                <div class="metrics-panel">
+                    <div class="dial-box">
+                        <div id="covValue" class="dial-val">0.0%</div>
+                        <div class="dial-sub">Evidence Coverage</div>
+                        <div id="covFormula" style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">0 / 0 pts</div>
+                    </div>
+                    <div class="sensitivity-grid">
+                        <div class="sens-card">
+                            <h4>Baseline (3:1)</h4>
+                            <p id="sensBaseline">0.0%</p>
+                        </div>
+                        <div class="sens-card">
+                            <h4>Equal (1:1)</h4>
+                            <p id="sensEqual">0.0%</p>
+                        </div>
+                        <div class="sens-card">
+                            <h4>Strict (5:1)</h4>
+                            <p id="sensStrict">0.0%</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Commit Contracts -->
+                <div style="margin-top: 24px;">
+                    <div style="font-size: 14px; font-weight: 600; margin-bottom: 8px;">Next Commit Contract Proposal:</div>
+                    <div id="contractsList">
+                        <div style="color: var(--text-sub); font-size: 13px;">Run assessment to propose coaching contract.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. ProofMap Explorer -->
+            <div class="card">
+                <div class="card-title">
+                    <span>Repository ProofMap</span>
+                </div>
+                <div class="card-desc">
+                    Reachable files, entry points, tests, and evidence signal density across project tree.
+                </div>
+
+                <div id="proofMapFiles" style="max-height: 380px; overflow-y: auto;">
+                    <div style="text-align: center; color: var(--text-sub); padding: 32px;">
+                        Connect a repository and run assessment to visualize the ProofMap.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Row: Detailed Evidence & Assessments -->
+        <div class="card">
+            <div class="card-title">
+                <span>Assessment Results & Verified Code Evidence</span>
+            </div>
+            <div class="card-desc">
+                Surviving multi-signal proof vs. hollow rejected evidence with line numbers and AST reachability indicators.
+            </div>
+
+            <div id="assessmentsList">
+                <div style="text-align: center; color: var(--text-sub); padding: 36px;">
+                    No assessment results yet. Start by extracting a job and running assessment above.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dry Run Modal -->
+    <div id="dryRunModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>Dry Run / What-If Analysis</h3>
+                <button id="btnCloseModal" class="btn btn-secondary btn-sm" type="button">✕</button>
+            </div>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 16px;">
+                Simulate candidate code changes to test their hypothetical impact on Evidence Coverage without pushing commits or modifying GitHub.
+            </p>
+            <div class="form-group">
+                <label for="simulatedPath">File Path</label>
+                <input type="text" id="simulatedPath" value="app/api/endpoints.py">
+            </div>
+            <div class="form-group">
+                <label for="simulatedCode">Simulated Code Content</label>
+                <textarea id="simulatedCode" style="min-height: 180px; font-family: monospace;">from fastapi import APIRouter
+from pydantic import BaseModel
+
+router = APIRouter()
+
+class ProfileSchema(BaseModel):
+    user_id: int
+    headline: str
+
+@router.get("/profile")
+def get_profile():
+    return {"status": "success"}
+</textarea>
+            </div>
+            <div class="actions-row">
+                <button id="btnExecuteDryRun" class="btn" style="flex: 1;">Calculate Hypothetical Coverage</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+{
+  "categories": {
+    "api_development": {
+      "display_name": "API Development",
+      "detector": "api_detector",
+      "assessable": "code_assessable",
+      "skills": {
+        "fastapi": {
+          "canonical_id": "api_fastapi",
+          "label": "FastAPI",
+          "aliases": ["fastapi", "fast api", "starlette"]
+        },
+        "rest_api": {
+          "canonical_id": "api_rest",
+          "label": "RESTful API Design",
+          "aliases": ["rest", "rest api", "restful", "rest apis", "endpoints", "http endpoints", "crud api"]
+        },
+        "flask": {
+          "canonical_id": "api_flask",
+          "label": "Flask",
+          "aliases": ["flask", "flask-restful"]
+        },
+        "express": {
+          "canonical_id": "api_express",
+          "label": "Express.js",
+          "aliases": ["express", "expressjs", "express.js"]
+        },
+        "django": {
+          "canonical_id": "api_django",
+          "label": "Django",
+          "aliases": ["django", "django rest framework", "drf"]
+        }
+      }
+    },
+    "databases_sql": {
+      "display_name": "Databases & SQL",
+      "detector": "sql_detector",
+      "assessable": "code_assessable",
+      "skills": {
+        "sql": {
+          "canonical_id": "db_sql",
+          "label": "SQL & Relational Databases",
+          "aliases": ["sql", "rdbms", "relational database", "queries", "sql queries"]
+        },
+        "postgresql": {
+          "canonical_id": "db_postgres",
+          "label": "PostgreSQL",
+          "aliases": ["postgres", "postgresql", "psql"]
+        },
+        "sqlite": {
+          "canonical_id": "db_sqlite",
+          "label": "SQLite",
+          "aliases": ["sqlite", "sqlite3"]
+        },
+        "sqlalchemy": {
+          "canonical_id": "db_sqlalchemy",
+          "label": "SQLAlchemy ORM",
+          "aliases": ["sqlalchemy", "orm", "alembic", "database migrations"]
+        }
+      }
+    },
+    "testing_qa": {
+      "display_name": "Automated Testing",
+      "detector": "testing_detector",
+      "assessable": "code_assessable",
+      "skills": {
+        "pytest": {
+          "canonical_id": "test_pytest",
+          "label": "pytest & Unit Testing",
+          "aliases": ["pytest", "py.test", "unit test", "unit testing", "automated tests", "integration tests", "test suite"]
+        },
+        "jest": {
+          "canonical_id": "test_jest",
+          "label": "Jest Testing",
+          "aliases": ["jest", "mocha", "chai", "vitest"]
+        }
+      }
+    },
+    "cicd_devops": {
+      "display_name": "Deployment & CI/CD",
+      "detector": "cicd_detector",
+      "assessable": "code_assessable",
+      "skills": {
+        "docker": {
+          "canonical_id": "devops_docker",
+          "label": "Docker Containerization",
+          "aliases": ["docker", "dockerfile", "container", "containers", "docker-compose", "containerization"]
+        },
+        "github_actions": {
+          "canonical_id": "devops_github_actions",
+          "label": "GitHub Actions & CI/CD",
+          "aliases": ["github actions", "github action", "ci/cd", "continuous integration", "continuous deployment", "ci pipeline", "workflows"]
+        }
+      }
+    },
+    "general_programming": {
+      "display_name": "Programming Languages & Core",
+      "detector": "generic_detector",
+      "assessable": "code_assessable",
+      "skills": {
+        "python": {
+          "canonical_id": "lang_python",
+          "label": "Python",
+          "aliases": ["python", "python3", "asyncio", "pydantic"]
+        },
+        "javascript": {
+          "canonical_id": "lang_javascript",
+          "label": "JavaScript / TypeScript",
+          "aliases": ["javascript", "typescript", "ts", "js", "node", "nodejs"]
+        }
+      }
+    },
+    "soft_skills_and_non_code": {
+      "display_name": "Non-Code & Interpersonal Skills",
+      "detector": null,
+      "assessable": "not_assessable_from_repo",
+      "skills": {
+        "communication": {
+          "canonical_id": "soft_communication",
+          "label": "Written & Verbal Communication",
+          "aliases": ["communication", "verbal communication", "presentation skills", "public speaking"]
+        },
+        "leadership": {
+          "canonical_id": "soft_leadership",
+          "label": "Team Leadership & Mentoring",
+          "aliases": ["leadership", "mentoring", "cross-functional", "stakeholder management"]
+        }
+      }
+    }
+  }
+}

@@ -4,6 +4,8 @@ ProofStack helps developers compare the skills requested in a real job descripti
 
 > **Core principle:** ProofStack reports what its analysis can demonstrate from the connected repositories—not a verdict on a person's overall ability.
 
+---
+
 ## Table of Contents
 
 - [Why ProofStack?](#why-proofstack)
@@ -13,13 +15,17 @@ ProofStack helps developers compare the skills requested in a real job descripti
 - [Commit Contracts](#commit-contracts)
 - [Product Principles](#product-principles)
 - [Architecture Overview](#architecture-overview)
-- [Getting Started](#getting-started)
-- [Configuration](#configuration)
-- [Development Notes](#development-notes)
+- [Tech Stack](#tech-stack)
+- [Getting Started & Local Setup](#getting-started--local-setup)
+- [Running Automated Tests](#running-automated-tests)
+- [Core API Endpoints](#core-api-endpoints)
+- [Docker Deployment](#docker-deployment)
+- [Security Architecture](#security-architecture)
 - [Limitations](#limitations)
 - [Roadmap Ideas](#roadmap-ideas)
 - [Contributing](#contributing)
-- [License](#license)
+
+---
 
 ## Why ProofStack?
 
@@ -33,6 +39,8 @@ It is designed to help developers:
 - Turn an evidence gap into a small, testable engineering task.
 - Reassess the project after making changes, where the configured backend supports reassessment.
 
+---
+
 ## How It Works
 
 1. **Add a job posting** — paste a job description or provide a supported job-posting URL.
@@ -45,178 +53,217 @@ It is designed to help developers:
 8. **Make the change in your normal workflow** — implement, test, and commit the work in your own development environment.
 9. **Reassess when supported** — run the analysis again to see whether the new repository state changes the available evidence or contract status.
 
-Actual analysis stages, progress, and results should come from the backend. Any demo or sample data should be clearly identified as mock data.
+---
 
 ## Key Features
 
 ### Job Requirement Extraction
-Extracts skill and requirement statements from a job description and keeps the source wording available for review. Extraction should be treated as editable input, not unquestionable truth.
+Extracts skill and requirement statements from a job description and keeps the source wording available for review. Verbatim supporting quotes are strictly validated against the retrieved text.
 
 ### Proof Map
 A visual view connecting job requirements with evidence discovered in selected repositories. It helps users navigate from a requirement to the code signals supporting the current assessment.
 
 ### Evidence Explorer
-Evidence details may include the following fields when provided by the backend:
-
+Evidence details include:
 - Requirement and repository
 - Commit SHA
 - File path and line range
 - Code excerpt and GitHub permalink
 - Detector name and version
 - Signal type and verification outcome
+- Reachability status via AST call graphs
 - Verification reason or counter-evidence note
-- Timestamp
-
-Evidence should be traceable to its source. If a field is unavailable, the interface should not fabricate it.
 
 ### Evidence Coverage
-Summarizes the scope of evidence detected for the selected job and repositories. Coverage is about what was observed in the selected code—not a measurement of the developer's complete skill set.
+Summarizes the scope of evidence detected for the selected job and repositories using defined heuristic weights:
+$$\text{Evidence Coverage} = \frac{\sum (\text{weight} \times \text{credit})}{\sum \text{weight}}$$
+Coverage is about what was observed in the selected code—not a measurement of the developer's complete skill set.
 
 ### Hollow-Evidence Guards
-Attempts to prevent weak signals—such as a keyword, dependency, filename, or superficial code pattern—from being presented as strong proof without adequate supporting evidence.
+Prevents weak signals—such as README keyword stuffing, unused dependencies, empty files, or trivial assertions (`assert True`)—from being counted as valid evidence.
 
 ### Commit Contract Recommendations
-Turns a specific evidence gap or improvement opportunity into a bounded task with acceptance checks, constraints, and a base repository revision when available.
+Turns a specific evidence gap into a bounded task with acceptance checks, constraints, base commit SHA, and negative invariant predictions.
 
-### Activity and System Health
-Provides visibility into recent analysis activity and service health when those signals are available from the actual system.
+---
 
 ## Evidence and Status Labels
 
-Use explicit labels and explanatory text rather than relying on color alone. The intended meanings are:
+Use explicit labels and explanatory text rather than relying on color alone:
 
-- **Proven** — the configured evidence checks support the requirement within the analyzed scope.
-- **Basic** — limited evidence was found; it should not be interpreted as comprehensive proof.
-- **Not shown in scope** — the configured analysis did not find sufficient evidence in the selected repositories and supported detectors.
-- **Unclear** — the available signals do not support a reliable conclusion.
+- **Demonstrated (strong)** — two or more independent surviving signal types support the requirement within the analyzed scope.
+- **Demonstrated (basic)** — one surviving signal type or generic language detector fallback.
+- **Not demonstrated in this scope** — the configured analysis did not find sufficient evidence in the selected repositories.
+- **Unclear** — conflicting signals, unsupported ecosystems, or non-code-assessable requirements.
 
-A detector may not exist for every skill. In such cases, report **“No detector in this version”** or an equivalent out-of-scope explanation instead of implying that the user lacks the skill.
-
-An LLM-only confirmation should not be presented as stronger than the product's defined evidence policy; the current product specification caps LLM-only confirmation at **Basic**.
+---
 
 ## Commit Contracts
 
-A Commit Contract is a recommendation, not a guaranteed solution or an automatic judgment of ability. Depending on backend support, it can include:
-
-- The recommended change and its rationale
+A Commit Contract is a recommendation, not a guaranteed solution or an automatic judgment of ability:
 - Current and predicted evidence state
 - Acceptance checks that can be verified
 - Skills or behaviors that must not regress
 - Base commit SHA
-- Estimated effort and scoring details, if implemented
-- Status and, when available, the adjudicated commit SHA and reason
+- Estimated effort class (`small`, `medium`, `large`)
+- Adjudication status: `Pending`, `Fulfilled`, `Partly fulfilled`, `Not fulfilled`
 
-The acceptance checks define a minimum bar for the proposed change; passing them is not a guarantee of overall code quality. A contract should only be marked complete or adjudicated when the backend has actually evaluated the relevant result.
+---
 
 ## Product Principles
 
 1. **Evidence, not people-ranking:** ProofStack does not rank candidates or issue hiring/ability verdicts.
 2. **Scope transparency:** results describe selected repositories and supported detectors only.
-3. **Traceability:** evidence should link to the relevant source code and revision when available.
+3. **Traceability:** evidence links to the relevant source code, commit SHA, and file line ranges.
 4. **Honest uncertainty:** distinguish missing evidence from evidence that a skill is absent.
 5. **No fabricated progress:** show only stages and metrics reported by the running system; label demo data clearly.
-6. **No false provenance claims:** a ledger or signature can show that a record has not changed since signing; it does not independently prove who authored the code or that a skill belongs to a particular person.
-7. **Accessible status design:** status meaning must be communicated with text/icons, not color alone.
+6. **Accessible status design:** status meaning must be communicated with text and icons, not color alone.
+
+---
 
 ## Architecture Overview
 
-At a conceptual level, the system follows this pipeline:
-
 ```text
-Job posting
+Job posting (URL / Pasted Text)
     ↓
-Requirement extraction and review
+Requirement extraction & Verbatim Quote Verification
     ↓
-Repository selection and file discovery
+Repository selection & Bounded File Discovery (GitHub REST API)
     ↓
-Deterministic evidence detectors
+Deterministic Code Detectors (API, SQL, Testing, CI/CD)
     ↓
-Evidence guards and verification
+Evidence Guards & AST Reachability Analysis
     ↓
-Assessment and coverage generation
+Pure Deterministic Assessment Engine & Coverage Sensitivity
     ↓
 Proof Map + Evidence Explorer
     ↓
-Commit Contract recommendation
+Commit Contract Generation & Real-Time SSE Stream
     ↓
-Developer implements changes
-    ↓
-Reassessment (if supported)
+Developer implements changes & Push triggers Reassessment
 ```
 
-The user interface should consume real backend responses for analysis results, status labels, progress, and contract adjudication. It should not simulate successful analysis when the backend has not completed it.
+---
 
-## Getting Started
+## Tech Stack
 
-The exact install commands depend on the repository's actual package manager, framework, and backend configuration. Once those are confirmed, document the commands here. A typical local setup is:
+- **Runtime & API**: Python 3.11+, FastAPI, Uvicorn
+- **Validation**: Pydantic v2
+- **Persistence**: SQLAlchemy 2.0 with SQLite in WAL mode (`aiosqlite`)
+- **HTTP Client**: `httpx` (async outbound requests)
+- **Static Analysis**: Python standard `ast` module
+- **Testing**: `pytest`, `pytest-asyncio`
+- **Frontend**: Responsive modern dark-mode dashboard (served directly at `http://localhost:8000/`)
 
-1. Clone the repository.
-2. Install dependencies for each application or service in the repository.
-3. Copy the example environment file, if provided, to the local environment file.
-4. Configure the required API keys, database connection, GitHub OAuth/app credentials, and service URLs.
-5. Start the backend services.
-6. Start the frontend application.
-7. Open the local URL printed by the frontend development server.
+---
 
-**Before publishing this README:** replace this section with the exact commands from the repository, such as the correct package manager commands, service names, ports, and environment variables. Do not add credentials to source control.
+## Getting Started & Local Setup
 
-## Configuration
+### 1. Prerequisites
+- Python 3.11 or higher
+- Git
 
-Configuration depends on the implementation. Common settings may include:
+### 2. Installation
+```bash
+# Clone the repository
+git clone https://github.com/Omb2121/AI-CarrerCoach.git
+cd AI-CarrerCoach
 
-- GitHub OAuth or GitHub App credentials and callback URL
-- Backend/API base URL
-- Database connection string
-- LLM provider/model configuration, if enabled
-- Allowed origins/CORS settings
-- Logging and environment mode
+# Create and activate virtual environment
+python -m venv .venv
 
-Use a `.env.example` file to document variable names and safe placeholder values. Keep real API keys, access tokens, OAuth secrets, and production credentials out of Git.
+# Windows
+.venv\Scripts\activate
+# Linux/macOS
+source .venv/bin/activate
 
-## Development Notes
+# Install dependencies
+pip install -r requirements.txt
+```
 
-- Keep evidence detection deterministic and explainable wherever possible.
-- Record detector names/versions so results can be reproduced and audited.
-- Preserve commit SHA and source locations for evidence signals.
-- Keep LLM verification separate from deterministic detection and disclose when it was used.
-- Add tests for false positives, weak evidence, unknown skills, and out-of-scope requirements.
-- Ensure empty, failed, or partial analysis results are represented honestly in the UI.
-- Treat soft requirements such as degree, years of experience, communication, location, and work authorization as not assessable from repository code unless a separate, appropriate source is explicitly provided.
+### 3. Configuration
+Copy `.env.example` to `.env`:
+```bash
+cp .env.example .env
+```
+*Deterministic mode operates out of the box with default settings; no LLM API key required.*
+
+### 4. Start the Application
+```bash
+uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+```
+Open **[http://localhost:8000](http://localhost:8000)** in your browser for the dashboard, or **[http://localhost:8000/docs](http://localhost:8000/docs)** for interactive OpenAPI documentation.
+
+---
+
+## Running Automated Tests
+
+Run the full pytest suite:
+```bash
+pytest -v
+```
+All 26 automated unit and integration tests verify:
+- SSRF defense against private IPs, AWS/GCP metadata, and scheme abuse.
+- Webhook signature HMAC-SHA256 verification and replay delivery deduplication.
+- AST call-graph reachability and hollow-evidence rejection.
+- All deterministic assessment state transitions.
+- Coverage arithmetic and sensitivity bounds.
+- Commit Contract generation and adjudication.
+- REST API integration and SSE streaming.
+
+---
+
+## Core API Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/health` | Service status, database WAL check, and engine mode |
+| `POST` | `/api/jobs` | Submit job posting URL or pasted description |
+| `PATCH` | `/api/requirements/{id}` | Edit, reinterpret, or adjust importance |
+| `POST` | `/api/repos` | Connect GitHub repository URL |
+| `POST` | `/api/analyze` | Start baseline evidence assessment pipeline |
+| `POST` | `/api/check-now` | Manually trigger assessment pipeline |
+| `GET` | `/api/assessments` | Retrieve status, surviving evidence, and rejections |
+| `GET` | `/api/coverage/{job_id}` | Retrieve Evidence Coverage and sensitivity bounds |
+| `GET` | `/api/proofmap/{job_id}` | Retrieve file map, entry points, and skill signals |
+| `POST` | `/webhooks/github` | Authenticated GitHub push event listener |
+| `GET` | `/api/events/stream` | Real-time Server-Sent Events (SSE) progress stream |
+| `GET` | `/api/trace/{run_id}` | Detailed execution steps, tools, and timings |
+| `GET` | `/api/contracts` | List Commit Contracts |
+| `POST` | `/api/contracts` | Propose next commit contract |
+| `POST` | `/api/dry-run` | Test hypothetical changes without mutating repo |
+| `POST` | `/api/corrections` | Submit candidate evidence correction |
+
+---
+
+## Docker Deployment
+
+To build and run with Docker Compose:
+```bash
+docker-compose up --build -d
+```
+The service will be live on `http://localhost:8000` with active container healthchecks.
+
+---
+
+## Security Architecture
+
+- **SSRF Defense**: Strict validation of DNS-resolved IP addresses; blocks loopback (`127.0.0.0/8`, `::1`), private CIDRs (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `fc00::/7`), link-local, multicast, and cloud metadata services (`169.254.169.254`, `metadata.google.internal`). Re-validates every redirect hop.
+- **Webhook Integrity**: Verifies `X-Hub-Signature-256` using constant-time HMAC-SHA256 comparison. Deduplicates delivery IDs.
+- **Read-Only Scope**: Analyzes repositories via read-only GitHub REST API; never clones, installs, executes, or mutates client repositories.
+- **Secret Redaction**: Redacts GitHub tokens (`ghp_*`) and API keys (`sk-*`) from application logs.
+
+---
 
 ## Limitations
 
 - Repository analysis cannot establish a person's complete skill set or professional ability.
 - A lack of detected evidence is not proof that a skill is absent.
-- Detector coverage varies by language, framework, repository structure, and implementation version.
-- Job-posting extraction may need human review.
-- LLM outputs can be wrong and should not override the product's evidence policy.
-- A cryptographic signature or ledger can help detect post-signing changes, but does not prove authorship by itself.
-- Reassessment and contract adjudication are available only if implemented and connected to the backend.
+- Full AST intra-package call-graph analysis is implemented for Python. JavaScript/TypeScript uses an import-graph heuristic; other languages report reachability as `unclear`.
+- Files exceeding 2 MB are skipped from deep static inspection to protect server resources.
 
-## Roadmap Ideas
-
-Potential areas to develop, depending on the current implementation:
-
-- Broader detector coverage with versioned tests
-- Better evidence explanations and counter-evidence handling
-- Reproducible assessments tied to immutable commit SHAs
-- Clear before/after comparisons after a Commit Contract is completed
-- Accessibility and responsive-layout testing
-- Evaluation datasets for detector precision and false-positive rates
-- Improved error states and observability for long-running analysis jobs
+---
 
 ## Contributing
 
-Contributions are welcome. Before submitting a pull request:
-
-1. Explain the problem and the intended behavior change.
-2. Add or update tests for the affected functionality.
-3. Ensure new evidence claims are traceable and do not overstate what the detector proves.
-4. Document configuration or API changes.
-5. Never commit secrets, personal access tokens, or private repository data.
-
-Open an issue or discussion first for substantial architectural changes.
-
-## License
-
-No license has been specified in this README. Add the license selected by the project owner and include the corresponding `LICENSE` file before distributing the project publicly.
+Contributions are welcome. Please ensure new evidence claims are traceable and all automated tests pass before submitting pull requests.
