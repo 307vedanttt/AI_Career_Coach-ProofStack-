@@ -1,0 +1,1 @@
+@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}.cartesian-dots{background-image:radial-gradient(rgba(226,226,230,0.07) 1px,transparent 0);background-size:24px 24px;}

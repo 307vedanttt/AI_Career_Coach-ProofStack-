@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ProofStack: Redirecting to GitHub OAuth</title>
+  <style>
+    body { background: #0A0C0F; color: #F7F5F0; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+    .pulse-container { display: flex; align-items: center; gap: 32px; }
+    .pulse-line { width: 120px; height: 2px; background: rgba(52, 211, 153, 0.4); position: relative; overflow: hidden; }
+    .pulse-particle { position: absolute; width: 40px; height: 100%; background: #34D399; animation: pulseFlow 1.2s infinite ease-in-out; }
+    @keyframes pulseFlow { 0% { left: -40px; } 100% { left: 120px; } }
+  </style>
+</head>
+<body>
+  <div class="pulse-container">
+    <div class="icon">GitHub</div>
+    <div class="pulse-line"><div class="pulse-particle"></div></div>
+    <div class="icon">ProofStack</div>
+  </div>
+</body>
+</html>

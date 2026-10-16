@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=1440, initial-scale=1.0" name="viewport"/>
+<title>ProofStack — Evidence Coverage &amp; Physical Proof Ledger</title>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Font integration: Satoshi / General Sans style via Plus Jakarta Sans & Space Grotesk / JetBrains Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            display: ['"Space Grotesk"', '"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            desk: '#0B0D10',
+            paper: '#FAF8F3',
+            ink: '#14171A',
+            proven: '#22C58B',
+            basic: '#F5A524',
+            notshown: '#7C8CA8',
+            unclear: '#8B7CFF',
+            refused: '#FF5C4D',
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    /* Custom SVG Turbulence Mask Filter for Authentic Ink Bleed Stamps */
+    .ink-bleed {
+      filter: url('#stamp-distortion');
+    }
+    
+    /* Zig-zag jagged torn top edge (12px teeth) */
+    .sawtooth-top {
+      clip-path: polygon(
+        0% 12px,
+        2.5% 0px, 5% 12px, 7.5% 0px, 10% 12px, 12.5% 0px, 15% 12px, 17.5% 0px, 20% 12px,
+        22.5% 0px, 25% 12px, 27.5% 0px, 30% 12px, 32.5% 0px, 35% 12px, 37.5% 0px, 40% 12px,
+        42.5% 0px, 45% 12px, 47.5% 0px, 50% 12px, 52.5% 0px, 55% 12px, 57.5% 0px, 60% 12px,
+        62.5% 0px, 65% 12px, 67.5% 0px, 70% 12px, 72.5% 0px, 75% 12px, 77.5% 0px, 80% 12px,
+        82.5% 0px, 85% 12px, 87.5% 0px, 90% 12px, 92.5% 0px, 95% 12px, 97.5% 0px, 100% 12px,
+        100% 100%,
+        0% 100%
+      );
+    }
+
+    /* Subtle paper texture simulation */
+    .paper-grain {
+      background-color: #FAF8F3;
+      background-image: radial-gradient(#14171a 0.75px, transparent 0.75px), radial-gradient(#14171a 0.75px, #FAF8F3 0.75px);
+      background-size: 30px 30px;
+      background-position: 0 0, 15px 15px;
+      background-blend-mode: multiply;
+    }
+
+    /* Desk Dot Grid (1px dots, 6% white, 24px spacing) */
+    .desk-grid {
+      background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1.25px, transparent 1.25px);
+      background-size: 24px 24px;
+    }
+
+    /* Barcode generator styling */
+    .barcode-lines {
+      background: repeating-linear-gradient(
+        to right,
+        #14171A 0px, #14171A 2px,
+        transparent 2px, transparent 4px,
+        #14171A 4px, #14171A 5px,
+        transparent 5px, transparent 8px,
+        #14171A 8px, #14171A 11px,
+        transparent 11px, transparent 13px,
+        #14171A 13px, #14171A 14px,
+        transparent 14px, transparent 18px,
+        #14171A 18px, #14171A 21px,
+        transparent 21px, transparent 24px
+      );
+    }
+
+    /* Glowing outlines */
+    .glow-emerald {
+      box-shadow: 0 0 28px rgba(34, 197, 139, 0.35);
+    }
+    .glow-amber {
+      box-shadow: 0 0 24px rgba(245, 165, 36, 0.35);
+    }
+    .glow-violet {
+      box-shadow: 0 0 24px rgba(139, 124, 255, 0.35);
+    }
+    .glow-slate {
+      box-shadow: 0 0 24px rgba(124, 140, 168, 0.35);
+    }
+    .glow-refused {
+      box-shadow: 0 0 16px rgba(255, 92, 77, 0.7);
+    }
+
+    /* Floating physical paper shadows */
+    .paper-shadow {
+      box-shadow: 0 35px 70px -15px rgba(0, 0, 0, 0.65), 0 15px 30px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    }
+
+    /* Fresh push pulse */
+    @keyframes pulse-ring {
+      0% { transform: scale(0.98); box-shadow: 0 0 0 0 rgba(34, 197, 139, 0.7); }
+      70% { transform: scale(1.02); box-shadow: 0 0 0 14px rgba(34, 197, 139, 0); }
+      100% { transform: scale(0.98); box-shadow: 0 0 0 0 rgba(34, 197, 139, 0); }
+    }
+    .active-push-pulse {
+      animation: pulse-ring 2.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    /* Stamp double border geometry */
+    .stamp-box {
+      border: 3.5px solid currentColor;
+      box-shadow: 0 0 0 3px #FAF8F3, 0 0 0 4.5px currentColor;
+    }
+  </style>
+<meta content="web_dashboard" name="shell-type"/></head>
+<body class="bg-desk text-[#F4F2EC] font-sans antialiased selection:bg-emerald-500/30 selection:text-white min-h-screen relative overflow-x-hidden">
+<!-- SVG Filter for Stamp Ink-Bleed Texture -->
+<svg class="hidden" height="0" width="0">
+<filter height="120%" id="stamp-distortion" width="120%" x="-10%" y="-10%">
+<feturbulence basefrequency="0.04" numoctaves="3" result="noise" type="fractalNoise"></feturbulence>
+<fedisplacementmap in="SourceGraphic" in2="noise" scale="2.5" xchannelselector="R" ychannelselector="G"></fedisplacementmap>
+</filter>
+</svg>
+<!-- BACKGROUND: Ambient Dark Desk Grid & Giant Radial Glows -->
+<div class="fixed inset-0 pointer-events-none z-0 desk-grid opacity-80"></div>
+<!-- Radial Glow Top-Left (Emerald #22C58B @ 12%) -->
+<div class="fixed -top-40 -left-40 w-[850px] h-[850px] bg-[#22C58B] opacity-12 rounded-full blur-[140px] pointer-events-none z-0"></div>
+<!-- Radial Glow Bottom-Right (Violet #8B7CFF @ 10%) -->
+<div class="fixed bottom-0 right-0 w-[900px] h-[900px] bg-[#8B7CFF] opacity-10 rounded-full blur-[160px] pointer-events-none z-0"></div>
+<!-- Subtle Edge Vignette -->
+<div class="fixed inset-0 pointer-events-none z-0 shadow-[inset_0_0_180px_rgba(0,0,0,0.85)]"></div>
+<!-- ==================== LEFT RAIL (80px, Glass Dark) ==================== -->
+<aside class="fixed top-0 left-0 bottom-0 w-[80px] bg-[#0c0e12]/85 backdrop-blur-xl border-r border-white/5 z-50 flex flex-col items-center py-6 select-none">
+<!-- Brand Logo Mark -->
+<a class="mb-10 w-11 h-11 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center hover:border-emerald-500/50 transition-colors group" href="#">
+<svg class="w-6 h-6 text-white group-hover:text-[#22C58B] transition-colors" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24">
+<path d="M4 6h16M4 12h16M4 18h10" stroke-linecap="round" stroke-linejoin="round"></path>
+<rect fill="none" height="6" rx="1.5" stroke="currentColor" width="6" x="15" y="14"></rect>
+</svg>
+</a>
+<!-- Nav Items: Start, Requirements, Dashboard (active), Contracts, Break-Me, Resume, Verify -->
+<nav class="flex-1 flex flex-col space-y-7 items-center w-full">
+<!-- Start -->
+<a class="group flex flex-col items-center justify-center w-full text-[#9AA3AE] hover:text-white transition-colors" href="#">
+<div class="w-10 h-10 flex items-center justify-center rounded-lg group-hover:bg-white/5 transition-all">
+<svg class="w-5 h-5 stroke-[1.8]" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<polygon points="5 3 19 12 5 21 5 3" stroke-linecap="round" stroke-linejoin="round"></polygon>
+</svg>
+</div>
+<span class="text-[11px] font-medium tracking-tight mt-1 opacity-70 group-hover:opacity-100">Start</span>
+</a>
+<!-- Requirements -->
+<a class="group flex flex-col items-center justify-center w-full text-[#9AA3AE] hover:text-white transition-colors" href="#">
+<div class="w-10 h-10 flex items-center justify-center rounded-lg group-hover:bg-white/5 transition-all">
+<svg class="w-5 h-5 stroke-[1.8]" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M9 11l3 3L22 4" stroke-linecap="round" stroke-linejoin="round"></path>
+<path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<span class="text-[11px] font-medium tracking-tight mt-1 opacity-70 group-hover:opacity-100">Reqs</span>
+</a>
+<!-- Dashboard (ACTIVE) -->
+<a class="group relative flex flex-col items-center justify-center w-full text-white" href="#">
+<!-- Emerald Glow Bar on the Left Edge -->
+<span class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-9 bg-[#22C58B] rounded-r-full shadow-[0_0_12px_#22C58B]"></span>
+<div class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/10 text-[#22C58B] shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
+<svg class="w-5 h-5 stroke-[2]" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<rect height="9" rx="1.5" width="7" x="3" y="3"></rect>
+<rect height="5" rx="1.5" width="7" x="14" y="3"></rect>
+<rect height="9" rx="1.5" width="7" x="14" y="12"></rect>
+<rect height="5" rx="1.5" width="7" x="3" y="16"></rect>
+</svg>
+</div>
+<span class="text-[11px] font-semibold text-[#22C58B] tracking-tight mt-1">Dash</span>
+</a>
+<!-- Contracts -->
+<a class="group flex flex-col items-center justify-center w-full text-[#9AA3AE] hover:text-white transition-colors" href="#">
+<div class="w-10 h-10 flex items-center justify-center rounded-lg group-hover:bg-white/5 transition-all">
+<svg class="w-5 h-5 stroke-[1.8]" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke-linecap="round" stroke-linejoin="round"></path>
+<polyline points="14 2 14 8 20 8"></polyline>
+<line x1="16" x2="8" y1="13" y2="13"></line>
+<line x1="16" x2="8" y1="17" y2="17"></line>
+</svg>
+</div>
+<span class="text-[11px] font-medium tracking-tight mt-1 opacity-70 group-hover:opacity-100">Contracts</span>
+</a>
+<!-- Break-Me -->
+<a class="group flex flex-col items-center justify-center w-full text-[#9AA3AE] hover:text-white transition-colors" href="#">
+<div class="w-10 h-10 flex items-center justify-center rounded-lg group-hover:bg-white/5 transition-all">
+<svg class="w-5 h-5 stroke-[1.8]" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" stroke-linecap="round" stroke-linejoin="round"></polygon>
+</svg>
+</div>
+<span class="text-[11px] font-medium tracking-tight mt-1 opacity-70 group-hover:opacity-100">Break-Me</span>
+</a>
+<!-- Resume -->
+<a class="group flex flex-col items-center justify-center w-full text-[#9AA3AE] hover:text-white transition-colors" href="#">
+<div class="w-10 h-10 flex items-center justify-center rounded-lg group-hover:bg-white/5 transition-all">
+<svg class="w-5 h-5 stroke-[1.8]" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<circle cx="12" cy="7" r="4"></circle>
+<path d="M5.5 21v-2a6.5 6.5 0 0113 0v2"></path>
+</svg>
+</div>
+<span class="text-[11px] font-medium tracking-tight mt-1 opacity-70 group-hover:opacity-100">Resume</span>
+</a>
+<!-- Verify -->
+<a class="group flex flex-col items-center justify-center w-full text-[#9AA3AE] hover:text-white transition-colors" href="#">
+<div class="w-10 h-10 flex items-center justify-center rounded-lg group-hover:bg-white/5 transition-all">
+<svg class="w-5 h-5 stroke-[1.8]" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+<circle cx="12" cy="11" r="2.5"></circle>
+</svg>
+</div>
+<span class="text-[11px] font-medium tracking-tight mt-1 opacity-70 group-hover:opacity-100">Verify</span>
+</a>
+</nav>
+<!-- Bottom User Avatar -->
+<div class="mt-auto pt-4 flex flex-col items-center">
+<div class="w-9 h-9 rounded-full bg-gradient-to-tr from-[#22C58B] to-[#8B7CFF] p-[1.5px] cursor-pointer">
+<div class="w-full h-full bg-[#14171A] rounded-full flex items-center justify-center text-xs font-semibold text-white">
+          RN
+        </div>
+</div>
+</div>
+</aside>
+<!-- ==================== MAIN CONTENT WRAPPER ==================== -->
+<div class="pl-[80px] w-full min-h-screen relative z-10 flex flex-col">
+<!-- ==================== TOP BAR (56px, Translucent) ==================== -->
+<header class="h-[56px] px-10 border-b border-white/[0.07] bg-[#0B0D10]/80 backdrop-blur-md flex items-center justify-between sticky top-0 z-40">
+<!-- Left: Wordmark -->
+<div class="flex items-center space-x-3">
+<span class="font-display font-bold text-[20px] tracking-tight text-white flex items-center gap-2">
+          ProofStack
+          <span class="text-[11px] font-mono font-medium px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[#9AA3AE] tracking-normal uppercase">
+            v2.4
+          </span>
+</span>
+</div>
+<!-- Right: Four Live Health Dots + Red Refused Counter Pill -->
+<div class="flex items-center space-x-8">
+<!-- Live Health Dots -->
+<div class="flex items-center space-x-6 text-[14px] text-[#9AA3AE]">
+<!-- GitHub -->
+<div class="flex items-center space-x-2">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22C58B] opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-[#22C58B]"></span>
+</span>
+<span class="font-medium text-white/90">GitHub</span>
+</div>
+<!-- Webhook -->
+<div class="flex items-center space-x-2">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22C58B] opacity-60"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-[#22C58B]"></span>
+</span>
+<span class="font-medium text-white/90">Webhook</span>
+</div>
+<!-- Model -->
+<div class="flex items-center space-x-2">
+<span class="relative inline-flex rounded-full h-2 w-2 bg-[#22C58B]"></span>
+<span class="font-medium text-white/90">Model</span>
+</div>
+<!-- Rate Limit -->
+<div class="flex items-center space-x-2">
+<span class="relative inline-flex rounded-full h-2 w-2 bg-[#22C58B]"></span>
+<span class="font-medium text-white/90">Rate limit</span>
+</div>
+</div>
+<!-- Hollow Signals Refused (Red #FF5C4D glow pill) -->
+<div class="flex items-center space-x-2.5 px-3.5 py-1.5 rounded-full bg-[#FF5C4D]/10 border border-[#FF5C4D]/30 backdrop-blur-sm">
+<span class="relative flex h-2 w-2">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF5C4D] opacity-80"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-[#FF5C4D]"></span>
+</span>
+<span class="text-[13px] font-medium text-[#F4F2EC]">Hollow signals refused</span>
+<span class="text-[14px] font-bold text-[#FF5C4D] glow-refused px-1.5 py-0.2 rounded font-mono">14</span>
+</div>
+</div>
+</header>
+<!-- ==================== BODY CONTENT CONTAINER ==================== -->
+<main class="max-w-[1360px] w-full mx-auto px-8 pt-10 pb-28 flex flex-col"><div class="flex flex-col w-full">
+<!-- SECTION 1: THE LOOP (900px Tall Kinetic Architectural Graph) -->
+<section class="relative w-full min-h-[920px] flex flex-col items-center justify-start select-none pt-8 pb-16 overflow-hidden">
+<!-- Centered Dramatic Headline -->
+<div class="text-center z-20 max-w-4xl mx-auto mb-16">
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high/80 text-secondary font-stamp-badge text-stamp-badge tracking-widest uppercase mb-4 shadow-sm">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+        Deterministic Verification Cycle
+      </div>
+<h2 class="font-headline-xl text-headline-xl text-primary tracking-tight">
+        Every commit closes the loop.
+      </h2>
+</div>
+<!-- The Kinetic S-Curve Ribbon Stage -->
+<div class="relative w-full max-w-[1240px] h-[620px] flex items-center justify-center">
+<!-- Glow Underlay for Ribbon -->
+<div class="absolute inset-x-8 top-1/2 -translate-y-1/2 h-44 bg-gradient-to-r from-secondary/15 via-tertiary-container/10 to-on-tertiary-container/15 blur-3xl pointer-events-none"></div>
+<!-- SVG Continuous Flow Ribbon and Return Arch -->
+<svg class="absolute inset-0 w-full h-full pointer-events-none z-0" fill="none" viewbox="0 0 1240 620">
+<defs>
+<lineargradient gradientunits="userSpaceOnUse" id="ribbonGrad" x1="60" x2="1180" y1="280" y2="280">
+<stop offset="0%" stop-color="#22C58B"></stop>
+<stop offset="35%" stop-color="#49dfa2"></stop>
+<stop offset="70%" stop-color="#8B7CFF"></stop>
+<stop offset="100%" stop-color="#6bfcbd"></stop>
+</lineargradient>
+<filter height="140%" id="ribbonGlow" width="140%" x="-20%" y="-20%">
+<fegaussianblur result="glow" stddeviation="7"></fegaussianblur>
+<femerge>
+<femergenode in="glow"></femergenode>
+<femergenode in="SourceGraphic"></femergenode>
+</femerge>
+</filter>
+</defs>
+<!-- Forward Wave Ribbon -->
+<path d="M 88 280 C 260 210, 360 360, 500 280 C 640 200, 760 360, 920 280 C 1040 220, 1100 280, 1152 280" filter="url(#ribbonGlow)" stroke="url(#ribbonGrad)" stroke-linecap="round" stroke-width="6"></path>
+<!-- Luminous Comet Trail Pulsing around Node 5 -->
+<circle cx="780" cy="305" fill="#22C58B" r="5">
+<animate attributename="opacity" dur="2.2s" repeatcount="indefinite" values="0.4;1;0.4"></animate>
+<animate attributename="r" dur="2.2s" repeatcount="indefinite" values="4;7;4"></animate>
+</circle>
+<path d="M 720 280 C 740 290, 760 300, 780 305" opacity="0.6" stroke="#22C58B" stroke-linecap="round" stroke-width="3"></path>
+<!-- Return Arch: Node 7 back to Node 1 -->
+<path d="M 1152 340 C 1152 560, 88 560, 88 340" opacity="0.75" stroke="#22C58B" stroke-dasharray="8 6" stroke-linecap="round" stroke-width="2.5"></path>
+<!-- Return Arrowhead pointing up into Node 1 -->
+<polygon fill="#22C58B" points="88,328 82,342 94,342"></polygon>
+</svg>
+<!-- Sweeping Return Ribbon Label -->
+<div class="absolute bottom-11 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-1.5 rounded-full bg-surface-container-lowest/90 backdrop-blur-md shadow-lg z-20">
+<span class="material-symbols-outlined text-secondary text-sm animate-spin" style="animation-duration: 9s;">autorenew</span>
+<span class="font-stamp-badge text-receipt-mono-sm uppercase text-secondary font-bold tracking-widest">Repeat • Continuous Proof Invariant</span>
+</div>
+<!-- 7 Circular Glass Nodes -->
+<div class="relative w-full h-full flex items-center justify-between px-6 z-10">
+<!-- Node 1: Posting -->
+<div class="flex flex-col items-center group -translate-y-4">
+<div class="w-24 h-24 rounded-full bg-surface-container/90 backdrop-blur-xl shadow-xl flex flex-col items-center justify-center transition-all duration-200 group-hover:-translate-y-1">
+<span class="material-symbols-outlined text-on-surface-variant text-base">description</span>
+<span class="font-headline-xl text-headline-lg font-bold text-primary mt-0.5">1</span>
+</div>
+<span class="font-title-md text-title-md text-on-surface mt-4 tracking-tight">Posting</span>
+</div>
+<!-- Node 2: Evidence -->
+<div class="flex flex-col items-center group translate-y-7">
+<div class="w-24 h-24 rounded-full bg-surface-container/90 backdrop-blur-xl shadow-xl flex flex-col items-center justify-center transition-all duration-200 group-hover:-translate-y-1">
+<span class="material-symbols-outlined text-on-surface-variant text-base">receipt_long</span>
+<span class="font-headline-xl text-headline-lg font-bold text-primary mt-0.5">2</span>
+</div>
+<span class="font-title-md text-title-md text-on-surface mt-4 tracking-tight">Evidence</span>
+</div>
+<!-- Node 3: Gaps -->
+<div class="flex flex-col items-center group -translate-y-6">
+<div class="w-24 h-24 rounded-full bg-surface-container/90 backdrop-blur-xl shadow-xl flex flex-col items-center justify-center transition-all duration-200 group-hover:-translate-y-1">
+<span class="material-symbols-outlined text-outline text-base">adjust</span>
+<span class="font-headline-xl text-headline-lg font-bold text-primary mt-0.5">3</span>
+</div>
+<span class="font-title-md text-title-md text-on-surface mt-4 tracking-tight">Gaps</span>
+</div>
+<!-- Node 4: Commit Contract (RECOMMENDATION) -->
+<div class="flex flex-col items-center relative group translate-y-3">
+<!-- Recommendation Badge -->
+<div class="absolute -top-7 -left-3 px-2 py-0.5 rounded bg-secondary-container/95 text-on-secondary font-stamp-badge text-[10px] tracking-wider uppercase shadow-md flex items-center gap-1 z-20">
+<span class="material-symbols-outlined text-[10px]" style="font-variation-settings: 'FILL' 1;">verified</span>
+            Recommendation
+          </div>
+<div class="w-24 h-24 rounded-full bg-surface-container-high/95 backdrop-blur-xl shadow-[0_0_24px_rgba(34,197,139,0.35)] flex flex-col items-center justify-center transition-all duration-200 group-hover:scale-105" style="outline: 2px dashed #22C58B; outline-offset: 4px;">
+<span class="material-symbols-outlined text-secondary text-base">draw</span>
+<span class="font-headline-xl text-headline-lg font-bold text-secondary mt-0.5">4</span>
+</div>
+<span class="font-title-md text-title-md text-secondary font-semibold mt-4 tracking-tight">Commit Contract</span>
+</div>
+<!-- Node 5: Commit (With traveling comet glow) -->
+<div class="flex flex-col items-center group translate-y-9 relative">
+<!-- Dynamic Comet Glow Halo -->
+<div class="absolute -inset-2 bg-secondary/15 rounded-full blur-md animate-pulse pointer-events-none"></div>
+<div class="w-24 h-24 rounded-full bg-surface-container/90 backdrop-blur-xl shadow-xl flex flex-col items-center justify-center transition-all duration-200 group-hover:-translate-y-1 relative z-10">
+<span class="material-symbols-outlined text-secondary text-base">commit</span>
+<span class="font-headline-xl text-headline-lg font-bold text-primary mt-0.5">5</span>
+</div>
+<span class="font-title-md text-title-md text-on-surface mt-4 tracking-tight">Commit</span>
+</div>
+<!-- Node 6: Auto update -->
+<div class="flex flex-col items-center group -translate-y-4">
+<div class="w-24 h-24 rounded-full bg-surface-container/90 backdrop-blur-xl shadow-xl flex flex-col items-center justify-center transition-all duration-200 group-hover:-translate-y-1">
+<span class="material-symbols-outlined text-on-surface-variant text-base">sync</span>
+<span class="font-headline-xl text-headline-lg font-bold text-primary mt-0.5">6</span>
+</div>
+<span class="font-title-md text-title-md text-on-surface mt-4 tracking-tight">Auto update</span>
+</div>
+<!-- Node 7: Verdict (With Hanging PROVEN Stamp) -->
+<div class="flex flex-col items-center relative group translate-y-3">
+<!-- Hanging Authentic Rubber Stamp -->
+<div class="absolute -top-6 -right-6 px-2 py-0.5 bg-paper text-[#22C58B] rounded-sm transform -rotate-12 shadow-lg stamp-box select-none pointer-events-none z-20">
+<span class="font-stamp-badge text-[10px] font-bold tracking-widest uppercase">PROVEN</span>
+</div>
+<div class="w-24 h-24 rounded-full bg-surface-container/90 backdrop-blur-xl shadow-xl flex flex-col items-center justify-center transition-all duration-200 group-hover:-translate-y-1">
+<span class="material-symbols-outlined text-secondary text-base">approval</span>
+<span class="font-headline-xl text-headline-lg font-bold text-primary mt-0.5">7</span>
+</div>
+<span class="font-title-md text-title-md text-on-surface mt-4 tracking-tight">Verdict</span>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 2: FOUR WAYS IT PROVES IT (12-Col Bento Grid) -->
+<section class="w-full flex flex-col mt-20">
+<div class="flex flex-col mb-12">
+<span class="font-stamp-badge text-receipt-mono-sm uppercase text-secondary tracking-widest mb-2 font-bold">[ FORENSIC CAPABILITIES ]</span>
+<h2 class="font-headline-xl text-headline-xl text-primary tracking-tight">
+        Four ways it proves it.
+      </h2>
+</div>
+<div class="grid grid-cols-12 gap-6 w-full">
+<!-- CARD A: Commit Contract (7 Columns, Heavy) -->
+<div class="col-span-12 lg:col-span-7 rounded-full bg-surface-container-low/90 backdrop-blur-xl shadow-2xl p-8 flex flex-col justify-between min-h-[520px] relative overflow-hidden" style="outline: 2px dashed rgba(34,197,139,0.45); outline-offset: -2px;">
+<!-- Recommendation Pin Tag -->
+<div class="flex items-center justify-between w-full mb-6 z-10">
+<div class="flex items-center gap-2">
+<span class="px-2.5 py-1 rounded bg-secondary-container text-on-secondary font-stamp-badge text-stamp-badge uppercase tracking-widest shadow-sm">
+              RECOMMENDATION
+            </span>
+<span class="font-receipt-mono-sm text-receipt-mono-sm text-on-surface-variant font-mono">CC-SPEC-0842</span>
+</div>
+<span class="font-receipt-mono-sm text-receipt-mono-sm text-secondary font-mono tracking-tight">Active Invariant</span>
+</div>
+<!-- Embedded Mini Physical Thermal Paper Slip -->
+<div class="w-full bg-paper text-ink rounded-lg p-6 paper-shadow relative my-auto sawtooth-top">
+<!-- Monospace Header & Barcode Lines -->
+<div class="flex items-center justify-between pb-4 border-b border-dashed border-[#C5BFB0] mb-5">
+<div>
+<div class="font-receipt-mono-sm text-[10px] uppercase font-bold tracking-widest text-[#7C8CA8]">PROOF ENGINE AUDIT RECEIPT</div>
+<div class="font-mono text-receipt-mono-sm font-semibold text-ink">TRANSITION-CONTRACT: API_ROUTE_V2</div>
+</div>
+<div class="w-20 h-5 barcode-lines opacity-80"></div>
+</div>
+<!-- State Mutation Flow: NOT SHOWN IN SCOPE -> PROVEN -->
+<div class="flex items-center justify-between gap-4 py-3 px-4 bg-[#F2EDE2] rounded mb-5">
+<div class="px-2.5 py-1 rounded bg-[#7C8CA8]/20 text-[#546480] font-stamp-badge text-stamp-badge tracking-wider font-bold">
+              NOT SHOWN IN SCOPE
+            </div>
+<div class="flex items-center text-[#22C58B]">
+<span class="font-mono text-xs font-bold mr-1 tracking-tighter">TRANSIT</span>
+<span class="material-symbols-outlined text-base">trending_flat</span>
+</div>
+<div class="px-2.5 py-1 bg-paper text-[#22C58B] rounded stamp-box font-stamp-badge text-stamp-badge tracking-widest font-bold">
+              PROVEN
+            </div>
+</div>
+<!-- Checklist Items -->
+<div class="flex flex-col gap-3 font-mono text-receipt-mono-sm">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#22C58B] text-lg" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="font-medium text-ink">Query reachable from route</span>
+<span class="ml-auto text-[10px] text-[#7C8CA8]">#884A</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#22C58B] text-lg" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="font-medium text-ink">Test asserts result</span>
+<span class="ml-auto text-[10px] text-[#7C8CA8]">#884B</span>
+</div>
+</div>
+</div>
+<!-- Typography Footer -->
+<div class="mt-6 z-10">
+<h3 class="font-title-md text-headline-lg text-primary tracking-tight mb-1">Commit Contract</h3>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-sm">
+            Predicts what your next commit proves.
+          </p>
+</div>
+</div>
+<!-- CARD B: Proof Map (5 Columns, Mosaic) -->
+<div class="col-span-12 lg:col-span-5 rounded-full bg-surface-container-low/90 backdrop-blur-xl shadow-2xl p-8 flex flex-col justify-between min-h-[520px]">
+<div class="flex items-center justify-between w-full mb-4">
+<span class="font-receipt-mono-sm text-receipt-mono-sm text-on-surface-variant font-mono">MAP::SURFACE_TREEMAP</span>
+<span class="px-2 py-0.5 rounded-full bg-surface-container-highest text-secondary text-[11px] font-mono">100% Coverage</span>
+</div>
+<!-- Dynamic Vibrant Mosaic (9 Tiles) -->
+<div class="grid grid-cols-4 grid-rows-3 gap-2.5 my-auto w-full aspect-[4/3] p-1">
+<!-- 2x2 Large PROVEN Tile -->
+<div class="col-span-2 row-span-2 rounded-xl bg-gradient-to-br from-[#22C58B] to-[#128a5e] p-3 flex flex-col justify-between text-on-secondary shadow-lg">
+<span class="font-mono text-xs font-bold uppercase tracking-wider">REST API</span>
+<div class="flex items-center justify-between">
+<span class="font-headline-lg text-base font-bold">14 Endpoints</span>
+<span class="font-stamp-badge text-[10px] bg-black/20 px-1.5 py-0.5 rounded">PROVEN</span>
+</div>
+</div>
+<!-- 1x2 Amber BASIC Tile -->
+<div class="col-span-1 row-span-2 rounded-xl bg-gradient-to-br from-[#F5A524] to-[#B3740E] p-3 flex flex-col justify-between text-[#261500] shadow-md">
+<span class="font-mono text-[11px] font-bold">Tests</span>
+<span class="font-stamp-badge text-[9px] uppercase font-bold">BASIC</span>
+</div>
+<!-- 1x1 Violet Tile with Pulsing Ring Glow -->
+<div class="col-span-1 row-span-1 rounded-xl bg-gradient-to-br from-[#8B7CFF] to-[#5844e6] p-2 flex flex-col justify-between text-white relative shadow-md">
+<div class="absolute -inset-1 rounded-xl border border-[#8B7CFF] animate-ping opacity-30 pointer-events-none"></div>
+<span class="font-mono text-[10px] font-semibold">Cache</span>
+<span class="font-stamp-badge text-[8px] uppercase self-end">UNCLEAR</span>
+</div>
+<!-- 1x1 Slate-Blue Tile -->
+<div class="col-span-1 row-span-1 rounded-xl bg-[#7C8CA8] p-2 flex flex-col justify-between text-[#111622] shadow-sm">
+<span class="font-mono text-[10px] font-semibold">Docker</span>
+<span class="font-stamp-badge text-[8px] uppercase self-end">NOT SHOWN</span>
+</div>
+<!-- 2x1 Emerald Tile -->
+<div class="col-span-2 row-span-1 rounded-xl bg-[#22C58B] p-2.5 flex items-center justify-between text-on-secondary shadow-md">
+<span class="font-mono text-xs font-bold">Postgres DB</span>
+<span class="font-stamp-badge text-[9px] bg-black/20 px-1 py-0.5 rounded">PROVEN</span>
+</div>
+<!-- 1x1 Attack Red Tile -->
+<div class="col-span-1 row-span-1 rounded-xl bg-[#FF5C4D] p-2 flex flex-col justify-between text-white shadow-md">
+<span class="font-mono text-[10px] font-bold">Auth Guards</span>
+<span class="font-stamp-badge text-[8px] uppercase self-end">REFUSED</span>
+</div>
+<!-- 1x1 Violet Tile -->
+<div class="col-span-1 row-span-1 rounded-xl bg-[#8B7CFF]/80 p-2 flex flex-col justify-between text-white">
+<span class="font-mono text-[10px]">Queue</span>
+<span class="font-mono text-[9px] self-end">ZKP</span>
+</div>
+</div>
+<div class="mt-6">
+<h3 class="font-title-md text-headline-lg text-primary tracking-tight mb-1">Proof Map</h3>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xs">
+            Your repo, colored by evidence.
+          </p>
+</div>
+</div>
+<!-- CARD C: Break-Me (5 Columns, Adversarial Testing) -->
+<div class="col-span-12 lg:col-span-5 rounded-full bg-surface-container-low/90 backdrop-blur-xl shadow-2xl p-8 flex flex-col justify-between min-h-[520px] relative overflow-hidden">
+<!-- Top Status Bar -->
+<div class="flex items-center justify-between w-full">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#FF5C4D] animate-ping"></span>
+<span class="font-mono text-receipt-mono-sm text-[#FF5C4D] font-bold uppercase tracking-wider">Adversarial Fuzz Active</span>
+</div>
+<span class="font-mono text-receipt-mono-sm text-outline">RUN #9104</span>
+</div>
+<!-- Giant High-Contrast Stats -->
+<div class="my-auto flex items-baseline justify-around w-full py-4">
+<div class="flex flex-col items-center">
+<span class="font-display-stat text-[100px] leading-none font-bold text-primary tracking-tight">10</span>
+<span class="font-mono text-receipt-mono-sm text-on-surface-variant uppercase tracking-wider mt-2">Attacks</span>
+</div>
+<div class="h-24 w-px bg-surface-container-highest"></div>
+<div class="flex flex-col items-center">
+<span class="font-display-stat text-[100px] leading-none font-bold text-secondary tracking-tight drop-shadow-[0_0_24px_rgba(34,197,139,0.4)]">0</span>
+<span class="font-mono text-receipt-mono-sm text-secondary uppercase tracking-wider mt-2 font-bold">Upgrades</span>
+</div>
+</div>
+<!-- 10 Red-Bordered Refusal Indicator Dots with Glow -->
+<div class="flex items-center justify-between px-2 py-3 bg-surface-container-lowest/80 rounded-lg">
+<div class="w-3.5 h-3.5 rounded-full bg-[#FF5C4D]/20 border border-[#FF5C4D] shadow-[0_0_8px_#FF5C4D]"></div>
+<div class="w-3.5 h-3.5 rounded-full bg-[#FF5C4D]/20 border border-[#FF5C4D] shadow-[0_0_8px_#FF5C4D]"></div>
+<div class="w-3.5 h-3.5 rounded-full bg-[#FF5C4D]/20 border border-[#FF5C4D] shadow-[0_0_8px_#FF5C4D]"></div>
+<div class="w-3.5 h-3.5 rounded-full bg-[#FF5C4D]/20 border border-[#FF5C4D] shadow-[0_0_8px_#FF5C4D]"></div>
+<div class="w-3.5 h-3.5 rounded-full bg-[#FF5C4D]/20 border border-[#FF5C4D] shadow-[0_0_8px_#FF5C4D]"></div>
+<div class="w-3.5 h-3.5 rounded-full bg-[#FF5C4D]/20 border border-[#FF5C4D] shadow-[0_0_8px_#FF5C4D]"></div>
+<div class="w-3.5 h-3.5 rounded-full bg-[#FF5C4D]/20 border border-[#FF5C4D] shadow-[0_0_8px_#FF5C4D]"></div>
+<div class="w-3.5 h-3.5 rounded-full bg-[#FF5C4D]/20 border border-[#FF5C4D] shadow-[0_0_8px_#FF5C4D]"></div>
+<div class="w-3.5 h-3.5 rounded-full bg-[#FF5C4D]/20 border border-[#FF5C4D] shadow-[0_0_8px_#FF5C4D]"></div>
+<div class="w-3.5 h-3.5 rounded-full bg-[#FF5C4D]/20 border border-[#FF5C4D] shadow-[0_0_8px_#FF5C4D]"></div>
+</div>
+<div class="mt-6">
+<h3 class="font-title-md text-headline-lg text-primary tracking-tight mb-1">Break-Me</h3>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xs">
+            Fool it. Watch the guard refuse.
+          </p>
+</div>
+</div>
+<!-- CARD D: Proof-linked Resume (7 Columns, Heavy) -->
+<div class="col-span-12 lg:col-span-7 rounded-full bg-surface-container-low/90 backdrop-blur-xl shadow-2xl p-8 flex flex-col justify-between min-h-[520px] relative overflow-hidden">
+<div class="flex items-center justify-between w-full mb-3 z-10">
+<span class="font-receipt-mono-sm text-receipt-mono-sm text-on-surface-variant font-mono">PORTFOLIO_PROOF_LEDGER</span>
+<span class="font-stamp-badge text-receipt-mono-sm text-secondary font-bold tracking-widest uppercase">Verified Candidate</span>
+</div>
+<!-- Warm Paper Mini-Resume Tilted +1deg -->
+<div class="w-full bg-paper text-ink rounded-lg p-6 paper-shadow transform rotate-[1deg] my-auto select-none">
+<div class="flex items-start justify-between pb-3 border-b border-[#D8D2C4] mb-4">
+<div>
+<div class="font-headline-lg text-lg font-bold text-ink tracking-tight">Staff Protocol Engineer</div>
+<div class="font-mono text-[11px] text-[#7C8CA8]">CRYPTO-IDENTITY: 0x9AF8...2C01 • REPO: core-engine</div>
+</div>
+<!-- Clean SVG QR Code -->
+<div class="w-12 h-12 bg-white p-1 rounded border border-[#D8D2C4] flex items-center justify-center">
+<svg class="w-10 h-10 text-ink" fill="currentColor" viewbox="0 0 24 24">
+<path d="M2 2h8v8H2V2zm2 2v4h4V4H4zm8-2h8v8h-8V2zm2 2v4h4V4h-4zM2 14h8v8H2v-8zm2 2v4h4v-4H4zm11 0h2v2h-2v-2zm-3-2h2v2h-2v-2zm4 4h2v2h-2v-2zm2-2h2v2h-2v-2zm0-2h2v2h-2v-2zm-2 4h-2v2h2v-2z"></path>
+</svg>
+</div>
+</div>
+<!-- Skill Line Entries with Forensic Status Indicators -->
+<div class="flex flex-col gap-2.5 font-mono text-receipt-mono-sm">
+<div class="flex items-center justify-between bg-white/70 px-3 py-1.5 rounded">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#22C58B]"></span>
+<span class="font-semibold text-ink">Distributed Consensus Raft</span>
+<sup class="text-[10px] text-secondary font-bold">#01</sup>
+</div>
+<span class="text-[10px] text-[#22C58B] font-bold">MERKLE_PROVED</span>
+</div>
+<div class="flex items-center justify-between bg-white/70 px-3 py-1.5 rounded">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#F5A524]"></span>
+<span class="font-semibold text-ink">Zero-Copy Memory Serialization</span>
+<sup class="text-[10px] text-[#B3740E] font-bold">#02</sup>
+</div>
+<span class="text-[10px] text-[#B3740E] font-bold">BENCH_VALID</span>
+</div>
+<div class="flex items-center justify-between bg-white/70 px-3 py-1.5 rounded">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#8B7CFF]"></span>
+<span class="font-semibold text-ink">Formal TLA+ Protocol Specifications</span>
+<sup class="text-[10px] text-[#5844e6] font-bold">#03</sup>
+</div>
+<span class="text-[10px] text-[#5844e6] font-bold">CHECK_STABLE</span>
+</div>
+</div>
+</div>
+<div class="mt-6 z-10">
+<h3 class="font-title-md text-headline-lg text-primary tracking-tight mb-1">Proof-linked Resume</h3>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-sm">
+            Every skill links to its proof.
+          </p>
+</div>
+</div>
+</div>
+</section>
+<!-- SECTION 3: NUMBERS STRIP (Full Width High-Impact Band) -->
+<section class="w-full relative my-32 py-16 overflow-hidden">
+<!-- Wide Soft Emerald Radial Glow Band Behind -->
+<div class="absolute inset-0 bg-gradient-to-r from-transparent via-secondary/10 to-transparent blur-3xl pointer-events-none"></div>
+<div class="absolute top-0 inset-x-0 h-px bg-surface-container-highest"></div>
+<div class="absolute bottom-0 inset-x-0 h-px bg-surface-container-highest"></div>
+<div class="max-w-[1300px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 relative z-10 px-4">
+<!-- Stat 1 -->
+<div class="flex flex-col items-center text-center lg:border-r border-surface-container-highest/60 pr-4">
+<span class="font-display-hero text-[120px] leading-none font-bold tracking-tight bg-gradient-to-b from-primary via-primary-fixed to-secondary bg-clip-text text-transparent">
+          14
+        </span>
+<span class="font-title-md text-headline-lg text-on-surface tracking-tight mt-3">
+          hollow signals refused
+        </span>
+</div>
+<!-- Stat 2 -->
+<div class="flex flex-col items-center text-center lg:border-r border-surface-container-highest/60 pr-4">
+<span class="font-display-hero text-[120px] leading-none font-bold tracking-tight text-primary">
+          3.4 s
+        </span>
+<span class="font-title-md text-headline-lg text-on-surface tracking-tight mt-3">
+          push to verdict
+        </span>
+</div>
+<!-- Stat 3 -->
+<div class="flex flex-col items-center text-center lg:border-r border-surface-container-highest/60 pr-4">
+<span class="font-display-hero text-[120px] leading-none font-bold tracking-tight text-primary">
+          22 of 22
+        </span>
+<span class="font-title-md text-headline-lg text-on-surface tracking-tight mt-3">
+          attacks refused
+        </span>
+</div>
+<!-- Stat 4 -->
+<div class="flex flex-col items-center text-center">
+<span class="font-display-hero text-[130px] leading-none font-bold tracking-tight text-secondary drop-shadow-[0_0_36px_rgba(34,197,139,0.55)]">
+          0
+        </span>
+<span class="font-title-md text-headline-lg text-secondary tracking-tight mt-3 font-semibold">
+          upgrades granted
+        </span>
+</div>
+</div>
+<!-- Footnote below -->
+<div class="w-full text-center mt-12 relative z-10">
+<span class="font-receipt-mono-sm text-body-md text-outline">
+        Sample numbers. Live ones come from real events.
+      </span>
+</div>
+</section>
+<!-- SECTION 4: FINAL CTA CARD (Giant Floating Paper Receipt Over Emerald Glow) -->
+<section class="w-full flex items-center justify-center relative py-20 overflow-hidden">
+<!-- Vivid Radial Emerald Underlay Glow -->
+<div class="absolute w-[800px] h-[550px] bg-secondary opacity-15 rounded-full blur-[140px] pointer-events-none"></div>
+<!-- Giant Physical Paper Receipt -->
+<div class="relative w-full max-w-[960px] min-h-[520px] bg-paper text-ink p-12 md:p-16 rounded-sm paper-shadow transform -rotate-1 sawtooth-top select-none flex flex-col justify-between" style="clip-path: polygon(0% 12px, 2.5% 0px, 5% 12px, 7.5% 0px, 10% 12px, 12.5% 0px, 15% 12px, 17.5% 0px, 20% 12px, 22.5% 0px, 25% 12px, 27.5% 0px, 30% 12px, 32.5% 0px, 35% 12px, 37.5% 0px, 40% 12px, 42.5% 0px, 45% 12px, 47.5% 0px, 50% 12px, 52.5% 0px, 55% 12px, 57.5% 0px, 60% 12px, 62.5% 0px, 65% 12px, 67.5% 0px, 70% 12px, 72.5% 0px, 75% 12px, 77.5% 0px, 80% 12px, 82.5% 0px, 85% 12px, 87.5% 0px, 90% 12px, 92.5% 0px, 95% 12px, 97.5% 0px, 100% 12px, 100% calc(100% - 12px), 97.5% 100%, 95% calc(100% - 12px), 92.5% 100%, 90% calc(100% - 12px), 87.5% 100%, 85% calc(100% - 12px), 82.5% 100%, 80% calc(100% - 12px), 77.5% 100%, 75% calc(100% - 12px), 72.5% 100%, 70% calc(100% - 12px), 67.5% 100%, 65% calc(100% - 12px), 62.5% 100%, 60% calc(100% - 12px), 57.5% 100%, 55% calc(100% - 12px), 52.5% 100%, 50% calc(100% - 12px), 47.5% 100%, 45% calc(100% - 12px), 42.5% 100%, 40% calc(100% - 12px), 37.5% 100%, 35% calc(100% - 12px), 32.5% 100%, 30% calc(100% - 12px), 27.5% 100%, 25% calc(100% - 12px), 22.5% 100%, 20% calc(100% - 12px), 17.5% 100%, 15% calc(100% - 12px), 12.5% 100%, 10% calc(100% - 12px), 7.5% 100%, 5% calc(100% - 12px), 2.5% 100%, 0% calc(100% - 12px));">
+<!-- Monospace Header Citations -->
+<div class="flex items-center justify-between pb-4 border-b-2 border-dashed border-[#D3CDBD] font-mono text-receipt-mono-sm">
+<div class="flex items-center gap-4">
+<span class="font-bold text-ink">PROOFSTACK IMMUTABLE DISPATCH</span>
+<span class="text-[#7C8CA8]">REF: 8092-LEDGER-V4</span>
+</div>
+<div class="w-32 h-6 barcode-lines opacity-90"></div>
+</div>
+<!-- Central Ink Headline (96px Scale) -->
+<div class="my-auto py-8">
+<h1 class="font-display-hero text-headline-xl md:text-[92px] leading-[0.95] font-bold text-ink tracking-tight max-w-2xl">
+          Don't claim it.<br/>Commit it.
+        </h1>
+</div>
+<!-- Action Row -->
+<div class="flex flex-wrap items-center gap-6 pt-6 border-t border-dashed border-[#D3CDBD]">
+<!-- Primary Action Button (64px Tall, Vibrant Emerald) -->
+<button class="h-16 px-10 rounded-full bg-secondary text-ink font-title-md text-title-md font-bold hover:scale-[1.02] active:scale-[0.98] transition-all shadow-lg flex items-center gap-3">
+<span>Analyze my repo</span>
+<span class="material-symbols-outlined font-bold">arrow_forward</span>
+</button>
+<!-- Secondary Text Link -->
+<a class="font-title-md text-title-md font-semibold text-ink/80 hover:text-ink flex items-center gap-1.5 transition-colors group" href="#how-we-judge">
+<span>See how we judge</span>
+<span class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform">east</span>
+</a>
+</div>
+<!-- Large Authentic Emerald 'PROVEN' Rubber Stamp Hanging Over Bottom Right -->
+<div class="absolute -bottom-8 -right-8 px-6 py-2.5 bg-paper text-[#22C58B] rounded-sm transform -rotate-6 shadow-2xl stamp-box select-none pointer-events-none mix-blend-multiply">
+<div class="font-stamp-badge text-[28px] leading-tight font-extrabold tracking-[0.25em] uppercase border-b-2 border-[#22C58B] pb-1">
+          PROVEN
+        </div>
+<div class="font-mono text-[9px] tracking-widest text-[#22C58B] text-center pt-0.5">
+          CRYPTOGRAPHIC VERDICT
+        </div>
+</div>
+</div>
+</section>
+<!-- SECTION 5: QUIET FOOTER (240px Tall Clean Terminal Bar) -->
+<footer class="w-full h-[240px] border-t border-surface-container-highest mt-20 flex flex-col justify-between py-12 px-6">
+<div class="max-w-[1360px] w-full mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
+<!-- Left: Wordmark & Core Mission Subtext -->
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center gap-2">
+<span class="font-headline-lg text-xl font-bold text-primary tracking-tight">ProofStack</span>
+<span class="font-mono text-[10px] text-secondary bg-surface-container-highest px-2 py-0.5 rounded">KERNEL 2.4</span>
+</div>
+<p class="font-body-md text-receipt-mono-sm text-outline">
+          A coach that predicts what your next commit will prove.
+        </p>
+</div>
+<!-- Center: Clean Navigation Links -->
+<nav class="flex items-center space-x-8 font-title-md text-receipt-mono-lg text-on-surface-variant">
+<a class="hover:text-primary transition-colors" href="#how-we-judge">How we judge</a>
+<a class="hover:text-primary transition-colors" href="#verify">Verify</a>
+<a class="hover:text-primary transition-colors" href="#limits">Limits</a>
+</nav>
+<!-- Right: Forensic Axiom -->
+<div class="flex items-center gap-2 text-right">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="font-receipt-mono-sm text-receipt-mono-sm text-on-surface-variant font-medium">
+          Evidence of use, not a ranking of people.
+        </span>
+</div>
+</div>
+<!-- Sub-hairline copyright note -->
+<div class="max-w-[1360px] w-full mx-auto flex items-center justify-between pt-4 border-t border-white/[0.03] text-outline font-mono text-[11px]">
+<span>© 2025 ProofStack Formal Systems. Deterministic Artifact Ledger.</span>
+<span>SHA-256::7e88b209a9...c4b1</span>
+</div>
+</footer>
+</div></main>
+</div>
+</body></html>

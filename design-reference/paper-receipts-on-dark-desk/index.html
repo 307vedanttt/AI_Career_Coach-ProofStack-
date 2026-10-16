@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1440, initial-scale=1.0">
+  <title>ProofStack — Evidence Coverage & Physical Proof Ledger</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font integration: Satoshi / General Sans style via Plus Jakarta Sans & Space Grotesk / JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            display: ['"Space Grotesk"', '"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            desk: '#0B0D10',
+            paper: '#FAF8F3',
+            ink: '#14171A',
+            proven: '#22C58B',
+            basic: '#F5A524',
+            notshown: '#7C8CA8',
+            unclear: '#8B7CFF',
+            refused: '#FF5C4D',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom SVG Turbulence Mask Filter for Authentic Ink Bleed Stamps */
+    .ink-bleed {
+      filter: url('#stamp-distortion');
+    }
+    
+    /* Zig-zag jagged torn top edge (12px teeth) */
+    .sawtooth-top {
+      clip-path: polygon(
+        0% 12px,
+        2.5% 0px, 5% 12px, 7.5% 0px, 10% 12px, 12.5% 0px, 15% 12px, 17.5% 0px, 20% 12px,
+        22.5% 0px, 25% 12px, 27.5% 0px, 30% 12px, 32.5% 0px, 35% 12px, 37.5% 0px, 40% 12px,
+        42.5% 0px, 45% 12px, 47.5% 0px, 50% 12px, 52.5% 0px, 55% 12px, 57.5% 0px, 60% 12px,
+        62.5% 0px, 65% 12px, 67.5% 0px, 70% 12px, 72.5% 0px, 75% 12px, 77.5% 0px, 80% 12px,
+        82.5% 0px, 85% 12px, 87.5% 0px, 90% 12px, 92.5% 0px, 95% 12px, 97.5% 0px, 100% 12px,
+        100% 100%,
+        0% 100%
+      );
+    }
+
+    /* Subtle paper texture simulation */
+    .paper-grain {
+      background-color: #FAF8F3;
+      background-image: radial-gradient(#14171a 0.75px, transparent 0.75px), radial-gradient(#14171a 0.75px, #FAF8F3 0.75px);
+      background-size: 30px 30px;
+      background-position: 0 0, 15px 15px;
+      background-blend-mode: multiply;
+    }
+
+    /* Desk Dot Grid (1px dots, 6% white, 24px spacing) */
+    .desk-grid {
+      background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1.25px, transparent 1.25px);
+      background-size: 24px 24px;
+    }
+
+    /* Barcode generator styling */
+    .barcode-lines {
+      background: repeating-linear-gradient(
+        to right,
+        #14171A 0px, #14171A 2px,
+        transparent 2px, transparent 4px,
+        #14171A 4px, #14171A 5px,
+        transparent 5px, transparent 8px,
+        #14171A 8px, #14171A 11px,
+        transparent 11px, transparent 13px,
+        #14171A 13px, #14171A 14px,
+        transparent 14px, transparent 18px,
+        #14171A 18px, #14171A 21px,
+        transparent 21px, transparent 24px
+      );
+    }
+
+    /* Glowing outlines */
+    .glow-emerald {
+      box-shadow: 0 0 28px rgba(34, 197, 139, 0.35);
+    }
+    .glow-amber {
+      box-shadow: 0 0 24px rgba(245, 165, 36, 0.35);
+    }
+    .glow-violet {
+      box-shadow: 0 0 24px rgba(139, 124, 255, 0.35);
+    }
+    .glow-slate {
+      box-shadow: 0 0 24px rgba(124, 140, 168, 0.35);
+    }
+    .glow-refused {
+      box-shadow: 0 0 16px rgba(255, 92, 77, 0.7);
+    }
+
+    /* Floating physical paper shadows */
+    .paper-shadow {
+      box-shadow: 0 35px 70px -15px rgba(0, 0, 0, 0.65), 0 15px 30px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    }
+
+    /* Fresh push pulse */
+    @keyframes pulse-ring {
+      0% { transform: scale(0.98); box-shadow: 0 0 0 0 rgba(34, 197, 139, 0.7); }
+      70% { transform: scale(1.02); box-shadow: 0 0 0 14px rgba(34, 197, 139, 0); }
+      100% { transform: scale(0.98); box-shadow: 0 0 0 0 rgba(34, 197, 139, 0); }
+    }
+    .active-push-pulse {
+      animation: pulse-ring 2.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    /* Stamp double border geometry */
+    .stamp-box {
+      border: 3.5px solid currentColor;
+      box-shadow: 0 0 0 3px #FAF8F3, 0 0 0 4.5px currentColor;
+    }
+  </style>
+</head>
+<body class="bg-desk text-[#F4F2EC] font-sans antialiased selection:bg-emerald-500/30 selection:text-white min-h-screen relative overflow-x-hidden">
+
+  <!-- SVG Filter for Stamp Ink-Bleed Texture -->
+  <svg class="hidden" width="0" height="0">
+    <filter id="stamp-distortion" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="3" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.5" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </svg>
+
+  <!-- BACKGROUND: Ambient Dark Desk Grid & Giant Radial Glows -->
+  <div class="fixed inset-0 pointer-events-none z-0 desk-grid opacity-80"></div>
+  
+  <!-- Radial Glow Top-Left (Emerald #22C58B @ 12%) -->
+  <div class="fixed -top-40 -left-40 w-[850px] h-[850px] bg-[#22C58B] opacity-12 rounded-full blur-[140px] pointer-events-none z-0"></div>
+  
+  <!-- Radial Glow Bottom-Right (Violet #8B7CFF @ 10%) -->
+  <div class="fixed bottom-0 right-0 w-[900px] h-[900px] bg-[#8B7CFF] opacity-10 rounded-full blur-[160px] pointer-events-none z-0"></div>
+
+  <!-- Subtle Edge Vignette -->
+  <div class="fixed inset-0 pointer-events-none z-0 shadow-[inset_0_0_180px_rgba(0,0,0,0.85)]"></div>
+
+  <!-- ==================== LEFT RAIL (80px, Glass Dark) ==================== -->
+  <aside class="fixed top-0 left-0 bottom-0 w-[80px] bg-[#0c0e12]/85 backdrop-blur-xl border-r border-white/5 z-50 flex flex-col items-center py-6 select-none">
+    <!-- Brand Logo Mark -->
+    <a href="#" class="mb-10 w-11 h-11 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center hover:border-emerald-500/50 transition-colors group">
+      <svg class="w-6 h-6 text-white group-hover:text-[#22C58B] transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M4 6h16M4 12h16M4 18h10" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="15" y="14" width="6" height="6" rx="1.5" stroke="currentColor" fill="none" />
+      </svg>
+    </a>
+
+    <!-- Nav Items: Start, Requirements, Dashboard (active), Contracts, Break-Me, Resume, Verify -->
+    <nav class="flex-1 flex flex-col space-y-7 items-center w-full">
+      <!-- Start -->
+      <a href="#" class="group flex flex-col items-center justify-center w-full text-[#9AA3AE] hover:text-white transition-colors">
+        <div class="w-10 h-10 flex items-center justify-center rounded-lg group-hover:bg-white/5 transition-all">
+          <svg class="w-5 h-5 stroke-[1.8]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="text-[11px] font-medium tracking-tight mt-1 opacity-70 group-hover:opacity-100">Start</span>
+      </a>
+
+      <!-- Requirements -->
+      <a href="#" class="group flex flex-col items-center justify-center w-full text-[#9AA3AE] hover:text-white transition-colors">
+        <div class="w-10 h-10 flex items-center justify-center rounded-lg group-hover:bg-white/5 transition-all">
+          <svg class="w-5 h-5 stroke-[1.8]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M9 11l3 3L22 4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="text-[11px] font-medium tracking-tight mt-1 opacity-70 group-hover:opacity-100">Reqs</span>
+      </a>
+
+      <!-- Dashboard (ACTIVE) -->
+      <a href="#" class="group relative flex flex-col items-center justify-center w-full text-white">
+        <!-- Emerald Glow Bar on the Left Edge -->
+        <span class="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-9 bg-[#22C58B] rounded-r-full shadow-[0_0_12px_#22C58B]"></span>
+        <div class="w-10 h-10 flex items-center justify-center rounded-xl bg-white/10 text-[#22C58B] shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]">
+          <svg class="w-5 h-5 stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <rect x="3" y="3" width="7" height="9" rx="1.5"/>
+            <rect x="14" y="3" width="7" height="5" rx="1.5"/>
+            <rect x="14" y="12" width="7" height="9" rx="1.5"/>
+            <rect x="3" y="16" width="7" height="5" rx="1.5"/>
+          </svg>
+        </div>
+        <span class="text-[11px] font-semibold text-[#22C58B] tracking-tight mt-1">Dash</span>
+      </a>
+
+      <!-- Contracts -->
+      <a href="#" class="group flex flex-col items-center justify-center w-full text-[#9AA3AE] hover:text-white transition-colors">
+        <div class="w-10 h-10 flex items-center justify-center rounded-lg group-hover:bg-white/5 transition-all">
+          <svg class="w-5 h-5 stroke-[1.8]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke-linecap="round" stroke-linejoin="round"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+        </div>
+        <span class="text-[11px] font-medium tracking-tight mt-1 opacity-70 group-hover:opacity-100">Contracts</span>
+      </a>
+
+      <!-- Break-Me -->
+      <a href="#" class="group flex flex-col items-center justify-center w-full text-[#9AA3AE] hover:text-white transition-colors">
+        <div class="w-10 h-10 flex items-center justify-center rounded-lg group-hover:bg-white/5 transition-all">
+          <svg class="w-5 h-5 stroke-[1.8]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="text-[11px] font-medium tracking-tight mt-1 opacity-70 group-hover:opacity-100">Break-Me</span>
+      </a>
+
+      <!-- Resume -->
+      <a href="#" class="group flex flex-col items-center justify-center w-full text-[#9AA3AE] hover:text-white transition-colors">
+        <div class="w-10 h-10 flex items-center justify-center rounded-lg group-hover:bg-white/5 transition-all">
+          <svg class="w-5 h-5 stroke-[1.8]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <circle cx="12" cy="7" r="4"/>
+            <path d="M5.5 21v-2a6.5 6.5 0 0113 0v2"/>
+          </svg>
+        </div>
+        <span class="text-[11px] font-medium tracking-tight mt-1 opacity-70 group-hover:opacity-100">Resume</span>
+      </a>
+
+      <!-- Verify -->
+      <a href="#" class="group flex flex-col items-center justify-center w-full text-[#9AA3AE] hover:text-white transition-colors">
+        <div class="w-10 h-10 flex items-center justify-center rounded-lg group-hover:bg-white/5 transition-all">
+          <svg class="w-5 h-5 stroke-[1.8]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <circle cx="12" cy="11" r="2.5"/>
+          </svg>
+        </div>
+        <span class="text-[11px] font-medium tracking-tight mt-1 opacity-70 group-hover:opacity-100">Verify</span>
+      </a>
+    </nav>
+
+    <!-- Bottom User Avatar -->
+    <div class="mt-auto pt-4 flex flex-col items-center">
+      <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-[#22C58B] to-[#8B7CFF] p-[1.5px] cursor-pointer">
+        <div class="w-full h-full bg-[#14171A] rounded-full flex items-center justify-center text-xs font-semibold text-white">
+          RN
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==================== MAIN CONTENT WRAPPER ==================== -->
+  <div class="pl-[80px] w-full min-h-screen relative z-10 flex flex-col">
+
+    <!-- ==================== TOP BAR (56px, Translucent) ==================== -->
+    <header class="h-[56px] px-10 border-b border-white/[0.07] bg-[#0B0D10]/80 backdrop-blur-md flex items-center justify-between sticky top-0 z-40">
+      <!-- Left: Wordmark -->
+      <div class="flex items-center space-x-3">
+        <span class="font-display font-bold text-[20px] tracking-tight text-white flex items-center gap-2">
+          ProofStack
+          <span class="text-[11px] font-mono font-medium px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-[#9AA3AE] tracking-normal uppercase">
+            v2.4
+          </span>
+        </span>
+      </div>
+
+      <!-- Right: Four Live Health Dots + Red Refused Counter Pill -->
+      <div class="flex items-center space-x-8">
+        <!-- Live Health Dots -->
+        <div class="flex items-center space-x-6 text-[14px] text-[#9AA3AE]">
+          <!-- GitHub -->
+          <div class="flex items-center space-x-2">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22C58B] opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-[#22C58B]"></span>
+            </span>
+            <span class="font-medium text-white/90">GitHub</span>
+          </div>
+
+          <!-- Webhook -->
+          <div class="flex items-center space-x-2">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#22C58B] opacity-60"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-[#22C58B]"></span>
+            </span>
+            <span class="font-medium text-white/90">Webhook</span>
+          </div>
+
+          <!-- Model -->
+          <div class="flex items-center space-x-2">
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-[#22C58B]"></span>
+            <span class="font-medium text-white/90">Model</span>
+          </div>
+
+          <!-- Rate Limit -->
+          <div class="flex items-center space-x-2">
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-[#22C58B]"></span>
+            <span class="font-medium text-white/90">Rate limit</span>
+          </div>
+        </div>
+
+        <!-- Hollow Signals Refused (Red #FF5C4D glow pill) -->
+        <div class="flex items-center space-x-2.5 px-3.5 py-1.5 rounded-full bg-[#FF5C4D]/10 border border-[#FF5C4D]/30 backdrop-blur-sm">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF5C4D] opacity-80"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-[#FF5C4D]"></span>
+          </span>
+          <span class="text-[13px] font-medium text-[#F4F2EC]">Hollow signals refused</span>
+          <span class="text-[14px] font-bold text-[#FF5C4D] glow-refused px-1.5 py-0.2 rounded font-mono">14</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ==================== BODY CONTENT CONTAINER ==================== -->
+    <main class="max-w-[1360px] w-full mx-auto px-8 pt-10 pb-28 flex flex-col">
+
+      <!-- ==================== SECTION 1: HERO (THE ONE FOCAL POINT) ==================== -->
+      <section class="mb-24">
+        <!-- Eyebrow -->
+        <div class="mb-6 flex items-center space-x-3">
+          <div class="inline-flex items-center space-x-2.5 px-3 py-1 rounded-full bg-white/[0.04] border border-white/[0.08] text-[15px] text-[#9AA3AE]">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#22C58B]"></span>
+            <span class="text-white font-medium">Rohan</span>
+            <span>·</span>
+            <span>Backend Engineer Intern</span>
+            <span>·</span>
+            <span class="text-white font-medium">Northwind Labs</span>
+          </div>
+          <span class="text-xs text-[#9AA3AE]/60 font-mono">Target scope: rohan/shop-api & rohan/notes-cli</span>
+        </div>
+
+        <!-- Hero Content Grid: Left Metrics & CTA | Right Proof Map Mosaic -->
+        <div class="grid grid-cols-12 gap-8 items-start">
+          
+          <!-- Left Column (5 Cols): Giant 58%, Subtitles, Stat Blocks, CTA -->
+          <div class="col-span-5 flex flex-col justify-between pt-2">
+            <div>
+              <!-- Giant 58% Stat -->
+              <div class="relative inline-block mb-2">
+                <!-- Emerald glow behind number -->
+                <div class="absolute -inset-4 bg-[#22C58B]/20 blur-3xl rounded-full pointer-events-none"></div>
+                <h1 class="relative text-[140px] font-extrabold leading-[0.9] tracking-[-0.04em] text-transparent bg-clip-text bg-gradient-to-br from-white via-[#F4F2EC] to-[#22C58B] select-none">
+                  58%
+                </h1>
+              </div>
+
+              <!-- Stat Title & Details -->
+              <h2 class="text-[32px] font-bold tracking-tight text-white mt-1 mb-1">
+                Evidence coverage
+              </h2>
+              <p class="text-[18px] text-[#9AA3AE] font-normal mb-8">
+                4 of 7 requirements assessed against repo commits
+              </p>
+
+              <!-- Four Big Glass Stat Blocks in a Row -->
+              <div class="grid grid-cols-4 gap-3 mb-10">
+                <!-- Proven -->
+                <div class="relative bg-white/[0.03] backdrop-blur-md border border-white/[0.08] rounded-2xl p-4 pt-3 overflow-hidden shadow-lg">
+                  <div class="absolute top-0 left-0 right-0 h-1 bg-[#22C58B] shadow-[0_0_12px_#22C58B]"></div>
+                  <div class="text-[34px] font-bold text-white tracking-tight leading-none mb-1">3</div>
+                  <div class="text-[13px] font-semibold text-[#22C58B] tracking-wide uppercase">Proven</div>
+                </div>
+
+                <!-- Basic -->
+                <div class="relative bg-white/[0.03] backdrop-blur-md border border-white/[0.08] rounded-2xl p-4 pt-3 overflow-hidden shadow-lg">
+                  <div class="absolute top-0 left-0 right-0 h-1 bg-[#F5A524] shadow-[0_0_12px_#F5A524]"></div>
+                  <div class="text-[34px] font-bold text-white tracking-tight leading-none mb-1">1</div>
+                  <div class="text-[13px] font-semibold text-[#F5A524] tracking-wide uppercase">Basic</div>
+                </div>
+
+                <!-- Unclear -->
+                <div class="relative bg-white/[0.03] backdrop-blur-md border border-white/[0.08] rounded-2xl p-4 pt-3 overflow-hidden shadow-lg">
+                  <div class="absolute top-0 left-0 right-0 h-1 bg-[#8B7CFF] shadow-[0_0_12px_#8B7CFF]"></div>
+                  <div class="text-[34px] font-bold text-white tracking-tight leading-none mb-1">2</div>
+                  <div class="text-[13px] font-semibold text-[#8B7CFF] tracking-wide uppercase">Unclear</div>
+                </div>
+
+                <!-- Not Shown -->
+                <div class="relative bg-white/[0.03] backdrop-blur-md border border-white/[0.08] rounded-2xl p-4 pt-3 overflow-hidden shadow-lg">
+                  <div class="absolute top-0 left-0 right-0 h-1 bg-[#7C8CA8] shadow-[0_0_12px_#7C8CA8]"></div>
+                  <div class="text-[34px] font-bold text-white tracking-tight leading-none mb-1">1</div>
+                  <div class="text-[13px] font-semibold text-[#7C8CA8] tracking-wide uppercase">Not shown</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Single Primary CTA + Secondary Link -->
+            <div class="flex items-center space-x-6">
+              <!-- Primary Emerald Button (The ONLY primary button) -->
+              <button class="h-[56px] px-8 rounded-[14px] bg-[#22C58B] hover:bg-[#1eb37d] text-[#0B0D10] font-bold text-[17px] tracking-tight transition-all duration-200 shadow-[0_0_28px_rgba(34,197,139,0.45)] hover:shadow-[0_0_36px_rgba(34,197,139,0.65)] hover:scale-[1.01] active:scale-[0.99] flex items-center space-x-3 cursor-pointer">
+                <span>Commit contract prediction</span>
+                <svg class="w-5 h-5 stroke-[2.5]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M5 12h14M12 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+
+              <!-- Secondary Text Link -->
+              <a href="#" class="text-[16px] font-medium text-[#9AA3AE] hover:text-white transition-colors flex items-center space-x-1.5 group">
+                <svg class="w-4 h-4 text-[#9AA3AE] group-hover:text-white transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                <span>Export receipt</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Right Column (7 Cols): SIGNATURE ELEMENT 4: PROOF MAP (Treemap Mosaic) -->
+          <div class="col-span-7 pl-4">
+            <div class="bg-white/[0.02] border border-white/[0.07] rounded-3xl p-6 backdrop-blur-xl relative">
+              <!-- Top bar for Proof Map -->
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center space-x-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-[#22C58B]"></span>
+                  <h3 class="text-[16px] font-bold text-white tracking-tight">Proof Map Treemap</h3>
+                  <span class="text-xs text-[#9AA3AE] font-mono">11 AST components mapped</span>
+                </div>
+                <div class="flex items-center space-x-2 text-[12px] text-[#22C58B] bg-[#22C58B]/10 px-2.5 py-1 rounded-full border border-[#22C58B]/20">
+                  <span class="w-1.5 h-1.5 rounded-full bg-[#22C58B] animate-pulse"></span>
+                  <span class="font-mono">Live AST sync</span>
+                </div>
+              </div>
+
+              <!-- Treemap Tile Grid (Stained glass aesthetic: vivid gradients, rounded 14px, 6px gaps) -->
+              <div class="grid grid-cols-6 grid-rows-3 gap-[6px] h-[320px] w-full">
+                
+                <!-- Tile 1: REST API (Big 2x2, Emerald) -->
+                <div class="col-span-3 row-span-2 rounded-[14px] p-4 bg-gradient-to-br from-[#1A9E6F] via-[#22C58B] to-[#0E5E40] border border-emerald-300/30 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)] flex flex-col justify-between group hover:scale-[1.01] transition-transform">
+                  <div class="flex justify-between items-start">
+                    <span class="text-white font-bold text-[17px] tracking-tight">REST API Routes</span>
+                    <span class="text-[11px] font-mono bg-black/30 px-2 py-0.5 rounded text-emerald-100">420 SLOC</span>
+                  </div>
+                  <div>
+                    <span class="text-[12px] font-mono text-emerald-100/90 block">api/routes/orders.py</span>
+                    <span class="text-[11px] font-semibold uppercase tracking-wider text-black/70 bg-white/70 px-1.5 py-0.2 rounded mt-1 inline-block">Proven</span>
+                  </div>
+                </div>
+
+                <!-- Tile 2: Testing Suite (Emerald, pulsing for fresh push) -->
+                <div class="col-span-3 row-span-1 rounded-[14px] p-3.5 bg-gradient-to-br from-[#22C58B] to-[#127A52] border border-emerald-300/40 active-push-pulse flex flex-col justify-between shadow-[inset_0_1px_1px_rgba(255,255,255,0.5)]">
+                  <div class="flex justify-between items-start">
+                    <span class="text-white font-bold text-[15px] tracking-tight">Automated Tests</span>
+                    <span class="text-[10px] font-mono bg-black/30 px-1.5 py-0.5 rounded text-emerald-100">8 Units</span>
+                  </div>
+                  <div class="flex justify-between items-end">
+                    <span class="text-[12px] font-mono text-emerald-100/90">tests/test_orders.py</span>
+                    <span class="text-[10px] font-mono text-emerald-950 bg-emerald-200 px-1.5 py-0.5 rounded font-bold">FRESH PUSH</span>
+                  </div>
+                </div>
+
+                <!-- Tile 3: Python Async (Emerald) -->
+                <div class="col-span-2 row-span-1 rounded-[14px] p-3 bg-gradient-to-br from-[#1DB880] to-[#0F6846] border border-emerald-300/20 flex flex-col justify-between">
+                  <span class="text-white font-bold text-[14px] leading-tight">Async Engine</span>
+                  <span class="text-[11px] font-mono text-emerald-100/80 truncate">runtime/async.py</span>
+                </div>
+
+                <!-- Tile 4: Docker Container (Amber) -->
+                <div class="col-span-1 row-span-1 rounded-[14px] p-3 bg-gradient-to-br from-[#F5A524] to-[#B8710B] border border-amber-300/30 flex flex-col justify-between shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)]">
+                  <span class="text-white font-bold text-[14px] leading-tight">Docker</span>
+                  <span class="text-[11px] font-mono text-amber-100/90">Dockerfile</span>
+                </div>
+
+                <!-- Tile 5: Caching Client (Violet) -->
+                <div class="col-span-2 row-span-1 rounded-[14px] p-3 bg-gradient-to-br from-[#8B7CFF] to-[#5545DC] border border-violet-300/30 flex flex-col justify-between shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)]">
+                  <div class="flex justify-between">
+                    <span class="text-white font-bold text-[14px]">Redis Client</span>
+                    <span class="text-[10px] font-mono bg-black/30 px-1 rounded text-violet-100">0 IO</span>
+                  </div>
+                  <span class="text-[11px] font-mono text-violet-100/80">cache.py</span>
+                </div>
+
+                <!-- Tile 6: CI/CD Pipeline (Violet) -->
+                <div class="col-span-2 row-span-1 rounded-[14px] p-3 bg-gradient-to-br from-[#7766F0] to-[#4335BF] border border-violet-300/30 flex flex-col justify-between">
+                  <span class="text-white font-bold text-[14px]">CI Actions</span>
+                  <span class="text-[11px] font-mono text-violet-100/80">.github/ci.yml</span>
+                </div>
+
+                <!-- Tile 7: SQL Persistence (Slate-Blue) -->
+                <div class="col-span-2 row-span-1 rounded-[14px] p-3 bg-gradient-to-br from-[#7C8CA8] to-[#4B586E] border border-slate-300/30 flex flex-col justify-between shadow-[inset_0_1px_1px_rgba(255,255,255,0.4)]">
+                  <div class="flex justify-between">
+                    <span class="text-white font-bold text-[14px]">SQL Engine</span>
+                    <span class="text-[10px] font-mono bg-black/40 px-1 rounded text-slate-200">Missing</span>
+                  </div>
+                  <span class="text-[11px] font-mono text-slate-200/80">db/queries.py</span>
+                </div>
+
+              </div>
+
+              <!-- Treemap Legend Below with Stamp Icons -->
+              <div class="mt-4 pt-4 border-t border-white/[0.06] flex items-center justify-between text-[13px] text-[#9AA3AE]">
+                <!-- Proven -->
+                <div class="flex items-center space-x-1.5">
+                  <span class="w-3.5 h-3.5 rounded-full bg-[#22C58B] flex items-center justify-center text-[9px] text-[#0B0D10] font-bold">✓</span>
+                  <span class="font-medium text-white">Proven (3)</span>
+                </div>
+                <!-- Basic -->
+                <div class="flex items-center space-x-1.5">
+                  <span class="w-3.5 h-3.5 rounded-full bg-[#F5A524] flex items-center justify-center text-[9px] text-[#0B0D10] font-bold">◐</span>
+                  <span class="font-medium text-white">Basic (1)</span>
+                </div>
+                <!-- Unclear -->
+                <div class="flex items-center space-x-1.5">
+                  <span class="w-3.5 h-3.5 rounded-full bg-[#8B7CFF] flex items-center justify-center text-[9px] text-[#0B0D10] font-bold">?</span>
+                  <span class="font-medium text-white">Unclear (2)</span>
+                </div>
+                <!-- Not Shown In Scope -->
+                <div class="flex items-center space-x-1.5">
+                  <span class="w-3.5 h-3.5 rounded-full bg-[#7C8CA8] flex items-center justify-center text-[9px] text-[#0B0D10] font-bold">⊘</span>
+                  <span class="font-medium text-white">Not shown in scope (1)</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!-- ==================== SECTION 2: RECEIPTS ("WHAT THE CODE PROVES") ==================== -->
+      <!-- Generous Whitespace: at least 96px separation -->
+      <section class="mb-28 pt-8">
+        
+        <div class="flex items-end justify-between mb-12">
+          <div>
+            <h2 class="text-[48px] font-extrabold tracking-[-0.03em] text-white">
+              What the code proves
+            </h2>
+            <p class="text-[18px] text-[#9AA3AE] mt-1 font-normal">
+              Direct physical receipts extracted deterministically from commit tree hashes
+            </p>
+          </div>
+          <div class="text-[14px] text-[#9AA3AE] font-mono">
+            Audit serials: REC-0042 → REC-0046
+          </div>
+        </div>
+
+        <!-- Four Large Floating Paper Receipts (300x420px approx) + Peeking 5th Receipt -->
+        <div class="relative flex items-start space-x-6 pb-8 overflow-visible">
+          
+          <!-- ==================== RECEIPT 1: REST API (PROVEN) ==================== -->
+          <!-- Rotated -1.5deg, stagger 0px -->
+          <div class="w-[290px] min-h-[420px] rounded-b-[4px] paper-grain text-ink paper-shadow relative flex flex-col justify-between p-6 pt-5 transition-transform hover:-translate-y-2 duration-300 sawtooth-top"
+               style="transform: rotate(-1.5deg); margin-top: 0px;">
+            
+            <!-- Perforated top margin spacing -->
+            <div class="pt-2">
+              <!-- Top Row: Serial & Barcode Strip -->
+              <div class="flex justify-between items-center mb-4">
+                <span class="font-mono text-[12px] font-semibold text-ink/70 tracking-wider">REC-0042</span>
+                <div class="w-[90px] h-[22px] barcode-lines opacity-85"></div>
+              </div>
+
+              <!-- Requirement Title -->
+              <h3 class="text-[24px] font-bold tracking-tight text-ink mb-2">
+                REST API
+              </h3>
+
+              <!-- ONE Evidence Line (Max 8 words) -->
+              <p class="text-[17px] font-medium text-ink/90 leading-snug mb-4">
+                4 routes verified with status codes
+              </p>
+
+              <!-- Tiny File Path in 12px mono -->
+              <div class="bg-black/[0.04] p-2.5 rounded border border-black/[0.06] mb-6">
+                <span class="text-[12px] font-mono text-ink/80 block break-all">
+                  api/routes/orders.py:44
+                </span>
+                <span class="text-[11px] text-ink/50 font-mono mt-1 block">
+                  sha: 9f3c2ab
+                </span>
+              </div>
+            </div>
+
+            <!-- Tear-line divider & Footer -->
+            <div>
+              <div class="border-t-2 border-dashed border-ink/20 pt-3 mb-2 flex justify-between text-[11px] font-mono text-ink/60">
+                <span>AUDIT SEALED</span>
+                <span>2024-03-29</span>
+              </div>
+            </div>
+
+            <!-- SIGNATURE ELEMENT 2: RUBBER STAMP (PROVEN) -->
+            <!-- Large ~150x56px, rotated -5deg, double border, ink-bleed SVG mask, mix-blend multiply, overlaps corner -->
+            <div class="absolute -bottom-4 -right-4 pointer-events-none select-none ink-bleed"
+                 style="transform: rotate(-5deg); mix-blend-mode: multiply;">
+              <div class="w-[155px] h-[58px] bg-paper text-[#1F8A5B] stamp-box rounded flex items-center justify-center space-x-2 px-3 shadow-sm opacity-90">
+                <!-- Check-Circle Icon -->
+                <svg class="w-6 h-6 stroke-[3] text-[#1F8A5B]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke-linecap="round" stroke-linejoin="round"/>
+                  <polyline points="22 4 12 14.01 9 11.01" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span class="font-display font-extrabold text-[20px] tracking-wider uppercase text-[#1F8A5B]">
+                  PROVEN
+                </span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ==================== RECEIPT 2: TESTING (PROVEN) ==================== -->
+          <!-- Rotated 1.0deg, stagger +18px -->
+          <div class="w-[290px] min-h-[420px] rounded-b-[4px] paper-grain text-ink paper-shadow relative flex flex-col justify-between p-6 pt-5 transition-transform hover:-translate-y-2 duration-300 sawtooth-top"
+               style="transform: rotate(1deg); margin-top: 18px;">
+            
+            <div class="pt-2">
+              <div class="flex justify-between items-center mb-4">
+                <span class="font-mono text-[12px] font-semibold text-ink/70 tracking-wider">REC-0043</span>
+                <div class="w-[90px] h-[22px] barcode-lines opacity-85"></div>
+              </div>
+
+              <h3 class="text-[24px] font-bold tracking-tight text-ink mb-2">
+                Testing
+              </h3>
+
+              <!-- ONE Evidence Line (Max 8 words) -->
+              <p class="text-[17px] font-medium text-ink/90 leading-snug mb-4">
+                8 tests, real assertions passed
+              </p>
+
+              <div class="bg-black/[0.04] p-2.5 rounded border border-black/[0.06] mb-6">
+                <span class="text-[12px] font-mono text-ink/80 block break-all">
+                  tests/test_orders.py:12
+                </span>
+                <span class="text-[11px] text-ink/50 font-mono mt-1 block">
+                  pytest runner // 0.42s
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <div class="border-t-2 border-dashed border-ink/20 pt-3 mb-2 flex justify-between text-[11px] font-mono text-ink/60">
+                <span>AUDIT SEALED</span>
+                <span>2024-03-29</span>
+              </div>
+            </div>
+
+            <!-- RUBBER STAMP: PROVEN -->
+            <div class="absolute -bottom-4 -right-4 pointer-events-none select-none ink-bleed"
+                 style="transform: rotate(-5deg); mix-blend-mode: multiply;">
+              <div class="w-[155px] h-[58px] bg-paper text-[#1F8A5B] stamp-box rounded flex items-center justify-center space-x-2 px-3 shadow-sm opacity-90">
+                <svg class="w-6 h-6 stroke-[3] text-[#1F8A5B]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" stroke-linecap="round" stroke-linejoin="round"/>
+                  <polyline points="22 4 12 14.01 9 11.01" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <span class="font-display font-extrabold text-[20px] tracking-wider uppercase text-[#1F8A5B]">
+                  PROVEN
+                </span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ==================== RECEIPT 3: DOCKER (BASIC) ==================== -->
+          <!-- Rotated -0.8deg, stagger +10px -->
+          <div class="w-[290px] min-h-[420px] rounded-b-[4px] paper-grain text-ink paper-shadow relative flex flex-col justify-between p-6 pt-5 transition-transform hover:-translate-y-2 duration-300 sawtooth-top"
+               style="transform: rotate(-0.8deg); margin-top: 10px;">
+            
+            <div class="pt-2">
+              <div class="flex justify-between items-center mb-4">
+                <span class="font-mono text-[12px] font-semibold text-ink/70 tracking-wider">REC-0044</span>
+                <div class="w-[90px] h-[22px] barcode-lines opacity-85"></div>
+              </div>
+
+              <h3 class="text-[24px] font-bold tracking-tight text-ink mb-2">
+                Docker
+              </h3>
+
+              <!-- ONE Evidence Line (Max 8 words) -->
+              <p class="text-[17px] font-medium text-ink/90 leading-snug mb-4">
+                Single-stage build only
+              </p>
+
+              <div class="bg-black/[0.04] p-2.5 rounded border border-black/[0.06] mb-6">
+                <span class="text-[12px] font-mono text-ink/80 block break-all">
+                  Dockerfile:1-18
+                </span>
+                <span class="text-[11px] text-ink/50 font-mono mt-1 block">
+                  python:3.11-slim base
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <div class="border-t-2 border-dashed border-ink/20 pt-3 mb-2 flex justify-between text-[11px] font-mono text-ink/60">
+                <span>AUDIT SEALED</span>
+                <span>2024-03-29</span>
+              </div>
+            </div>
+
+            <!-- RUBBER STAMP: BASIC (Amber, Half-Circle Icon) -->
+            <div class="absolute -bottom-4 -right-4 pointer-events-none select-none ink-bleed"
+                 style="transform: rotate(-5deg); mix-blend-mode: multiply;">
+              <div class="w-[155px] h-[58px] bg-paper text-[#B7791F] stamp-box rounded flex items-center justify-center space-x-2 px-3 shadow-sm opacity-90">
+                <!-- Half-Circle Icon -->
+                <svg class="w-6 h-6 text-[#B7791F]" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2a10 10 0 0 0 0 20V2z"/>
+                  <circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+                </svg>
+                <span class="font-display font-extrabold text-[20px] tracking-wider uppercase text-[#B7791F]">
+                  BASIC
+                </span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ==================== RECEIPT 4: SQL (NOT SHOWN IN SCOPE) ==================== -->
+          <!-- Rotated 1.6deg, stagger +24px -->
+          <div class="w-[290px] min-h-[420px] rounded-b-[4px] paper-grain text-ink paper-shadow relative flex flex-col justify-between p-6 pt-5 transition-transform hover:-translate-y-2 duration-300 sawtooth-top"
+               style="transform: rotate(1.6deg); margin-top: 24px;">
+            
+            <div class="pt-2">
+              <div class="flex justify-between items-center mb-4">
+                <span class="font-mono text-[12px] font-semibold text-ink/70 tracking-wider">REC-0045</span>
+                <div class="w-[90px] h-[22px] barcode-lines opacity-85"></div>
+              </div>
+
+              <h3 class="text-[24px] font-bold tracking-tight text-ink mb-2">
+                SQL Persistence
+              </h3>
+
+              <!-- ONE Evidence Line (Max 8 words) -->
+              <p class="text-[17px] font-medium text-ink/90 leading-snug mb-4">
+                No queries found in scope
+              </p>
+
+              <div class="bg-black/[0.04] p-2.5 rounded border border-black/[0.06] mb-6">
+                <span class="text-[12px] font-mono text-ink/80 block break-all">
+                  db/
+                </span>
+                <span class="text-[11px] text-ink/50 font-mono mt-1 block">
+                  0 queries in 42 files
+                </span>
+              </div>
+            </div>
+
+            <div>
+              <div class="border-t-2 border-dashed border-ink/20 pt-3 mb-2 flex justify-between text-[11px] font-mono text-ink/60">
+                <span>AUDIT SEALED</span>
+                <span>2024-03-29</span>
+              </div>
+            </div>
+
+            <!-- RUBBER STAMP: NOT SHOWN IN SCOPE (Slate-Blue, Dashed-Circle Icon) -->
+            <div class="absolute -bottom-4 -right-4 pointer-events-none select-none ink-bleed"
+                 style="transform: rotate(-5deg); mix-blend-mode: multiply;">
+              <div class="w-[165px] h-[58px] bg-paper text-[#64748B] stamp-box rounded flex items-center justify-center space-x-2 px-2.5 shadow-sm opacity-90">
+                <!-- Dashed-Circle Icon -->
+                <svg class="w-6 h-6 stroke-[2.5] text-[#64748B]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <circle cx="12" cy="12" r="9" stroke-dasharray="4 3" stroke-width="2.5"/>
+                  <line x1="8" y1="12" x2="16" y2="12" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+                <span class="font-display font-extrabold text-[16px] tracking-wide uppercase text-[#64748B] text-center leading-none">
+                  NOT SHOWN<br><span class="text-[13px]">IN SCOPE</span>
+                </span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- ==================== RECEIPT 5: PEEKING CARD (CACHING - UNCLEAR) ==================== -->
+          <!-- Peeking from the right edge with Question-in-Diamond Stamp -->
+          <div class="w-[200px] min-h-[420px] rounded-b-[4px] paper-grain text-ink paper-shadow relative flex flex-col justify-between p-6 pt-5 opacity-75 hover:opacity-100 transition-all duration-300 sawtooth-top"
+               style="transform: rotate(-2deg); margin-top: 8px;">
+            <div class="pt-2">
+              <div class="flex justify-between items-center mb-4">
+                <span class="font-mono text-[12px] font-semibold text-ink/70">REC-0046</span>
+                <div class="w-[50px] h-[22px] barcode-lines opacity-85"></div>
+              </div>
+              <h3 class="text-[22px] font-bold tracking-tight text-ink mb-2">Caching</h3>
+              <p class="text-[16px] font-medium text-ink/80 leading-snug mb-4">
+                Client instantiated, zero read calls
+              </p>
+              <div class="bg-black/[0.04] p-2 rounded">
+                <span class="text-[12px] font-mono text-ink/80 block truncate">cache.py:8</span>
+              </div>
+            </div>
+
+            <!-- RUBBER STAMP: UNCLEAR (Violet, Question Mark Icon) -->
+            <div class="absolute -bottom-4 -right-4 pointer-events-none select-none ink-bleed"
+                 style="transform: rotate(-5deg); mix-blend-mode: multiply;">
+              <div class="w-[155px] h-[58px] bg-paper text-[#6D5BD0] stamp-box rounded flex items-center justify-center space-x-2 px-3 shadow-sm opacity-90">
+                <!-- Question Mark Icon -->
+                <svg class="w-6 h-6 stroke-[3] text-[#6D5BD0]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <circle cx="12" cy="12" r="9"/>
+                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                <span class="font-display font-extrabold text-[20px] tracking-wider uppercase text-[#6D5BD0]">
+                  UNCLEAR
+                </span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <!-- ==================== SECTION 3: SIGNATURE ELEMENT 3: RECOMMENDATION CARD ==================== -->
+      <!-- Full width, dashed 2px glowing outline in emerald, dark glass card, RECOMMENDATION tag -->
+      <section class="mt-8">
+        <div class="w-full relative rounded-2xl bg-white/[0.04] backdrop-blur-xl border-2 border-dashed border-[#22C58B] glow-emerald p-8 overflow-hidden">
+          
+          <!-- Small "RECOMMENDATION" Tag Top-Left -->
+          <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-[#22C58B]/15 border border-[#22C58B]/40 text-[#22C58B] text-[13px] font-bold tracking-wider uppercase mb-6">
+            <span class="w-2 h-2 rounded-full bg-[#22C58B] animate-pulse"></span>
+            <span>RECOMMENDATION · HIGH CONFIDENCE DELTA</span>
+          </div>
+
+          <!-- Card Content Grid: Left Title | Middle Huge Delta | Right Dry Run & Verification -->
+          <div class="grid grid-cols-12 gap-8 items-center">
+            
+            <!-- Left: "Next commit: add SQL queries" at 40px -->
+            <div class="col-span-4">
+              <h3 class="text-[40px] font-bold text-white tracking-tight leading-[1.1] mb-2">
+                Next commit: add SQL queries
+              </h3>
+              <p class="text-[17px] text-[#9AA3AE]">
+                Committing an SQLite schema migration to <code class="text-white font-mono text-[14px] bg-white/10 px-1.5 py-0.5 rounded">db/queries.py</code> will satisfy Northwind's core requirement.
+              </p>
+            </div>
+
+            <!-- Middle: Huge "58% → 71%" at 96px, the arrow in emerald -->
+            <div class="col-span-4 flex items-center justify-center">
+              <div class="text-[96px] font-extrabold tracking-[-0.04em] text-white flex items-center space-x-3 select-none leading-none">
+                <span>58%</span>
+                <span class="text-[#22C58B] transform translate-y-[-2px]">→</span>
+                <span class="text-[#22C58B] glow-emerald">71%</span>
+              </div>
+            </div>
+
+            <!-- Right: Button "Dry run" and "Will not change: Testing" -->
+            <div class="col-span-4 flex flex-col items-end">
+              <div class="flex items-center space-x-4 mb-3">
+                <span class="text-[15px] font-medium text-[#9AA3AE]">
+                  Will not change: <strong class="text-white font-semibold">Testing</strong>
+                </span>
+                
+                <!-- Dry run button -->
+                <button class="h-[48px] px-6 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-[16px] border border-white/15 transition-all flex items-center space-x-2 cursor-pointer">
+                  <svg class="w-4 h-4 stroke-[2]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <polygon points="5 3 19 12 5 21 5 3"/>
+                  </svg>
+                  <span>Dry run</span>
+                </button>
+              </div>
+
+              <!-- Tiny Copy Chip with Git Command in 12px Mono -->
+              <div class="flex items-center space-x-2 bg-black/60 border border-white/10 px-3.5 py-2 rounded-lg cursor-pointer hover:border-emerald-500/50 transition-colors group">
+                <span class="text-[12px] font-mono text-[#22C58B]">$</span>
+                <span class="text-[12px] font-mono text-[#F4F2EC]">git checkout -b feat/sql-persistence &amp;&amp; touch db/queries.py</span>
+                <button class="ml-2 text-[#9AA3AE] group-hover:text-white" title="Copy to clipboard">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                </button>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+      </section>
+
+      <!-- Persistent Honesty Line & Scope Ribbon -->
+      <footer class="mt-20 pt-8 border-t border-white/[0.08] flex items-center justify-between text-[14px] text-[#9AA3AE]">
+        <div class="flex items-center space-x-2">
+          <svg class="w-4 h-4 text-[#22C58B]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <span class="font-medium text-white/90">
+            Requirements scored against evidence, never people.
+          </span>
+          <span class="text-white/30">|</span>
+          <span>Evidence of use, not proficiency or authorship.</span>
+        </div>
+
+        <div>
+          <a href="#" class="text-white/80 hover:text-white underline underline-offset-4 font-mono text-[13px]">
+            View Audit Limits &amp; Scope →
+          </a>
+        </div>
+      </footer>
+
+    </main>
+
+  </div>
+
+</body>
+</html>

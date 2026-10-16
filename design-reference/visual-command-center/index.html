@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1440, height=900, initial-scale=1.0">
+  <title>ProofStack: Visual Command Center</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Fraunces:opsz,wght@9..144,700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #0B0D10;
+      color: #F4F2EC;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      width: 1440px;
+      height: 900px;
+      letter-spacing: -0.015em;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .font-stamp {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+    /* Dot Grid Background */
+    .bg-dot-grid {
+      background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    /* Glass Panel */
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      backdrop-filter: blur(24px);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
+    /* Mini Stamp */
+    .mini-stamp {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 8px;
+      font-size: 11px;
+      line-height: 14px;
+      text-transform: uppercase;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      border-radius: 3px;
+      transform: rotate(-4deg);
+      mix-blend-mode: screen;
+      white-space: nowrap;
+    }
+    .stamp-proven {
+      color: #22C58B;
+      border: 1.5px solid #22C58B;
+      box-shadow: 0 0 0 1px rgba(34, 197, 139, 0.3), 0 0 12px rgba(34, 197, 139, 0.35);
+      background: rgba(34, 197, 139, 0.12);
+    }
+    .stamp-basic {
+      color: #F5A524;
+      border: 1.5px solid #F5A524;
+      box-shadow: 0 0 0 1px rgba(245, 165, 36, 0.3), 0 0 12px rgba(245, 165, 36, 0.35);
+      background: rgba(245, 165, 36, 0.12);
+    }
+    .stamp-not-shown {
+      color: #7C8CA8;
+      border: 1.5px solid #7C8CA8;
+      box-shadow: 0 0 0 1px rgba(124, 140, 168, 0.3), 0 0 12px rgba(124, 140, 168, 0.25);
+      background: rgba(124, 140, 168, 0.12);
+    }
+    .stamp-unclear {
+      color: #8B7CFF;
+      border: 1.5px solid #8B7CFF;
+      box-shadow: 0 0 0 1px rgba(139, 124, 255, 0.3), 0 0 12px rgba(139, 124, 255, 0.35);
+      background: rgba(139, 124, 255, 0.12);
+    }
+    /* Zig Zag Paper Tag */
+    .paper-tag {
+      background: #FAF8F3;
+      color: #14171A;
+      box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0,0,0,0.2);
+      clip-path: polygon(
+        0% 0%, 5% 4px, 10% 0%, 15% 4px, 20% 0%, 25% 4px, 30% 0%, 35% 4px, 40% 0%, 45% 4px, 50% 0%, 55% 4px, 60% 0%, 65% 4px, 70% 0%, 75% 4px, 80% 0%, 85% 4px, 90% 0%, 95% 4px, 100% 0%,
+        100% 100%, 0% 100%
+      );
+    }
+    /* Pulse Rings */
+    @keyframes pulseGlow {
+      0%, 100% {
+        box-shadow: 0 0 0 2px #22C58B, 0 0 25px rgba(34, 197, 139, 0.6), inset 0 0 20px rgba(34, 197, 139, 0.3);
+      }
+      50% {
+        box-shadow: 0 0 0 4px #22C58B, 0 0 45px rgba(34, 197, 139, 0.8), inset 0 0 30px rgba(34, 197, 139, 0.45);
+      }
+    }
+    .animate-pulse-glow {
+      animation: pulseGlow 2.8s infinite ease-in-out;
+    }
+    /* Stained Glass Tile Gradients */
+    .tile-emerald {
+      background: linear-gradient(135deg, rgba(34, 197, 139, 0.85) 0%, rgba(16, 124, 85, 0.95) 100%);
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.4), 0 4px 14px rgba(34, 197, 139, 0.25);
+      border: 1px solid rgba(34, 197, 139, 0.5);
+    }
+    .tile-slate {
+      background: linear-gradient(135deg, rgba(124, 140, 168, 0.55) 0%, rgba(71, 85, 105, 0.8) 100%);
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25), 0 4px 14px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(124, 140, 168, 0.4);
+    }
+    .tile-amber {
+      background: linear-gradient(135deg, rgba(245, 165, 36, 0.85) 0%, rgba(180, 83, 9, 0.9) 100%);
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.35), 0 4px 14px rgba(245, 165, 36, 0.3);
+      border: 1px solid rgba(245, 165, 36, 0.5);
+    }
+    .tile-violet {
+      background: linear-gradient(135deg, rgba(139, 124, 255, 0.8) 0%, rgba(99, 102, 241, 0.85) 100%);
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.35), 0 4px 14px rgba(139, 124, 255, 0.3);
+      border: 1px solid rgba(139, 124, 255, 0.5);
+    }
+  </style>
+</head>
+<body class="relative w-[1440px] h-[900px] overflow-hidden bg-[#0B0D10] bg-dot-grid flex flex-row">
+
+  <!-- Ambient Radial Glows -->
+  <div class="pointer-events-none absolute top-1/4 left-1/3 w-[600px] h-[600px] bg-[#22C58B] opacity-[0.11] rounded-full blur-[140px] -translate-x-1/2 -translate-y-1/2"></div>
+  <div class="pointer-events-none absolute bottom-0 right-0 w-[550px] h-[500px] bg-[#8B7CFF] opacity-[0.10] rounded-full blur-[150px]"></div>
+  <!-- Edge Vignette -->
+  <div class="pointer-events-none absolute inset-0 shadow-[inset_0_0_120px_rgba(0,0,0,0.85)] z-40"></div>
+
+  <!-- LEFT ICON RAIL (64px wide, glass, full height) -->
+  <aside class="relative z-30 w-[64px] h-[900px] flex-shrink-0 bg-black/40 border-r border-white/10 backdrop-blur-2xl flex flex-col items-center py-4 justify-between">
+    <!-- Brand Mark Top -->
+    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-white/10 to-white/5 border border-white/15 flex items-center justify-center shadow-lg">
+      <svg class="w-5 h-5 text-[#22C58B]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+      </svg>
+    </div>
+
+    <!-- 7 Nav Items -->
+    <nav class="flex flex-col items-center space-y-4 w-full">
+      <!-- Start -->
+      <a href="#" class="group relative flex flex-col items-center justify-center w-full py-1.5 text-[#9AA3AE] hover:text-[#F4F2EC] transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>
+        <span class="text-[10px] mt-1 font-medium tracking-tight">Start</span>
+      </a>
+
+      <!-- Requirements -->
+      <a href="#" class="group relative flex flex-col items-center justify-center w-full py-1.5 text-[#9AA3AE] hover:text-[#F4F2EC] transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <path d="M9 11l3 3L22 4"></path>
+          <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"></path>
+        </svg>
+        <span class="text-[10px] mt-1 font-medium tracking-tight">Reqs</span>
+      </a>
+
+      <!-- Dashboard (ACTIVE) -->
+      <a href="#" class="group relative flex flex-col items-center justify-center w-full py-1.5 text-[#22C58B]">
+        <!-- Emerald Glow Bar on Left Edge -->
+        <div class="absolute left-0 top-1 bottom-1 w-[3px] bg-[#22C58B] rounded-r shadow-[0_0_12px_#22C58B]"></div>
+        <div class="w-10 h-10 rounded-xl bg-[#22C58B]/10 border border-[#22C58B]/30 flex flex-col items-center justify-center shadow-[0_0_16px_rgba(34,197,139,0.25)]">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+          </svg>
+        </div>
+        <span class="text-[10px] mt-1 font-semibold text-[#22C58B] tracking-tight">Dash</span>
+      </a>
+
+      <!-- Contracts -->
+      <a href="#" class="group relative flex flex-col items-center justify-center w-full py-1.5 text-[#9AA3AE] hover:text-[#F4F2EC] transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+        <span class="text-[10px] mt-1 font-medium tracking-tight">Contracts</span>
+      </a>
+
+      <!-- Break-Me -->
+      <a href="#" class="group relative flex flex-col items-center justify-center w-full py-1.5 text-[#9AA3AE] hover:text-[#F4F2EC] transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+        </svg>
+        <span class="text-[10px] mt-1 font-medium tracking-tight">Break-Me</span>
+      </a>
+
+      <!-- Resume -->
+      <a href="#" class="group relative flex flex-col items-center justify-center w-full py-1.5 text-[#9AA3AE] hover:text-[#F4F2EC] transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span class="text-[10px] mt-1 font-medium tracking-tight">Resume</span>
+      </a>
+
+      <!-- Verify -->
+      <a href="#" class="group relative flex flex-col items-center justify-center w-full py-1.5 text-[#9AA3AE] hover:text-[#F4F2EC] transition-colors">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+        <span class="text-[10px] mt-1 font-medium tracking-tight">Verify</span>
+      </a>
+    </nav>
+
+    <!-- Bottom User Avatar Mini -->
+    <div class="w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-[11px] font-bold text-[#F4F2EC]">
+      RN
+    </div>
+  </aside>
+
+  <!-- MAIN VIEWPORT CONTAINER (1376px wide, 900px tall) -->
+  <main class="relative z-20 flex-1 h-[900px] flex flex-col px-6 py-4 overflow-hidden">
+    
+    <!-- TOP BAR (56px tall) -->
+    <header class="w-full h-[52px] flex items-center justify-between border-b border-white/10 pb-2 flex-shrink-0">
+      <!-- Left Wordmark + Breadcrumb -->
+      <div class="flex items-center space-x-3">
+        <span class="text-xl font-bold tracking-tight text-[#F4F2EC]">ProofStack</span>
+        <span class="text-xs px-2 py-0.5 rounded bg-white/10 text-[#9AA3AE] font-mono">v2.4</span>
+        <span class="text-[#9AA3AE]/40">/</span>
+        <span class="text-base text-[#F4F2EC] font-medium tracking-tight flex items-center gap-1.5">
+          <span class="text-white font-semibold">Rohan</span>
+          <span class="text-[#9AA3AE]">/</span>
+          <span class="text-[#9AA3AE]">Backend Engineer Intern, Northwind Labs</span>
+        </span>
+      </div>
+
+      <!-- Right Health Dots + Hollow Pill -->
+      <div class="flex items-center space-x-6 text-sm text-[#9AA3AE]">
+        <div class="flex items-center space-x-5 text-sm font-medium">
+          <div class="flex items-center space-x-2">
+            <span class="w-2 h-2 rounded-full bg-[#22C58B] shadow-[0_0_8px_#22C58B] animate-pulse"></span>
+            <span class="text-[#F4F2EC]">GitHub</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="w-2 h-2 rounded-full bg-[#22C58B] shadow-[0_0_8px_#22C58B] animate-pulse"></span>
+            <span class="text-[#F4F2EC]">Webhook</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="w-2 h-2 rounded-full bg-[#22C58B] shadow-[0_0_8px_#22C58B] animate-pulse"></span>
+            <span class="text-[#F4F2EC]">Model</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="w-2 h-2 rounded-full bg-[#22C58B] shadow-[0_0_8px_#22C58B] animate-pulse"></span>
+            <span class="text-[#F4F2EC]">Rate limit</span>
+          </div>
+        </div>
+
+        <!-- Refused Counter Pill -->
+        <div class="flex items-center space-x-2.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 shadow-inner">
+          <span class="w-2.5 h-2.5 rounded-full bg-[#FF5C4D] shadow-[0_0_10px_#FF5C4D]"></span>
+          <span class="text-xs text-[#9AA3AE]">Hollow signals refused</span>
+          <span class="text-sm font-bold text-[#FF5C4D] font-mono">14</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- TOP STRIP (112px tall, under header) -->
+    <section class="w-full h-[106px] grid grid-cols-4 gap-4 mt-3 flex-shrink-0">
+      
+      <!-- Stat 1: 14 Hollow Refused -->
+      <div class="glass-panel relative flex flex-col justify-center px-6 py-2 border-t-2 border-t-[#FF5C4D] overflow-hidden">
+        <div class="absolute -top-12 left-1/4 w-32 h-16 bg-[#FF5C4D]/20 blur-xl rounded-full pointer-events-none"></div>
+        <div class="flex items-baseline space-x-3">
+          <span class="text-[52px] font-extrabold text-white tracking-tight leading-none">14</span>
+          <span class="w-2 h-2 rounded-full bg-[#FF5C4D] shadow-[0_0_10px_#FF5C4D]"></span>
+        </div>
+        <span class="text-sm font-medium text-[#9AA3AE] mt-1.5">Hollow signals refused</span>
+      </div>
+
+      <!-- Stat 2: 128 Files Analyzed -->
+      <div class="glass-panel relative flex flex-col justify-center px-6 py-2 border-t-2 border-t-[#7C8CA8] overflow-hidden">
+        <div class="absolute -top-12 left-1/4 w-32 h-16 bg-[#7C8CA8]/20 blur-xl rounded-full pointer-events-none"></div>
+        <span class="text-[52px] font-extrabold text-white tracking-tight leading-none font-mono">128</span>
+        <span class="text-sm font-medium text-[#9AA3AE] mt-1.5">Files analyzed</span>
+      </div>
+
+      <!-- Stat 3: 1 LLM Calls -->
+      <div class="glass-panel relative flex flex-col justify-center px-6 py-2 border-t-2 border-t-[#8B7CFF] overflow-hidden">
+        <div class="absolute -top-12 left-1/4 w-32 h-16 bg-[#8B7CFF]/20 blur-xl rounded-full pointer-events-none"></div>
+        <span class="text-[52px] font-extrabold text-white tracking-tight leading-none font-mono">1</span>
+        <span class="text-sm font-medium text-[#9AA3AE] mt-1.5">LLM calls</span>
+      </div>
+
+      <!-- Stat 4: 3.4 s Push to Verdict -->
+      <div class="glass-panel relative flex flex-col justify-center px-6 py-2 border-t-2 border-t-[#22C58B] overflow-hidden">
+        <div class="absolute -top-12 left-1/4 w-32 h-16 bg-[#22C58B]/20 blur-xl rounded-full pointer-events-none"></div>
+        <div class="flex items-baseline space-x-1.5">
+          <span class="text-[52px] font-extrabold text-white tracking-tight leading-none font-mono">3.4</span>
+          <span class="text-3xl font-bold text-[#22C58B] font-mono">s</span>
+        </div>
+        <span class="text-sm font-medium text-[#9AA3AE] mt-1.5">Push to verdict</span>
+      </div>
+
+    </section>
+
+    <!-- MAIN AREA (Three columns, exactly fitted inside remainder, ~700px) -->
+    <div class="w-full flex-1 grid grid-cols-[300px_1fr_360px] gap-4 mt-3.5 min-h-0 overflow-hidden pb-1">
+
+      <!-- ================= LEFT COLUMN (300px, Requirements List) ================= -->
+      <aside class="glass-panel flex flex-col p-4 overflow-hidden justify-between">
+        <!-- Header -->
+        <div>
+          <div class="flex items-center justify-between mb-3 px-1">
+            <h2 class="text-base font-bold text-[#F4F2EC] tracking-tight">Requirements</h2>
+            <span class="text-xs font-mono text-[#9AA3AE] bg-white/5 px-2 py-0.5 rounded border border-white/10">7 SCOPED</span>
+          </div>
+
+          <!-- 7 Compact Pill Rows (52px tall, radius 14px, 8px gaps) -->
+          <div class="flex flex-col space-y-2">
+            
+            <!-- 1. SQL (REQUIRED) - ACTIVE ROW -->
+            <div class="h-[50px] rounded-[14px] bg-white/[0.08] border-l-[3.5px] border-l-[#22C58B] border-y border-r border-white/15 px-3 flex items-center justify-between shadow-[0_0_20px_rgba(34,197,139,0.12)]">
+              <div class="flex items-center space-x-2">
+                <span class="text-base font-semibold text-white tracking-tight">SQL</span>
+                <span class="text-[10px] font-bold text-white px-1.5 py-0.5 rounded border border-white/30 tracking-wider">REQUIRED</span>
+              </div>
+              <div class="mini-stamp stamp-not-shown">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-dasharray="3 3">
+                  <circle cx="12" cy="12" r="9"/>
+                </svg>
+                <span>NOT SHOWN</span>
+              </div>
+            </div>
+
+            <!-- 2. REST API (REQUIRED) -->
+            <div class="h-[48px] rounded-[14px] bg-white/[0.025] hover:bg-white/[0.05] border border-white/10 px-3 flex items-center justify-between transition-colors">
+              <div class="flex items-center space-x-2">
+                <span class="text-base font-semibold text-[#F4F2EC] tracking-tight">REST API</span>
+                <span class="text-[10px] font-bold text-white/80 px-1.5 py-0.5 rounded border border-white/20 tracking-wider">REQUIRED</span>
+              </div>
+              <div class="mini-stamp stamp-proven">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <path d="M20 6L9 17l-5-5"/>
+                </svg>
+                <span>PROVEN</span>
+              </div>
+            </div>
+
+            <!-- 3. Testing (REQUIRED) -->
+            <div class="h-[48px] rounded-[14px] bg-white/[0.025] hover:bg-white/[0.05] border border-white/10 px-3 flex items-center justify-between transition-colors">
+              <div class="flex items-center space-x-2">
+                <span class="text-base font-semibold text-[#F4F2EC] tracking-tight">Testing</span>
+                <span class="text-[10px] font-bold text-white/80 px-1.5 py-0.5 rounded border border-white/20 tracking-wider">REQUIRED</span>
+              </div>
+              <div class="mini-stamp stamp-proven">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <path d="M20 6L9 17l-5-5"/>
+                </svg>
+                <span>PROVEN</span>
+              </div>
+            </div>
+
+            <!-- 4. Python (REQUIRED) -->
+            <div class="h-[48px] rounded-[14px] bg-white/[0.025] hover:bg-white/[0.05] border border-white/10 px-3 flex items-center justify-between transition-colors">
+              <div class="flex items-center space-x-2">
+                <span class="text-base font-semibold text-[#F4F2EC] tracking-tight">Python</span>
+                <span class="text-[10px] font-bold text-white/80 px-1.5 py-0.5 rounded border border-white/20 tracking-wider">REQUIRED</span>
+              </div>
+              <div class="mini-stamp stamp-proven">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <path d="M20 6L9 17l-5-5"/>
+                </svg>
+                <span>PROVEN</span>
+              </div>
+            </div>
+
+            <!-- 5. Docker (PREFERRED) -->
+            <div class="h-[48px] rounded-[14px] bg-white/[0.025] hover:bg-white/[0.05] border border-white/10 px-3 flex items-center justify-between transition-colors">
+              <div class="flex items-center space-x-2">
+                <span class="text-base font-semibold text-[#F4F2EC] tracking-tight">Docker</span>
+                <span class="text-[10px] font-semibold text-[#9AA3AE] px-1.5 py-0.5 rounded border border-white/10 tracking-wider">PREFERRED</span>
+              </div>
+              <div class="mini-stamp stamp-basic">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M12 3a9 9 0 0 0 0 18v-18z" fill="currentColor"/>
+                  <circle cx="12" cy="12" r="9"/>
+                </svg>
+                <span>BASIC</span>
+              </div>
+            </div>
+
+            <!-- 6. CI/CD (PREFERRED) -->
+            <div class="h-[48px] rounded-[14px] bg-white/[0.025] hover:bg-white/[0.05] border border-white/10 px-3 flex items-center justify-between transition-colors">
+              <div class="flex items-center space-x-2">
+                <span class="text-base font-semibold text-[#F4F2EC] tracking-tight">CI/CD</span>
+                <span class="text-[10px] font-semibold text-[#9AA3AE] px-1.5 py-0.5 rounded border border-white/10 tracking-wider">PREFERRED</span>
+              </div>
+              <div class="mini-stamp stamp-unclear">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <circle cx="12" cy="12" r="9"/>
+                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                <span>UNCLEAR</span>
+              </div>
+            </div>
+
+            <!-- 7. Caching (PREFERRED) -->
+            <div class="h-[48px] rounded-[14px] bg-white/[0.025] hover:bg-white/[0.05] border border-white/10 px-3 flex items-center justify-between transition-colors">
+              <div class="flex items-center space-x-2">
+                <span class="text-base font-semibold text-[#F4F2EC] tracking-tight">Caching</span>
+                <span class="text-[10px] font-semibold text-[#9AA3AE] px-1.5 py-0.5 rounded border border-white/10 tracking-wider">PREFERRED</span>
+              </div>
+              <div class="mini-stamp stamp-unclear">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <circle cx="12" cy="12" r="9"/>
+                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                </svg>
+                <span>UNCLEAR</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Collapsed out-of-scope row -->
+        <div class="mt-2 py-2 px-3 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-between text-xs text-[#9AA3AE]">
+          <span class="font-medium">3 not assessable from code</span>
+          <svg class="w-4 h-4 text-[#9AA3AE]" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </div>
+      </aside>
+
+      <!-- ================= CENTER (THE HERO: Proof Map Treemap + Scrubber) ================= -->
+      <section class="glass-panel relative flex flex-col p-4 justify-between overflow-hidden">
+        
+        <!-- Header & Repo Pill Tabs -->
+        <div class="flex items-center justify-between pb-3 border-b border-white/10 flex-shrink-0">
+          <div class="flex items-center space-x-2">
+            <span class="text-lg font-bold text-white tracking-tight">Proof Map</span>
+            <span class="text-xs px-2 py-0.5 rounded-full bg-[#22C58B]/20 text-[#22C58B] border border-[#22C58B]/30 font-medium">LIVE MERKLE SYNC</span>
+          </div>
+
+          <!-- Tabs -->
+          <div class="flex items-center space-x-1.5 bg-black/40 p-1 rounded-xl border border-white/10 text-xs">
+            <button class="px-3 py-1.5 rounded-lg bg-white/15 text-white font-semibold relative shadow">
+              shop-api
+              <span class="absolute bottom-0 left-2 right-2 h-[2px] bg-[#22C58B] shadow-[0_0_8px_#22C58B]"></span>
+            </button>
+            <button class="px-3 py-1.5 rounded-lg text-[#9AA3AE] hover:text-white transition">notes-cli</button>
+            <button class="px-3 py-1.5 rounded-lg text-[#9AA3AE] hover:text-white transition">ml-playground</button>
+            <button class="px-3 py-1.5 rounded-lg text-[#9AA3AE] hover:text-white transition">flask-demo</button>
+          </div>
+        </div>
+
+        <!-- THE PROOF MAP TREEMAP MOSAIC (14 Rounded Tiles) -->
+        <div class="relative w-full flex-1 my-2.5 grid grid-cols-6 grid-rows-4 gap-2 min-h-0">
+          
+          <!-- TILE 1 (HERO 2x2): orders.py (PULSING EMERALD) -->
+          <div class="col-span-3 row-span-2 tile-emerald rounded-[14px] p-3.5 relative flex flex-col justify-between overflow-hidden animate-pulse-glow z-10 cursor-pointer">
+            <!-- Pulsing Rings Decorator -->
+            <div class="absolute -right-6 -bottom-6 w-32 h-32 rounded-full border border-white/30 pointer-events-none"></div>
+            
+            <div class="flex items-start justify-between">
+              <div>
+                <span class="text-xs font-mono font-medium text-white/80 uppercase tracking-wider block">API Route Engine</span>
+                <span class="text-xl font-bold text-white tracking-tight block">orders.py</span>
+                <span class="text-[11px] font-mono text-emerald-100/90 block mt-0.5">api/routes/orders.py</span>
+              </div>
+              <span class="px-2 py-0.5 rounded bg-black/30 border border-white/20 text-[10px] font-mono text-white font-bold">420 SLOC</span>
+            </div>
+
+            <!-- Paper Tag attached to corner reading "orders.py changed 12 s ago" -->
+            <div class="self-end paper-tag px-2.5 py-1 rounded text-xs font-semibold font-mono tracking-tight transform rotate-[1.5deg] shadow-lg flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-[#22C58B] animate-ping"></span>
+              <span>orders.py changed 12 s ago</span>
+            </div>
+          </div>
+
+          <!-- TILE 2 (Medium, 2x1): test_orders.py (PROVEN Emerald) -->
+          <div class="col-span-2 row-span-1 tile-emerald rounded-[14px] p-2.5 flex flex-col justify-between">
+            <div class="flex items-start justify-between">
+              <span class="text-sm font-bold text-white tracking-tight">test_orders.py</span>
+              <span class="text-[10px] font-mono text-white/80 bg-black/20 px-1.5 py-0.5 rounded">8 tests</span>
+            </div>
+            <span class="text-[11px] font-mono text-emerald-100/80">tests/test_orders.py</span>
+          </div>
+
+          <!-- TILE 3 (Small, 1x1): Dockerfile (BASIC Amber) -->
+          <div class="col-span-1 row-span-1 tile-amber rounded-[14px] p-2.5 flex flex-col justify-between">
+            <span class="text-xs font-bold text-white tracking-tight">Dockerfile</span>
+            <span class="text-[10px] font-mono text-amber-100/90">Single-stage</span>
+          </div>
+
+          <!-- TILE 4 (Medium, 2x1): db/ (NOT SHOWN Slate) -->
+          <div class="col-span-2 row-span-1 tile-slate rounded-[14px] p-2.5 flex flex-col justify-between border-dashed">
+            <div class="flex items-start justify-between">
+              <span class="text-sm font-bold text-white tracking-tight">db/queries.py</span>
+              <span class="text-[10px] font-mono text-white/60 bg-black/30 px-1.5 py-0.5 rounded">0 files</span>
+            </div>
+            <span class="text-[11px] font-mono text-slate-200/70">schema missing</span>
+          </div>
+
+          <!-- TILE 5 (Small, 1x1): cache.py (UNCLEAR Violet) -->
+          <div class="col-span-1 row-span-1 tile-violet rounded-[14px] p-2.5 flex flex-col justify-between">
+            <span class="text-xs font-bold text-white tracking-tight">cache.py</span>
+            <span class="text-[10px] font-mono text-indigo-100">0 get/set</span>
+          </div>
+
+          <!-- TILE 6 (Medium, 2x1): auth/jwt.py (PROVEN Emerald) -->
+          <div class="col-span-2 row-span-1 tile-emerald rounded-[14px] p-2.5 flex flex-col justify-between">
+            <div class="flex items-start justify-between">
+              <span class="text-sm font-bold text-white tracking-tight">auth/jwt.py</span>
+              <span class="text-[10px] font-mono text-white/80 bg-black/20 px-1.5 py-0.5 rounded">HS256</span>
+            </div>
+            <span class="text-[11px] font-mono text-emerald-100/80">Bearer signed</span>
+          </div>
+
+          <!-- TILE 7 (Small, 1x1): ci.yml (UNCLEAR Violet) -->
+          <div class="col-span-1 row-span-1 tile-violet rounded-[14px] p-2.5 flex flex-col justify-between">
+            <span class="text-xs font-bold text-white tracking-tight">.github/ci</span>
+            <span class="text-[10px] font-mono text-indigo-100">inactive</span>
+          </div>
+
+          <!-- TILE 8 (Small, 1x1): reqs.txt (NOT SHOWN Slate) -->
+          <div class="col-span-1 row-span-1 tile-slate rounded-[14px] p-2 flex flex-col justify-between">
+            <span class="text-xs font-bold text-white tracking-tight">requirements</span>
+            <span class="text-[10px] font-mono text-slate-300">deps list</span>
+          </div>
+
+          <!-- TILE 9 (Medium, 2x1): pyproject.toml (PROVEN Emerald) -->
+          <div class="col-span-2 row-span-1 tile-emerald rounded-[14px] p-2.5 flex flex-col justify-between">
+            <div class="flex items-start justify-between">
+              <span class="text-sm font-bold text-white tracking-tight">pyproject.toml</span>
+              <span class="text-[10px] font-mono text-white/80 bg-black/20 px-1.5 py-0.5 rounded">3.11</span>
+            </div>
+            <span class="text-[11px] font-mono text-emerald-100/80">asyncio pinned</span>
+          </div>
+
+          <!-- TILE 10 (Small, 1x1): models/order.py (PROVEN Emerald) -->
+          <div class="col-span-1 row-span-1 tile-emerald rounded-[14px] p-2 flex flex-col justify-between">
+            <span class="text-xs font-bold text-white tracking-tight">models.py</span>
+            <span class="text-[10px] font-mono text-emerald-100/80">Pydantic</span>
+          </div>
+
+          <!-- TILE 11 (Small, 1x1): compose.yaml (BASIC Amber) -->
+          <div class="col-span-1 row-span-1 tile-amber rounded-[14px] p-2 flex flex-col justify-between">
+            <span class="text-xs font-bold text-white tracking-tight">compose</span>
+            <span class="text-[10px] font-mono text-amber-100">local port</span>
+          </div>
+
+          <!-- TILE 12 (Small, 1x1): main.py (PROVEN Emerald) -->
+          <div class="col-span-1 row-span-1 tile-emerald rounded-[14px] p-2 flex flex-col justify-between">
+            <span class="text-xs font-bold text-white tracking-tight">main.py</span>
+            <span class="text-[10px] font-mono text-emerald-100/80">FastAPI</span>
+          </div>
+
+          <!-- TILE 13 (Small, 1x1): migrations/ (NOT SHOWN Slate) -->
+          <div class="col-span-1 row-span-1 tile-slate rounded-[14px] p-2 flex flex-col justify-between border-dashed">
+            <span class="text-xs font-bold text-white tracking-tight">migrations</span>
+            <span class="text-[10px] font-mono text-slate-300">empty dir</span>
+          </div>
+
+          <!-- TILE 14 (Medium, 2x1): client.py (PROVEN Emerald) -->
+          <div class="col-span-2 row-span-1 tile-emerald rounded-[14px] p-2.5 flex flex-col justify-between">
+            <div class="flex items-start justify-between">
+              <span class="text-sm font-bold text-white tracking-tight">client.py</span>
+              <span class="text-[10px] font-mono text-white/80 bg-black/20 px-1.5 py-0.5 rounded">Async</span>
+            </div>
+            <span class="text-[11px] font-mono text-emerald-100/80">HTTPX mock pool</span>
+          </div>
+
+        </div>
+
+        <!-- TIMELINE SCRUBBER & LEGEND -->
+        <div class="flex flex-col space-y-2 pt-2 border-t border-white/10 flex-shrink-0">
+          <!-- Scrubber Control -->
+          <div class="flex items-center space-x-3">
+            <button class="w-9 h-9 rounded-full bg-[#22C58B] hover:bg-[#1eb07c] text-[#0B0D10] flex items-center justify-center shadow-[0_0_15px_rgba(34,197,139,0.5)] transition flex-shrink-0">
+              <svg class="w-4 h-4 ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+            </button>
+            <div class="flex-1 flex flex-col justify-center">
+              <div class="relative w-full h-[6px] bg-white/10 rounded-full flex items-center justify-between px-2">
+                <!-- Track Line Fill -->
+                <div class="absolute left-0 top-0 bottom-0 w-[95%] bg-gradient-to-r from-white/20 to-[#22C58B] rounded-full"></div>
+                <!-- 8 Snapshot Dots -->
+                <span class="w-2 h-2 rounded-full bg-white/40 z-10"></span>
+                <span class="w-2 h-2 rounded-full bg-white/40 z-10"></span>
+                <span class="w-2 h-2 rounded-full bg-white/50 z-10"></span>
+                <span class="w-2 h-2 rounded-full bg-white/50 z-10"></span>
+                <span class="w-2 h-2 rounded-full bg-white/60 z-10"></span>
+                <span class="w-2 h-2 rounded-full bg-white/70 z-10"></span>
+                <span class="w-2.5 h-2.5 rounded-full bg-white/90 z-10"></span>
+                <!-- Last dot larger and glowing -->
+                <span class="w-3.5 h-3.5 rounded-full bg-[#22C58B] shadow-[0_0_12px_#22C58B] z-10 ring-2 ring-white"></span>
+              </div>
+              <div class="flex justify-between text-[11px] font-mono text-[#9AA3AE] mt-1">
+                <span>commit 9f3c2ab (09:42:10)</span>
+                <span class="text-[#22C58B]">HEAD (14:02:28 UTC)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Legend Row -->
+          <div class="flex items-center justify-between text-xs pt-1 px-1 text-[#9AA3AE]">
+            <div class="flex items-center space-x-1.5">
+              <span class="w-2.5 h-2.5 rounded-sm bg-[#22C58B]"></span>
+              <span class="text-[#F4F2EC] font-medium">PROVEN (check)</span>
+            </div>
+            <div class="flex items-center space-x-1.5">
+              <span class="w-2.5 h-2.5 rounded-sm bg-[#F5A524]"></span>
+              <span class="text-[#F4F2EC] font-medium">BASIC (half circle)</span>
+            </div>
+            <div class="flex items-center space-x-1.5">
+              <span class="w-2.5 h-2.5 rounded-sm bg-[#7C8CA8]"></span>
+              <span class="text-[#F4F2EC] font-medium">NOT SHOWN (dashed circle)</span>
+            </div>
+            <div class="flex items-center space-x-1.5">
+              <span class="w-2.5 h-2.5 rounded-sm bg-[#8B7CFF]"></span>
+              <span class="text-[#F4F2EC] font-medium">UNCLEAR (question)</span>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ================= RIGHT COLUMN (360px, Three Stacked Blocks) ================= -->
+      <div class="flex flex-col space-y-3 overflow-hidden justify-between">
+        
+        <!-- BLOCK 1: GAUGE (about 250px tall) -->
+        <div class="glass-panel relative flex flex-col items-center justify-center p-3 h-[245px] flex-shrink-0">
+          <div class="relative w-[180px] h-[140px] flex items-center justify-center">
+            <!-- Radial SVG Gauge (270-degree arc) -->
+            <svg class="w-[180px] h-[180px] -rotate-90" viewBox="0 0 100 100">
+              <!-- Background Track (270-deg) -->
+              <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="8" stroke-dasharray="188.4" stroke-dashoffset="47.1" stroke-linecap="round"/>
+              <!-- Active Arc (58% of 270 deg = ~109.2 filled) -->
+              <circle cx="50" cy="50" r="40" fill="none" stroke="url(#emeraldGradient)" stroke-width="8" stroke-dasharray="188.4" stroke-dashoffset="85" stroke-linecap="round" class="filter drop-shadow-[0_0_8px_rgba(34,197,139,0.7)]"/>
+              <defs>
+                <linearGradient id="emeraldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#22C58B"/>
+                  <stop offset="100%" stop-color="#8B7CFF"/>
+                </linearGradient>
+              </defs>
+            </svg>
+            <!-- 58% Inside -->
+            <div class="absolute inset-0 flex flex-col items-center justify-center pt-2">
+              <span class="text-[58px] font-extrabold text-transparent bg-clip-text bg-gradient-to-b from-white to-[#22C58B] tracking-tight leading-none drop-shadow-[0_0_20px_rgba(34,197,139,0.3)]">58%</span>
+            </div>
+          </div>
+
+          <!-- Caption & Range Bar -->
+          <div class="w-full text-center mt-1">
+            <span class="text-xs font-semibold text-[#F4F2EC] tracking-tight block">Evidence coverage, 7 assessed requirements</span>
+            <!-- 6px Range Bar -->
+            <div class="relative w-full h-[6px] bg-white/10 rounded-full mt-2 overflow-hidden">
+              <div class="absolute left-[50%] right-[22%] top-0 bottom-0 bg-[#22C58B]/25"></div>
+              <div class="absolute left-0 top-0 bottom-0 w-[58%] bg-gradient-to-r from-[#22C58B] to-[#22C58B] rounded-full shadow-[0_0_8px_#22C58B]"></div>
+            </div>
+            <div class="flex justify-between text-[10px] font-mono text-[#9AA3AE] mt-1 px-0.5">
+              <span>baseline 50%</span>
+              <span class="text-[#22C58B] font-bold">target 78%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- BLOCK 2: RECOMMENDATION CARD (Dashed 2px glowing emerald outline) -->
+        <div class="relative rounded-[20px] p-3.5 bg-white/[0.03] backdrop-blur-2xl border-2 border-dashed border-[#22C58B] shadow-[0_0_30px_rgba(34,197,139,0.15)] flex flex-col justify-between h-[175px] flex-shrink-0">
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-[10px] font-bold text-[#22C58B] font-mono tracking-wider px-2 py-0.5 rounded bg-[#22C58B]/10 border border-[#22C58B]/30">RECOMMENDATION</span>
+              <span class="text-[11px] font-mono text-[#9AA3AE]">+13% DELTA</span>
+            </div>
+            <h3 class="text-[17px] font-bold text-white tracking-tight leading-snug">Next commit: add one query + one test</h3>
+            <div class="flex items-center space-x-2 mt-1.5">
+              <span class="text-xs text-[#9AA3AE]">SQL becomes</span>
+              <div class="mini-stamp stamp-proven">
+                <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <path d="M20 6L9 17l-5-5"/>
+                </svg>
+                <span>PROVEN</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ONE Primary Filled Button on Screen (Emerald) -->
+          <button class="w-full h-[42px] rounded-xl bg-[#22C58B] hover:bg-[#1eb07c] text-[#0B0D10] font-bold text-sm tracking-tight flex items-center justify-center space-x-2 shadow-[0_0_20px_rgba(34,197,139,0.4)] transition">
+            <span>Open contract</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- BLOCK 3: LIVE FEED (Remaining height) -->
+        <div class="glass-panel flex-1 p-3 flex flex-col justify-between overflow-hidden min-h-0">
+          <div class="flex items-center justify-between pb-1.5 border-b border-white/10">
+            <div class="flex items-center space-x-2">
+              <span class="w-2 h-2 rounded-full bg-[#22C58B] animate-ping"></span>
+              <span class="text-xs font-bold text-white tracking-tight uppercase">Live feed</span>
+            </div>
+            <span class="text-[11px] font-mono text-[#9AA3AE]">24 ms</span>
+          </div>
+
+          <!-- 4 one-line rows (max 6 words each) -->
+          <div class="flex flex-col space-y-1.5 my-1">
+            <!-- Row 1 -->
+            <div class="flex items-center justify-between text-xs py-0.5">
+              <span class="text-[#F4F2EC] font-medium truncate max-w-[190px]">Push to shop-api</span>
+              <div class="flex items-center space-x-1.5">
+                <span class="text-[9px] font-mono px-1.5 py-0.2 rounded border border-[#22C58B]/50 text-[#22C58B] font-bold">WEBHOOK</span>
+                <span class="text-[10px] font-mono text-[#9AA3AE]">12s</span>
+              </div>
+            </div>
+
+            <!-- Row 2 -->
+            <div class="flex items-center justify-between text-xs py-0.5">
+              <span class="text-[#F4F2EC] font-medium truncate max-w-[190px]">SQL moved to Unclear</span>
+              <div class="flex items-center space-x-1.5">
+                <span class="text-[9px] font-mono px-1.5 py-0.2 rounded border border-[#22C58B]/50 text-[#22C58B] font-bold">WEBHOOK</span>
+                <span class="text-[10px] font-mono text-[#9AA3AE]">1m</span>
+              </div>
+            </div>
+
+            <!-- Row 3 -->
+            <div class="flex items-center justify-between text-xs py-0.5">
+              <span class="text-[#9AA3AE] font-medium truncate max-w-[190px]">Poll found no change</span>
+              <div class="flex items-center space-x-1.5">
+                <span class="text-[9px] font-mono px-1.5 py-0.2 rounded border border-[#7C8CA8]/50 text-[#7C8CA8] font-bold">POLL</span>
+                <span class="text-[10px] font-mono text-[#9AA3AE]">4m</span>
+              </div>
+            </div>
+
+            <!-- Row 4 -->
+            <div class="flex items-center justify-between text-xs py-0.5">
+              <span class="text-[#9AA3AE] font-medium truncate max-w-[190px]">Baseline scan done</span>
+              <div class="flex items-center space-x-1.5">
+                <span class="text-[9px] font-mono px-1.5 py-0.2 rounded border border-[#7C8CA8]/50 text-[#7C8CA8] font-bold">POLL</span>
+                <span class="text-[10px] font-mono text-[#9AA3AE]">12m</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="pt-1 border-t border-white/5 flex items-center justify-between text-[10px] text-[#9AA3AE] font-mono">
+            <span>AUDIT HASH: 0x981A</span>
+            <span class="text-[#22C58B]">MERKLE SEALED</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+</body>
+</html>

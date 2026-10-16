@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&amp;family=Space+Grotesk:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = { darkMode: "class", theme: { extend: { "colors": { "on-error-container": "#ffdad6", "inverse-primary": "#5e5e5b", "outline": "#90918a", "surface-container-low": "#1a1c1f", "on-primary-container": "#656461", "tertiary-fixed-dim": "#ffb957", "error": "#ffb4ab", "on-tertiary-fixed-variant": "#643f00", "surface-bright": "#37393d", "primary-container": "#e4e2dd", "secondary-container": "#00ba81", "secondary": "#49dfa2", "surface-dim": "#111317", "on-secondary-container": "#00422c", "inverse-surface": "#e2e2e6", "surface-container-high": "#282a2d", "primary-fixed": "#e4e2dd", "surface-variant": "#333538", "on-tertiary-container": "#8c5a00", "on-secondary": "#003824", "secondary-fixed-dim": "#49dfa2", "on-primary-fixed-variant": "#474744", "inverse-on-surface": "#2f3034", "on-background": "#e2e2e6", "on-secondary-fixed": "#002113", "surface-container-highest": "#333538", "surface-tint": "#c8c6c2", "primary-fixed-dim": "#c8c6c2", "background": "#111317", "on-secondary-fixed-variant": "#005236", "tertiary": "#ffffff", "surface-container": "#1e2023", "surface": "#111317", "secondary-fixed": "#6bfcbd", "error-container": "#93000a", "on-tertiary-fixed": "#2a1800", "primary": "#ffffff", "on-surface-variant": "#c7c7bf", "on-surface": "#e2e2e6", "tertiary-fixed": "#ffddb5", "on-primary": "#30312e", "tertiary-container": "#ffddb5", "surface-container-lowest": "#0c0e11", "on-tertiary": "#462b00", "outline-variant": "#464742", "on-error": "#690005", "on-primary-fixed": "#1b1c19" }, "borderRadius": { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" }, "spacing": { "space-xs": "0.25rem", "space-xl": "2.5rem", "space-md": "1rem", "margin": "2.5rem", "gutter": "1.5rem", "space-sm": "0.5rem", "gutter-mobile": "0.75rem", "space-lg": "1.5rem", "margin-mobile": "1rem" }, "fontFamily": { "title-md": [ "Space Grotesk" ], "receipt-mono-sm": [ "JetBrains Mono" ], "body-lg": [ "Space Grotesk" ], "body-md": [ "Space Grotesk" ], "receipt-mono-lg": [ "JetBrains Mono" ], "headline-xl": [ "Space Grotesk" ], "display-hero": [ "Space Grotesk" ], "stamp-badge": [ "JetBrains Mono" ], "headline-lg": [ "Space Grotesk" ], "display-stat": [ "Space Grotesk" ], "headline-xl-mobile": [ "Space Grotesk" ] }, "fontSize": { "title-md": [ "18px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600" } ], "receipt-mono-sm": [ "11px", { "lineHeight": "16px", "letterSpacing": "0.02em", "fontWeight": "400" } ], "body-lg": [ "15px", { "lineHeight": "22px", "fontWeight": "400" } ], "body-md": [ "13px", { "lineHeight": "18px", "fontWeight": "400" } ], "receipt-mono-lg": [ "14px", { "lineHeight": "20px", "letterSpacing": "-0.02em", "fontWeight": "500" } ], "headline-xl": [ "48px", { "lineHeight": "52px", "letterSpacing": "-0.03em", "fontWeight": "700" } ], "display-hero": [ "80px", { "lineHeight": "84px", "letterSpacing": "-0.04em", "fontWeight": "700" } ], "stamp-badge": [ "12px", { "lineHeight": "12px", "letterSpacing": "0.15em", "fontWeight": "700" } ], "headline-lg": [ "28px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" } ], "display-stat": [ "96px", { "lineHeight": "96px", "letterSpacing": "-0.05em", "fontWeight": "700" } ], "headline-xl-mobile": [ "32px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "700" } ] } } } };</script></head><body class="bg-surface-container-lowest text-on-surface antialiased selection:bg-secondary selection:text-on-secondary"><aside class="fixed left-0 top-0 h-full w-16 bg-surface-container-low z-50 flex flex-col items-center py-3 shadow-[0_1px_8px_rgba(0,0,0,0.5)]"><div class="w-10 h-10 rounded-lg bg-surface-container-high flex items-center justify-center mb-6"><span class="material-symbols-outlined text-secondary text-[22px]">terminal</span></div><nav class="flex-1 flex flex-col items-center gap-2 w-full px-2" data-active-classes="bg-surface-container-highest text-secondary shadow-[inset_0_0_12px_rgba(73,223,162,0.15)]"><a class="w-12 h-12 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="start" href="#" title="Start"><span class="material-symbols-outlined text-[20px]">play_circle</span></a><a class="w-12 h-12 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="requirements" href="#" title="Requirements"><span class="material-symbols-outlined text-[20px]">fact_check</span></a><a class="w-12 h-12 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="dashboard" href="#" title="Dashboard"><span class="material-symbols-outlined text-[20px]">space_dashboard</span></a><a class="w-12 h-12 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="contracts" href="#" title="Contracts"><span class="material-symbols-outlined text-[20px]">description</span></a><a class="w-12 h-12 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="break-me" href="#" title="Break-Me"><span class="material-symbols-outlined text-[20px]">security</span></a><a aria-current="page" class="w-12 h-12 rounded-lg flex items-center justify-center transition-colors bg-surface-container-highest text-secondary shadow-[inset_0_0_12px_rgba(73,223,162,0.15)]" data-path="resume" href="#" title="Resume"><span class="material-symbols-outlined text-[20px]">assignment_ind</span></a><a class="w-12 h-12 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="verify" href="#" title="Verify"><span class="material-symbols-outlined text-[20px]">verified</span></a></nav><div class="flex flex-col items-center gap-3"><a class="w-10 h-10 rounded-lg flex items-center justify-center text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" data-path="settings" href="#"><span class="material-symbols-outlined text-[18px]">tune</span></a><div class="w-2 h-2 rounded-full bg-secondary animate-pulse"></div></div></aside><div class="pl-16"><header class="fixed top-0 left-16 right-0 h-14 bg-surface-container-low/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.4)] z-40 px-6 flex items-center justify-between"><div class="flex items-center gap-3"><div class="flex items-center gap-2 font-receipt-mono-sm text-receipt-mono-sm"><span class="font-title-md text-title-md font-bold tracking-tight text-primary">ProofStack</span><span class="text-outline">/</span><span class="text-on-surface-variant">Rohan</span><span class="text-outline">/</span><span class="text-secondary bg-secondary-container/20 px-2 py-0.5 rounded text-receipt-mono-sm font-receipt-mono-sm">Resume Attestation (A4)</span></div></div><div class="flex items-center gap-6"><div class="hidden md:flex items-center gap-4 bg-surface-container px-3 py-1.5 rounded-lg"><div class="flex items-center gap-1.5"><div class="w-1.5 h-1.5 rounded-full bg-secondary shadow-[0_0_6px_rgba(73,223,162,0.8)]"></div><span class="font-receipt-mono-sm text-receipt-mono-sm text-on-surface-variant">GitHub</span></div><div class="w-1 h-1 rounded-full bg-surface-bright"></div><div class="flex items-center gap-1.5"><div class="w-1.5 h-1.5 rounded-full bg-secondary shadow-[0_0_6px_rgba(73,223,162,0.8)]"></div><span class="font-receipt-mono-sm text-receipt-mono-sm text-on-surface-variant">Webhook</span></div><div class="w-1 h-1 rounded-full bg-surface-bright"></div><div class="flex items-center gap-1.5"><div class="w-1.5 h-1.5 rounded-full bg-secondary shadow-[0_0_6px_rgba(73,223,162,0.8)]"></div><span class="font-receipt-mono-sm text-receipt-mono-sm text-on-surface-variant">Merkle Ledger</span></div></div><div class="flex items-center gap-3"><button class="p-1.5 rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[18px]">download</span></button><button class="p-1.5 rounded text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface transition-colors" type="button"><span class="material-symbols-outlined text-[18px]">terminal</span></button><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></div></header><main class="relative pt-14 w-full min-h-screen bg-surface-container-lowest"><div class="flex flex-col w-full relative">
+<!-- Interactive Ambient Backdrop & Desk Grid -->
+<div class="relative w-full px-4 lg:px-8 py-8 flex flex-col items-center">
+<!-- Atmospheric Glow Underlays -->
+<div class="absolute top-24 left-1/2 -translate-x-1/2 w-[720px] h-[480px] bg-secondary/10 rounded-full blur-[140px] pointer-events-none"></div>
+<div class="absolute top-96 right-1/4 w-[360px] h-[360px] bg-secondary-container/15 rounded-full blur-[110px] pointer-events-none"></div>
+<!-- Master Layout: Centered A4 Canvas with Adjacent Floating Glass Verifier Panel -->
+<div class="relative z-10 w-full max-w-[1240px] flex flex-col xl:flex-row items-center xl:items-start justify-center gap-8">
+<!-- ======================================================== -->
+<!-- THE PHYSICAL A4 PAPER DOSSIER (Warm Ivory Substrate)      -->
+<!-- ======================================================== -->
+<article class="relative w-full max-w-[780px] bg-[#FAF8F3] text-[#14171A] rounded-sm transition-all duration-300 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.5),0_25px_50px_-12px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.06)] p-8 sm:p-12 md:p-14 select-text" id="resume-document">
+<!-- Top Perforation Accent Mark -->
+<div class="absolute -top-[5px] left-6 right-6 h-[5px] flex justify-between items-center overflow-hidden opacity-40 pointer-events-none">
+<div class="w-full border-t-[2px] border-dashed border-[#8E9299]"></div>
+</div>
+<!-- Rubber Stamp: Proven Candidate Seal -->
+<div class="absolute top-8 right-8 pointer-events-none select-none transform rotate-[-5deg] mix-blend-multiply opacity-90">
+<div class="border-[2px] border-[#00BA81] p-[3px] rounded-sm">
+<div class="border-[1px] border-[#00BA81] px-3 py-1 flex flex-col items-center">
+<span class="font-stamp-badge text-stamp-badge text-[#00422C] font-bold tracking-widest leading-tight">ATTESTED PROOF</span>
+<span class="font-receipt-mono-sm text-[9px] text-[#00BA81] font-bold tracking-tighter">COMMIT #9F3C2AB • 2025</span>
+</div>
+</div>
+</div>
+<!-- DOCUMENT HEADER -->
+<header class="pb-6 border-b border-[#E6E2D8]">
+<div class="flex items-center gap-2 mb-2 font-receipt-mono-sm text-receipt-mono-sm text-[#656461]">
+<span class="inline-block w-2 h-2 rounded-full bg-[#00BA81]"></span>
+<span>AUDIT IDENTIFIER: #9f3c2ab</span>
+<span>•</span>
+<span class="text-[#00422C] font-semibold bg-[#E4E2DD] px-1.5 py-0.5 rounded">VERIFIED MERKLE LEDGER</span>
+</div>
+<h1 class="font-headline-xl text-headline-xl sm:text-display-hero sm:text-[44px] sm:leading-[46px] font-bold tracking-tight text-[#111317]">
+            ROHAN VERMA
+          </h1>
+<p class="font-title-md text-title-md text-[#474744] mt-1 font-medium">
+            Backend &amp; Distributed Systems Engineer
+          </p>
+<div class="flex flex-wrap items-center gap-x-4 gap-y-1 font-receipt-mono-sm text-receipt-mono-sm text-[#656461] mt-3">
+<span class="hover:text-[#111317] transition-colors cursor-pointer">rohan@northwind-labs.dev</span>
+<span class="text-[#90918A]">/</span>
+<span class="hover:text-[#111317] transition-colors cursor-pointer">github.com/rohan</span>
+<span class="text-[#90918A]">/</span>
+<span>San Francisco, CA</span>
+<span class="text-[#90918A]">/</span>
+<span class="text-[#00422C] font-mono font-medium">Clearance: Level-0 Codebase Verified</span>
+</div>
+</header>
+<!-- PROFESSIONAL SUMMARY -->
+<section class="py-5 border-b border-[#E6E2D8]">
+<div class="flex items-center gap-2 mb-2">
+<span class="font-stamp-badge text-[11px] tracking-wider text-[#656461] font-bold uppercase">Executive Summary</span>
+</div>
+<p class="font-body-lg text-body-lg text-[#282A2D] leading-relaxed">
+            Performance-obsessed distributed systems engineer specializing in high-throughput RPC interfaces, automated formal testing invariants, and zero-trust schema pipelines. Backed by verified cryptographic commits proving concurrency constraints and fault-tolerant transaction delivery.
+          </p>
+</section>
+<!-- TECHNICAL SKILLS (HERO EVALUATION SECTION) -->
+<section class="py-6 border-b border-[#E6E2D8]">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-2">
+<span class="font-stamp-badge text-[11px] tracking-wider text-[#656461] font-bold uppercase">Attested Technical Surface</span>
+<span class="font-receipt-mono-sm text-[10px] bg-[#E4E2DD] text-[#30312E] px-2 py-0.5 rounded font-mono font-medium">Target: Northwind Repo Spec</span>
+</div>
+<div class="hidden sm:flex items-center gap-3 font-receipt-mono-sm text-[10px] text-[#656461]">
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#00BA81]"></span> Proven</span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#FFB957]"></span> Basic</span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-[#90918A]"></span> Not In Scope</span>
+</div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-5">
+<!-- Category: Core Languages -->
+<div class="bg-[#F3EFE6]/60 p-3.5 rounded-sm">
+<div class="font-receipt-mono-sm text-[11px] font-bold uppercase text-[#474744] tracking-wider mb-2.5 flex items-center justify-between border-b border-[#E6E2D8] pb-1">
+<span>01. Core Languages</span>
+<span class="text-[#00BA81] font-mono text-[10px]">2 / 2 AUDITED</span>
+</div>
+<ul class="space-y-2">
+<li class="flex items-center justify-between font-body-md text-body-md">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#00BA81] shadow-[0_0_6px_rgba(0,186,129,0.8)]"></span>
+<span class="font-semibold text-[#111317]">Python</span>
+<sup class="font-receipt-mono-sm text-[10px] text-[#00422C] font-bold bg-[#E4E2DD] px-1 rounded">[1]</sup>
+</div>
+<span class="font-receipt-mono-sm text-[10px] font-bold text-[#00422C] tracking-tight">PROVEN</span>
+</li>
+<li class="flex items-center justify-between font-body-md text-body-md">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#00BA81] shadow-[0_0_6px_rgba(0,186,129,0.8)]"></span>
+<span class="font-semibold text-[#111317]">Go / Golang</span>
+<sup class="font-receipt-mono-sm text-[10px] text-[#00422C] font-bold bg-[#E4E2DD] px-1 rounded">[4]</sup>
+</div>
+<span class="font-receipt-mono-sm text-[10px] font-bold text-[#00422C] tracking-tight">PROVEN</span>
+</li>
+</ul>
+</div>
+<!-- Category: Backend & APIs -->
+<div class="bg-[#F3EFE6]/60 p-3.5 rounded-sm">
+<div class="font-receipt-mono-sm text-[11px] font-bold uppercase text-[#474744] tracking-wider mb-2.5 flex items-center justify-between border-b border-[#E6E2D8] pb-1">
+<span>02. Backend &amp; APIs</span>
+<span class="text-[#00BA81] font-mono text-[10px]">2 / 2 AUDITED</span>
+</div>
+<ul class="space-y-2">
+<li class="flex items-center justify-between font-body-md text-body-md">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#00BA81] shadow-[0_0_6px_rgba(0,186,129,0.8)]"></span>
+<span class="font-semibold text-[#111317]">REST API Architecture</span>
+<sup class="font-receipt-mono-sm text-[10px] text-[#00422C] font-bold bg-[#E4E2DD] px-1 rounded">[1]</sup>
+</div>
+<span class="font-receipt-mono-sm text-[10px] font-bold text-[#00422C] tracking-tight">PROVEN</span>
+</li>
+<li class="flex items-center justify-between font-body-md text-body-md">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#00BA81] shadow-[0_0_6px_rgba(0,186,129,0.8)]"></span>
+<span class="font-semibold text-[#111317]">Automated Regression Testing</span>
+<sup class="font-receipt-mono-sm text-[10px] text-[#00422C] font-bold bg-[#E4E2DD] px-1 rounded">[2]</sup>
+</div>
+<span class="font-receipt-mono-sm text-[10px] font-bold text-[#00422C] tracking-tight">PROVEN</span>
+</li>
+</ul>
+</div>
+<!-- Category: Systems & Infra -->
+<div class="bg-[#F3EFE6]/60 p-3.5 rounded-sm">
+<div class="font-receipt-mono-sm text-[11px] font-bold uppercase text-[#474744] tracking-wider mb-2.5 flex items-center justify-between border-b border-[#E6E2D8] pb-1">
+<span>03. Systems &amp; Infra</span>
+<span class="text-[#656461] font-mono text-[10px]">1 / 3 AUDITED</span>
+</div>
+<ul class="space-y-2">
+<li class="flex items-center justify-between font-body-md text-body-md">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#FFB957]"></span>
+<span class="font-medium text-[#111317]">Docker Containerization</span>
+<sup class="font-receipt-mono-sm text-[10px] text-[#643F00] font-bold bg-[#FFDDB5] px-1 rounded">[3]</sup>
+</div>
+<span class="font-receipt-mono-sm text-[10px] font-bold text-[#643F00] tracking-tight">BASIC</span>
+</li>
+<li class="flex items-center justify-between font-body-md text-body-md opacity-60">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#90918A]"></span>
+<span class="font-normal text-[#656461]">Kubernetes Orchestration</span>
+</div>
+<span class="font-receipt-mono-sm text-[10px] text-[#656461] tracking-tight">NOT SHOWN</span>
+</li>
+<li class="flex items-center justify-between font-body-md text-body-md opacity-60">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#7C8CA8]"></span>
+<span class="font-normal text-[#656461]">CI/CD GitHub Actions</span>
+</div>
+<span class="font-receipt-mono-sm text-[10px] text-[#7C8CA8] tracking-tight">UNCLEAR</span>
+</li>
+</ul>
+</div>
+<!-- Category: Data & Persistence -->
+<div class="bg-[#F3EFE6]/60 p-3.5 rounded-sm">
+<div class="font-receipt-mono-sm text-[11px] font-bold uppercase text-[#474744] tracking-wider mb-2.5 flex items-center justify-between border-b border-[#E6E2D8] pb-1">
+<span>04. Data &amp; Persistence</span>
+<span class="text-[#656461] font-mono text-[10px]">1 / 2 AUDITED</span>
+</div>
+<ul class="space-y-2">
+<li class="flex items-center justify-between font-body-md text-body-md">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#00BA81] shadow-[0_0_6px_rgba(0,186,129,0.8)]"></span>
+<span class="font-semibold text-[#111317]">PostgreSQL / Schema Migrations</span>
+<sup class="font-receipt-mono-sm text-[10px] text-[#00422C] font-bold bg-[#E4E2DD] px-1 rounded">[5]</sup>
+</div>
+<span class="font-receipt-mono-sm text-[10px] font-bold text-[#00422C] tracking-tight">PROVEN</span>
+</li>
+<li class="flex items-center justify-between font-body-md text-body-md opacity-60">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-[#7C8CA8]"></span>
+<span class="font-normal text-[#656461]">Redis In-Memory Buffers</span>
+</div>
+<span class="font-receipt-mono-sm text-[10px] text-[#7C8CA8] tracking-tight">UNCLEAR</span>
+</li>
+</ul>
+</div>
+</div>
+</section>
+<!-- EXPERIENCE SECTION -->
+<section class="py-6 border-b border-[#E6E2D8]">
+<div class="flex items-center justify-between mb-4">
+<span class="font-stamp-badge text-[11px] tracking-wider text-[#656461] font-bold uppercase">Engineering Work History</span>
+<span class="font-receipt-mono-sm text-receipt-mono-sm text-[#90918A]">Cryptographically Linked Evidence</span>
+</div>
+<!-- Role 1 -->
+<div class="mb-6">
+<div class="flex flex-col sm:flex-row sm:items-baseline justify-between mb-1.5">
+<h3 class="font-title-md text-title-md font-bold text-[#111317]">
+                Northwind Labs <span class="font-normal text-[#474744]">— Backend Engineering Intern</span>
+</h3>
+<span class="font-receipt-mono-sm text-receipt-mono-sm text-[#656461]">2024 — Present • San Francisco</span>
+</div>
+<ul class="space-y-1.5 text-body-md font-body-md text-[#282A2D]">
+<li class="flex items-start gap-2">
+<span class="text-[#00BA81] font-bold select-none mt-0.5">•</span>
+<span>
+                  Architected asynchronous REST order dispatch service handling 1,400+ ops/sec with FastAPI and Redis mock pipelines.
+                  <sup class="font-receipt-mono-sm text-[10px] font-bold text-[#00422C] bg-[#E4E2DD] px-1 rounded ml-1 cursor-help hover:bg-[#00BA81] hover:text-[#002113] transition-colors">[1]</sup>
+</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="text-[#00BA81] font-bold select-none mt-0.5">•</span>
+<span>
+                  Implemented automated regression testing suite achieving 92% branch coverage across route handlers and token validators.
+                  <sup class="font-receipt-mono-sm text-[10px] font-bold text-[#00422C] bg-[#E4E2DD] px-1 rounded ml-1 cursor-help hover:bg-[#00BA81] hover:text-[#002113] transition-colors">[2]</sup>
+</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="text-[#00BA81] font-bold select-none mt-0.5">•</span>
+<span>
+                  Containerized service deployment via Docker multi-stage builds and isolated environment specs.
+                  <sup class="font-receipt-mono-sm text-[10px] font-bold text-[#643F00] bg-[#FFDDB5] px-1 rounded ml-1 cursor-help hover:bg-[#FFB957] hover:text-[#2A1800] transition-colors">[3]</sup>
+</span>
+</li>
+</ul>
+</div>
+<!-- Role 2 -->
+<div>
+<div class="flex flex-col sm:flex-row sm:items-baseline justify-between mb-1.5">
+<h3 class="font-title-md text-title-md font-bold text-[#111317]">
+                Shop-API Open-Source Engine <span class="font-normal text-[#474744]">— Core Maintainer</span>
+</h3>
+<span class="font-receipt-mono-sm text-receipt-mono-sm text-[#656461]">2023 — 2024 • Remote OSS</span>
+</div>
+<ul class="space-y-1.5 text-body-md font-body-md text-[#282A2D]">
+<li class="flex items-start gap-2">
+<span class="text-[#00BA81] font-bold select-none mt-0.5">•</span>
+<span>
+                  Authored JWT token rotation middleware and database connection pools with strict connection quotas.
+                  <sup class="font-receipt-mono-sm text-[10px] font-bold text-[#00422C] bg-[#E4E2DD] px-1 rounded ml-1 cursor-help hover:bg-[#00BA81] hover:text-[#002113] transition-colors">[4]</sup>
+</span>
+</li>
+<li class="flex items-start gap-2">
+<span class="text-[#00BA81] font-bold select-none mt-0.5">•</span>
+<span>
+                  Designed relational schema migration tooling and persistent order receipt hashing mechanism.
+                  <sup class="font-receipt-mono-sm text-[10px] font-bold text-[#00422C] bg-[#E4E2DD] px-1 rounded ml-1 cursor-help hover:bg-[#00BA81] hover:text-[#002113] transition-colors">[5]</sup>
+</span>
+</li>
+</ul>
+</div>
+</section>
+<!-- A4 FOOTNOTE CITATIONS & VERIFICATION MERKLE -->
+<footer class="pt-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+<div class="space-y-1 text-[10px] font-receipt-mono-sm text-[#656461] max-w-[500px]">
+<p class="text-[#30312E] font-bold uppercase tracking-wider mb-1">Audit Ledger Footnotes:</p>
+<p><span class="text-[#00422C] font-bold">[1]</span> Commit 9f3c2ab: FastAPI route assertions &amp; payload schemas in api/routes/orders.py</p>
+<p><span class="text-[#00422C] font-bold">[2]</span> Commit 3a1b8cd: 8 unit test fixtures passing in tests/test_orders.py</p>
+<p><span class="text-[#643F00] font-bold">[3]</span> Commit 8e41bf0: Dockerfile production spec &amp; multi-stage layer definitions</p>
+<p><span class="text-[#00422C] font-bold">[4]</span> Commit e41b712: Go-native HMAC token verification middleware with 10k req test</p>
+<p><span class="text-[#00422C] font-bold">[5]</span> Commit 7a9c310: Postgres idempotent foreign keys and state change locks</p>
+</div>
+<div class="flex items-center gap-3 bg-[#F3EFE6] p-2.5 rounded border border-[#E6E2D8] self-stretch md:self-auto justify-between md:justify-start">
+<div class="w-14 h-14 bg-white p-1 rounded border border-[#D3CDBD] flex items-center justify-center">
+<!-- Inline High-Fidelity SVG QR Representation -->
+<svg class="w-full h-full text-[#111317]" fill="currentColor" viewbox="0 0 44 44">
+<rect fill="none" height="14" stroke="currentColor" stroke-width="2" width="14" x="0" y="0"></rect>
+<rect height="6" width="6" x="4" y="4"></rect>
+<rect fill="none" height="14" stroke="currentColor" stroke-width="2" width="14" x="30" y="0"></rect>
+<rect height="6" width="6" x="34" y="4"></rect>
+<rect fill="none" height="14" stroke="currentColor" stroke-width="2" width="14" x="0" y="30"></rect>
+<rect height="6" width="6" x="4" y="34"></rect>
+<rect height="4" width="4" x="18" y="4"></rect>
+<rect height="4" width="4" x="24" y="8"></rect>
+<rect height="6" width="6" x="18" y="16"></rect>
+<rect height="8" width="4" x="28" y="18"></rect>
+<rect height="4" width="4" x="18" y="26"></rect>
+<rect height="4" width="6" x="24" y="32"></rect>
+<rect height="6" width="6" x="34" y="34"></rect>
+</svg>
+</div>
+<div class="font-receipt-mono-sm text-[9px] text-[#474744] flex flex-col justify-center">
+<span class="font-bold text-[#111317] uppercase tracking-wider">Merkle Proof Root</span>
+<span class="text-[#00422C] font-mono">0x9f3c2ab...410F</span>
+<span class="text-[#90918A] mt-0.5">Scan to verify immutable ledger</span>
+</div>
+</div>
+</footer>
+<!-- Bottom Perforation Saw-Tooth Illusion -->
+<div class="absolute -bottom-[6px] left-4 right-4 h-[6px] flex justify-between items-center overflow-hidden opacity-50 pointer-events-none">
+<div class="w-full border-b-[2px] border-dashed border-[#8E9299]"></div>
+</div>
+</article>
+<!-- ======================================================== -->
+<!-- FLOATING GLASS UTILITY PANEL (Forensic Attestation Tool) -->
+<!-- ======================================================== -->
+<aside class="w-full xl:w-[360px] flex flex-col gap-4 sticky xl:top-20">
+<!-- Main Glass Card -->
+<div class="w-full bg-surface-container/70 backdrop-blur-xl rounded-xl p-6 shadow-[0_20px_40px_rgba(0,0,0,0.6)] flex flex-col gap-5">
+<!-- Panel Header -->
+<div class="flex items-center justify-between pb-3 border-b border-surface-bright/40">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary shadow-[0_0_10px_rgba(73,223,162,0.9)] animate-pulse"></span>
+<h2 class="font-title-md text-title-md text-on-surface font-semibold tracking-tight">Proof Attestation</h2>
+</div>
+<span class="font-receipt-mono-sm text-receipt-mono-sm text-secondary bg-secondary-container/20 px-2 py-0.5 rounded">ONLINE</span>
+</div>
+<!-- Quick Action Buttons -->
+<div class="flex flex-col gap-2.5">
+<button class="w-full h-11 bg-primary text-on-primary font-receipt-mono-lg text-receipt-mono-lg font-bold rounded-lg flex items-center justify-center gap-2 shadow-lg hover:bg-primary-container active:scale-[0.98] transition-all" id="btn-export-pdf" type="button">
+<span class="material-symbols-outlined text-[18px]">download</span>
+<span>EXPORT CERTIFIED PDF</span>
+</button>
+<button class="w-full h-10 bg-surface-container-high/80 hover:bg-surface-bright text-on-surface font-receipt-mono-sm text-receipt-mono-sm rounded-lg flex items-center justify-center gap-2 transition-all" id="btn-copy-link" type="button">
+<span class="material-symbols-outlined text-[16px] text-secondary">link</span>
+<span id="copy-btn-text">COPY PROOF LEDGER LINK</span>
+</button>
+</div>
+<!-- Public Verifier QR Module -->
+<div class="bg-surface-container-lowest/80 rounded-lg p-4 flex items-center gap-4">
+<div class="w-16 h-16 bg-white rounded p-1.5 flex-shrink-0 shadow-inner flex items-center justify-center">
+<svg class="w-full h-full text-black" fill="currentColor" viewbox="0 0 44 44">
+<rect fill="none" height="14" stroke="currentColor" stroke-width="2" width="14" x="0" y="0"></rect>
+<rect height="6" width="6" x="4" y="4"></rect>
+<rect fill="none" height="14" stroke="currentColor" stroke-width="2" width="14" x="30" y="0"></rect>
+<rect height="6" width="6" x="34" y="4"></rect>
+<rect fill="none" height="14" stroke="currentColor" stroke-width="2" width="14" x="0" y="30"></rect>
+<rect height="6" width="6" x="4" y="34"></rect>
+<rect height="4" width="4" x="18" y="4"></rect>
+<rect height="4" width="4" x="24" y="8"></rect>
+<rect height="6" width="6" x="18" y="16"></rect>
+<rect height="8" width="4" x="28" y="18"></rect>
+<rect height="4" width="4" x="18" y="26"></rect>
+<rect height="4" width="6" x="24" y="32"></rect>
+<rect height="6" width="6" x="34" y="34"></rect>
+</svg>
+</div>
+<div class="flex flex-col justify-center min-w-0">
+<span class="font-title-md text-[13px] font-bold text-on-surface truncate">Public Verifier QR</span>
+<span class="font-receipt-mono-sm text-receipt-mono-sm text-on-surface-variant leading-tight mt-0.5">Scans directly to SHA-256 Merkle tree verification node.</span>
+</div>
+</div>
+<!-- Evaluator Status Key / Legend -->
+<div class="flex flex-col gap-2 pt-2 border-t border-surface-bright/30">
+<span class="font-stamp-badge text-[10px] tracking-wider text-on-surface-variant font-bold uppercase">Attestation Legend</span>
+<div class="space-y-1.5 font-receipt-mono-sm text-receipt-mono-sm">
+<div class="flex items-center justify-between p-1.5 rounded bg-surface-container-high/40">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-secondary shadow-[0_0_6px_rgba(73,223,162,0.9)]"></span>
+<span class="text-on-surface font-medium">PROVEN</span>
+</div>
+<span class="text-on-surface-variant text-[10px]">Test suite pass</span>
+</div>
+<div class="flex items-center justify-between p-1.5 rounded bg-surface-container-high/40">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-tertiary-fixed-dim"></span>
+<span class="text-on-surface font-medium">BASIC</span>
+</div>
+<span class="text-on-surface-variant text-[10px]">Syntax &amp; imports</span>
+</div>
+<div class="flex items-center justify-between p-1.5 rounded bg-surface-container-high/40">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-[#8B7CFF]"></span>
+<span class="text-on-surface font-medium">UNCLEAR</span>
+</div>
+<span class="text-on-surface-variant text-[10px]">Signal ambiguous</span>
+</div>
+<div class="flex items-center justify-between p-1.5 rounded bg-surface-container-high/40">
+<div class="flex items-center gap-2">
+<span class="w-2.5 h-2.5 rounded-full bg-outline"></span>
+<span class="text-on-surface-variant">NOT SHOWN</span>
+</div>
+<span class="text-on-surface-variant text-[10px]">Unaudited scope</span>
+</div>
+</div>
+</div>
+<!-- Audit Metadata Block -->
+<div class="bg-surface-container-lowest p-3 rounded-lg font-receipt-mono-sm text-[11px] space-y-1.5">
+<div class="flex justify-between text-on-surface-variant">
+<span>Target:</span>
+<span class="text-on-surface font-mono font-medium">Northwind Labs</span>
+</div>
+<div class="flex justify-between text-on-surface-variant">
+<span>Coverage:</span>
+<span class="text-secondary font-mono font-bold">58% (4 of 7 skills)</span>
+</div>
+<div class="flex justify-between text-on-surface-variant">
+<span>Audit ID:</span>
+<span class="text-on-surface font-mono">NWL-2025-0428-ROH</span>
+</div>
+<div class="flex justify-between text-on-surface-variant">
+<span>Merkle Root:</span>
+<span class="text-secondary font-mono">0x9f3c2ab71...</span>
+</div>
+</div>
+<!-- Bottom Ledger Timestamp -->
+<div class="flex items-center justify-between text-[10px] font-receipt-mono-sm text-outline pt-1">
+<span>TIMESTAMP: 2025-04-28 14:22:09 UTC</span>
+<span class="flex items-center gap-1 text-secondary">
+<span class="material-symbols-outlined text-[12px]">verified</span>
+              SIGNED
+            </span>
+</div>
+</div>
+<!-- Secondary Informational Card -->
+<div class="w-full bg-surface-container-low/60 backdrop-blur-md rounded-lg p-4 flex items-center justify-between text-on-surface-variant font-receipt-mono-sm text-receipt-mono-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary text-[18px]">lock_reset</span>
+<span>Zero-Knowledge Verification</span>
+</div>
+<span class="text-primary font-bold">SHA-256</span>
+</div>
+</aside>
+</div>
+</div>
+</div>
+<script>
+  // Quick Copy Verification Link Micro-Interaction
+  const copyBtn = document.getElementById('btn-copy-link');
+  const copyText = document.getElementById('copy-btn-text');
+  
+  if (copyBtn && copyText) {
+    copyBtn.addEventListener('click', () => {
+      const originalText = copyText.textContent;
+      navigator.clipboard?.writeText(window.location.href);
+      copyText.textContent = 'COPIED TO CLIPBOARD!';
+      copyBtn.classList.add('bg-secondary-container', 'text-on-secondary');
+      setTimeout(() => {
+        copyText.textContent = originalText;
+        copyBtn.classList.remove('bg-secondary-container', 'text-on-secondary');
+      }, 2000);
+    });
+  }
+
+  // Export PDF Trigger Mock
+  const exportBtn = document.getElementById('btn-export-pdf');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', () => {
+      window.print();
+    });
+  }
+</script></main></div></body></html>

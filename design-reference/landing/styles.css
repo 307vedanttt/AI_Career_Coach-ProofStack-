@@ -1,0 +1,90 @@
+
+    /* Custom SVG Turbulence Mask Filter for Authentic Ink Bleed Stamps */
+    .ink-bleed {
+      filter: url('#stamp-distortion');
+    }
+    
+    /* Zig-zag jagged torn top edge (12px teeth) */
+    .sawtooth-top {
+      clip-path: polygon(
+        0% 12px,
+        2.5% 0px, 5% 12px, 7.5% 0px, 10% 12px, 12.5% 0px, 15% 12px, 17.5% 0px, 20% 12px,
+        22.5% 0px, 25% 12px, 27.5% 0px, 30% 12px, 32.5% 0px, 35% 12px, 37.5% 0px, 40% 12px,
+        42.5% 0px, 45% 12px, 47.5% 0px, 50% 12px, 52.5% 0px, 55% 12px, 57.5% 0px, 60% 12px,
+        62.5% 0px, 65% 12px, 67.5% 0px, 70% 12px, 72.5% 0px, 75% 12px, 77.5% 0px, 80% 12px,
+        82.5% 0px, 85% 12px, 87.5% 0px, 90% 12px, 92.5% 0px, 95% 12px, 97.5% 0px, 100% 12px,
+        100% 100%,
+        0% 100%
+      );
+    }
+
+    /* Subtle paper texture simulation */
+    .paper-grain {
+      background-color: #FAF8F3;
+      background-image: radial-gradient(#14171a 0.75px, transparent 0.75px), radial-gradient(#14171a 0.75px, #FAF8F3 0.75px);
+      background-size: 30px 30px;
+      background-position: 0 0, 15px 15px;
+      background-blend-mode: multiply;
+    }
+
+    /* Desk Dot Grid (1px dots, 6% white, 24px spacing) */
+    .desk-grid {
+      background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1.25px, transparent 1.25px);
+      background-size: 24px 24px;
+    }
+
+    /* Barcode generator styling */
+    .barcode-lines {
+      background: repeating-linear-gradient(
+        to right,
+        #14171A 0px, #14171A 2px,
+        transparent 2px, transparent 4px,
+        #14171A 4px, #14171A 5px,
+        transparent 5px, transparent 8px,
+        #14171A 8px, #14171A 11px,
+        transparent 11px, transparent 13px,
+        #14171A 13px, #14171A 14px,
+        transparent 14px, transparent 18px,
+        #14171A 18px, #14171A 21px,
+        transparent 21px, transparent 24px
+      );
+    }
+
+    /* Glowing outlines */
+    .glow-emerald {
+      box-shadow: 0 0 28px rgba(34, 197, 139, 0.35);
+    }
+    .glow-amber {
+      box-shadow: 0 0 24px rgba(245, 165, 36, 0.35);
+    }
+    .glow-violet {
+      box-shadow: 0 0 24px rgba(139, 124, 255, 0.35);
+    }
+    .glow-slate {
+      box-shadow: 0 0 24px rgba(124, 140, 168, 0.35);
+    }
+    .glow-refused {
+      box-shadow: 0 0 16px rgba(255, 92, 77, 0.7);
+    }
+
+    /* Floating physical paper shadows */
+    .paper-shadow {
+      box-shadow: 0 35px 70px -15px rgba(0, 0, 0, 0.65), 0 15px 30px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    }
+
+    /* Fresh push pulse */
+    @keyframes pulse-ring {
+      0% { transform: scale(0.98); box-shadow: 0 0 0 0 rgba(34, 197, 139, 0.7); }
+      70% { transform: scale(1.02); box-shadow: 0 0 0 14px rgba(34, 197, 139, 0); }
+      100% { transform: scale(0.98); box-shadow: 0 0 0 0 rgba(34, 197, 139, 0); }
+    }
+    .active-push-pulse {
+      animation: pulse-ring 2.8s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    /* Stamp double border geometry */
+    .stamp-box {
+      border: 3.5px solid currentColor;
+      box-shadow: 0 0 0 3px #FAF8F3, 0 0 0 4.5px currentColor;
+    }
+  

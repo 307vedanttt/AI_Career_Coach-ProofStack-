@@ -1,0 +1,121 @@
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+    }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #0B0D10;
+      color: #F4F2EC;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      width: 1440px;
+      height: 900px;
+      letter-spacing: -0.015em;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .font-stamp {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+    }
+    /* Dot Grid Background */
+    .bg-dot-grid {
+      background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    /* Glass Panel */
+    .glass-panel {
+      background: rgba(255, 255, 255, 0.035);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      backdrop-filter: blur(24px);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    }
+    /* Mini Stamp */
+    .mini-stamp {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 2px 8px;
+      font-size: 11px;
+      line-height: 14px;
+      text-transform: uppercase;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      border-radius: 3px;
+      transform: rotate(-4deg);
+      mix-blend-mode: screen;
+      white-space: nowrap;
+    }
+    .stamp-proven {
+      color: #22C58B;
+      border: 1.5px solid #22C58B;
+      box-shadow: 0 0 0 1px rgba(34, 197, 139, 0.3), 0 0 12px rgba(34, 197, 139, 0.35);
+      background: rgba(34, 197, 139, 0.12);
+    }
+    .stamp-basic {
+      color: #F5A524;
+      border: 1.5px solid #F5A524;
+      box-shadow: 0 0 0 1px rgba(245, 165, 36, 0.3), 0 0 12px rgba(245, 165, 36, 0.35);
+      background: rgba(245, 165, 36, 0.12);
+    }
+    .stamp-not-shown {
+      color: #7C8CA8;
+      border: 1.5px solid #7C8CA8;
+      box-shadow: 0 0 0 1px rgba(124, 140, 168, 0.3), 0 0 12px rgba(124, 140, 168, 0.25);
+      background: rgba(124, 140, 168, 0.12);
+    }
+    .stamp-unclear {
+      color: #8B7CFF;
+      border: 1.5px solid #8B7CFF;
+      box-shadow: 0 0 0 1px rgba(139, 124, 255, 0.3), 0 0 12px rgba(139, 124, 255, 0.35);
+      background: rgba(139, 124, 255, 0.12);
+    }
+    /* Zig Zag Paper Tag */
+    .paper-tag {
+      background: #FAF8F3;
+      color: #14171A;
+      box-shadow: 0 10px 25px -4px rgba(0, 0, 0, 0.6), 0 2px 6px rgba(0,0,0,0.2);
+      clip-path: polygon(
+        0% 0%, 5% 4px, 10% 0%, 15% 4px, 20% 0%, 25% 4px, 30% 0%, 35% 4px, 40% 0%, 45% 4px, 50% 0%, 55% 4px, 60% 0%, 65% 4px, 70% 0%, 75% 4px, 80% 0%, 85% 4px, 90% 0%, 95% 4px, 100% 0%,
+        100% 100%, 0% 100%
+      );
+    }
+    /* Pulse Rings */
+    @keyframes pulseGlow {
+      0%, 100% {
+        box-shadow: 0 0 0 2px #22C58B, 0 0 25px rgba(34, 197, 139, 0.6), inset 0 0 20px rgba(34, 197, 139, 0.3);
+      }
+      50% {
+        box-shadow: 0 0 0 4px #22C58B, 0 0 45px rgba(34, 197, 139, 0.8), inset 0 0 30px rgba(34, 197, 139, 0.45);
+      }
+    }
+    .animate-pulse-glow {
+      animation: pulseGlow 2.8s infinite ease-in-out;
+    }
+    /* Stained Glass Tile Gradients */
+    .tile-emerald {
+      background: linear-gradient(135deg, rgba(34, 197, 139, 0.85) 0%, rgba(16, 124, 85, 0.95) 100%);
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.4), 0 4px 14px rgba(34, 197, 139, 0.25);
+      border: 1px solid rgba(34, 197, 139, 0.5);
+    }
+    .tile-slate {
+      background: linear-gradient(135deg, rgba(124, 140, 168, 0.55) 0%, rgba(71, 85, 105, 0.8) 100%);
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25), 0 4px 14px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(124, 140, 168, 0.4);
+    }
+    .tile-amber {
+      background: linear-gradient(135deg, rgba(245, 165, 36, 0.85) 0%, rgba(180, 83, 9, 0.9) 100%);
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.35), 0 4px 14px rgba(245, 165, 36, 0.3);
+      border: 1px solid rgba(245, 165, 36, 0.5);
+    }
+    .tile-violet {
+      background: linear-gradient(135deg, rgba(139, 124, 255, 0.8) 0%, rgba(99, 102, 241, 0.85) 100%);
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.35), 0 4px 14px rgba(139, 124, 255, 0.3);
+      border: 1px solid rgba(139, 124, 255, 0.5);
+    }
+  

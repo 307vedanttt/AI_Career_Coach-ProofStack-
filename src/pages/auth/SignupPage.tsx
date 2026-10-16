@@ -1,0 +1,206 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Lock, UserCheck } from 'lucide-react';
+
+import { motion, useReducedMotion } from 'framer-motion';
+import { AuthSplitLayout } from '../../components/layout/AuthSplitLayout';
+import { AuthPanel, AuthItem } from '../../components/auth/AuthPanel';
+import { StepPreview } from '../../components/auth/StepPreview';
+import { WhatWeAskGithubCard } from '../../components/auth/WhatWeAskGithubCard';
+import { CustomCheckbox } from '../../components/auth/CustomCheckbox';
+import { Button } from '../../components/ui/Button';
+import { getCurrentUser, getMockAuthPath } from '../../lib/api';
+
+export const SignupPage: React.FC = () => {
+  const navigate = useNavigate();
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const shouldReduceMotion = useReducedMotion();
+
+  const [agreedReadOnly, setAgreedReadOnly] = useState(false);
+  const [agreedPrivacy, setAgreedPrivacy] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const isFormComplete = agreedReadOnly && agreedPrivacy;
+
+  useEffect(() => {
+    // Check if user is already signed in
+    getCurrentUser().then((user) => {
+      if (user) {
+        navigate('/app', { replace: true });
+      }
+    });
+
+    // Move focus to heading on route load
+    headingRef.current?.focus();
+  }, [navigate]);
+
+  const handleSignup = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!isFormComplete) return;
+
+    setIsSubmitting(true);
+    const authPath = getMockAuthPath();
+
+    setTimeout(() => {
+      if (authPath === 'declined') {
+        navigate('/auth/error?reason=declined');
+      } else if (authPath === 'rate_limited') {
+        navigate('/auth/rate-limited?retry_after=45');
+      } else {
+        // Direct to consent preview or redirecting
+        navigate('/auth/consent');
+      }
+    }, 300);
+  };
+
+  return (
+    <AuthSplitLayout
+      tagline="TERMINAL HANDSHAKE // ACCESS TIER"
+      headline={
+        <>
+          Start with what your code{' '}
+          <span className="font-serif italic font-normal text-[#34D399] tracking-normal">
+            already proves
+          </span>
+          .
+        </>
+      }
+      leftContent={<StepPreview />}
+      rightContent={
+        <div className="w-full flex justify-center">
+          <AuthPanel
+            badge="REGISTER_V3.8"
+            icon={<UserCheck className="w-4 h-4 text-[#34D399]" />}
+          >
+            {/* Header */}
+            <AuthItem className="mb-5">
+              <h2
+                ref={headingRef}
+                tabIndex={-1}
+                className="text-2xl font-bold tracking-tight text-white mb-1 focus:outline-none"
+              >
+                Create your account
+              </h2>
+              <p className="text-xs text-[#9AA3AE]">
+                One click. No password.
+              </p>
+            </AuthItem>
+
+            {/* What We Ask GitHub For Receipt Card */}
+            <AuthItem className="mb-5">
+              <WhatWeAskGithubCard />
+            </AuthItem>
+
+            {/* Interactive Custom Checkboxes */}
+            <AuthItem className="space-y-3 mb-5">
+              <CustomCheckbox
+                id="check-readonly"
+                checked={agreedReadOnly}
+                onChange={setAgreedReadOnly}
+                describedBy="signup-button-helper"
+                label="I understand ProofStack only reads my code, never changes it."
+              />
+              <CustomCheckbox
+                id="check-privacy"
+                checked={agreedPrivacy}
+                onChange={setAgreedPrivacy}
+                describedBy="signup-button-helper"
+                label={
+                  <span>
+                    I agree to the{' '}
+                    <span className="text-[#34D399] underline underline-offset-2">
+                      Privacy notice
+                    </span>
+                    .
+                  </span>
+                }
+              />
+            </AuthItem>
+
+            {/* Helper description for screen readers */}
+            <div id="signup-button-helper" className="sr-only">
+              {isFormComplete
+                ? 'Both terms accepted. Sign up with GitHub is enabled.'
+                : 'Both checkboxes must be accepted before connecting GitHub.'}
+            </div>
+
+            {/* Primary Action Button: Sign up with GitHub */}
+            <AuthItem className="mb-4">
+              <motion.div
+                animate={
+                  isFormComplete && !shouldReduceMotion
+                    ? {
+                        boxShadow: [
+                          '0 0 0 rgba(52,211,153,0)',
+                          '0 0 24px rgba(52,211,153,0.5)',
+                          '0 0 10px rgba(52,211,153,0.2)',
+                        ],
+                      }
+                    : {}
+                }
+                transition={{ duration: 0.6 }}
+                className="rounded-[8px]"
+              >
+                <a
+                  href="/auth/github/start"
+                  onClick={handleSignup}
+                  aria-disabled={!isFormComplete}
+                  aria-describedby="signup-button-helper"
+                  className={`w-full block focus-visible:outline-none ${
+                    !isFormComplete ? 'pointer-events-none' : ''
+                  }`}
+                >
+                  <Button
+                    type="button"
+                    variant={isFormComplete ? 'solid_paper' : 'solid_ink'}
+                    size="lg"
+                    disabled={!isFormComplete || isSubmitting}
+                    isLoading={isSubmitting}
+                    className={`w-full text-xs sm:text-sm font-semibold tracking-tight min-h-[52px] transition-all duration-300 ${
+                      isFormComplete
+                        ? 'border-[#34D399]/40 shadow-lg'
+                        : 'opacity-50 cursor-not-allowed bg-white/5 border-white/10 text-[#6B7280]'
+                    }`}
+                    icon={
+                      <svg
+                        className="w-4 h-4"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          clipRule="evenodd"
+                          d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"
+                        />
+                      </svg>
+                    }
+                  >
+                    Sign up with GitHub
+                  </Button>
+                </a>
+              </motion.div>
+            </AuthItem>
+
+            {/* Privacy & Instant Deletion Guarantee */}
+            <AuthItem className="mb-5 flex items-center justify-center gap-1.5 font-mono text-[11px] text-[#9AA3AE]">
+              <Lock className="w-3.5 h-3.5 text-[#34D399]" />
+              <span>Delete all your data in one click.</span>
+            </AuthItem>
+
+            {/* Footer Navigation Link */}
+            <AuthItem className="text-center text-xs text-[#6B7280] border-t border-white/[0.06] pt-4">
+              Already have an account?{' '}
+              <Link
+                to="/login"
+                className="font-semibold text-white hover:text-[#34D399] transition-colors underline underline-offset-4 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#34D399] rounded px-1"
+              >
+                Sign in
+              </Link>
+            </AuthItem>
+          </AuthPanel>
+        </div>
+      }
+    />
+  );
+};

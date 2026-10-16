@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ProofStack: Evidence Drawer & Verification Inspector</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0B0D10;
+      --desk-dot: rgba(255, 255, 255, 0.06);
+      --ink-emerald: #22C58B;
+      --ink-amber: #F5A524;
+      --ink-violet: #8B7CFF;
+      --ink-slate: #7C8CA8;
+      --ink-red: #FF5C4D;
+      --paper-cream: #FAF8F3;
+      --paper-text: #14171A;
+      --paper-sub: #575D65;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-dark);
+      color: #F4F2EC;
+      overflow: hidden;
+      width: 1440px;
+      height: 900px;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .font-serif-inst {
+      font-family: 'Instrument Serif', Georgia, serif;
+    }
+
+    .font-mono-code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Desk dot pattern */
+    .desk-grid {
+      background-image: radial-gradient(var(--desk-dot) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+
+    /* Paper receipt saw-tooth torn top edge (12px teeth) */
+    .perforated-top-edge {
+      clip-path: polygon(
+        0% 12px,
+        2.5% 0px, 5% 12px, 7.5% 0px, 10% 12px, 12.5% 0px, 15% 12px, 17.5% 0px, 20% 12px,
+        22.5% 0px, 25% 12px, 27.5% 0px, 30% 12px, 32.5% 0px, 35% 12px, 37.5% 0px, 40% 12px,
+        42.5% 0px, 45% 12px, 47.5% 0px, 50% 12px, 52.5% 0px, 55% 12px, 57.5% 0px, 60% 12px,
+        62.5% 0px, 65% 12px, 67.5% 0px, 70% 12px, 72.5% 0px, 75% 12px, 77.5% 0px, 80% 12px,
+        82.5% 0px, 85% 12px, 87.5% 0px, 90% 12px, 92.5% 0px, 95% 12px, 97.5% 0px, 100% 12px,
+        100% 100%, 0% 100%
+      );
+    }
+
+    /* Rubber stamp styles */
+    .rubber-stamp {
+      mix-blend-mode: multiply;
+      transform: rotate(-5deg);
+      filter: url(#ink-bleed);
+    }
+
+    .stamp-proven {
+      border: 3.5px double var(--ink-emerald);
+      color: var(--ink-emerald);
+      box-shadow: 0 0 16px rgba(34, 197, 139, 0.28);
+    }
+
+    .stamp-hollow {
+      border: 3.5px double var(--ink-red);
+      color: var(--ink-red);
+      transform: rotate(-7deg);
+      box-shadow: 0 0 20px rgba(255, 92, 77, 0.35);
+    }
+
+    /* Subtle paper texture */
+    .paper-texture {
+      background-color: var(--paper-cream);
+      background-image: 
+        radial-gradient(rgba(0,0,0,0.02) 1px, transparent 0),
+        linear-gradient(to bottom, #FAF8F3, #F4F1E8);
+      background-size: 8px 8px, 100% 100%;
+    }
+
+    /* Glass Panels */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+    }
+
+    .glass-drawer {
+      background: rgba(14, 17, 22, 0.88);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      border-left: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: -24px 0 80px rgba(0, 0, 0, 0.85);
+    }
+
+    /* Code highlights */
+    .code-hl-emerald {
+      background: rgba(34, 197, 139, 0.12);
+      border-left: 3px solid var(--ink-emerald);
+    }
+    
+    .code-hl-red {
+      background: rgba(255, 92, 77, 0.10);
+      border-left: 3px solid var(--ink-red);
+    }
+
+    /* Barcode simulation */
+    .barcode-line {
+      display: inline-block;
+      height: 18px;
+      background-color: #2D3339;
+      margin-right: 2px;
+    }
+
+    /* Custom scrollbar for receipt body if needed */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="relative w-[1440px] h-[900px] overflow-hidden bg-[#0B0D10] text-[#F4F2EC]">
+
+  <!-- SVG Filter for Stamp Ink Bleed Texture -->
+  <svg class="hidden" width="0" height="0">
+    <filter id="ink-bleed">
+      <feTurbulence type="fractalNoise" baseFrequency="0.18" numOctaves="3" result="noise" />
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="1.6" xChannelSelector="R" yChannelSelector="G" />
+    </filter>
+  </svg>
+
+  <!-- Ambient Glows across desk -->
+  <div class="absolute -top-[120px] left-[280px] w-[620px] h-[620px] rounded-full bg-[#22C58B]/[0.10] blur-[150px] pointer-events-none"></div>
+  <div class="absolute -bottom-[100px] right-[400px] w-[580px] h-[580px] rounded-full bg-[#8B7CFF]/[0.08] blur-[160px] pointer-events-none"></div>
+
+  <!-- ========================================================================= -->
+  <!-- BACKGROUND: DASHBOARD SCREEN (Dimmed and blurred at 40% as requested)     -->
+  <!-- ========================================================================= -->
+  <div class="absolute inset-0 w-[1440px] h-[900px] pointer-events-none transition-all duration-300 desk-grid" style="opacity: 0.40; filter: blur(6px);">
+    
+    <!-- Top Bar -->
+    <header class="h-[56px] px-6 border-b border-white/10 flex items-center justify-between bg-[#0B0D10]/80">
+      <div class="flex items-center gap-3">
+        <div class="w-6 h-6 rounded bg-[#22C58B]/20 flex items-center justify-center text-[#22C58B] font-bold text-xs">P</div>
+        <span class="font-bold tracking-tight text-white">ProofStack</span>
+        <span class="text-xs px-1.5 py-0.5 rounded bg-white/5 border border-white/10 text-[#9AA3AE] font-mono">v2.4</span>
+        <span class="text-white/20">/</span>
+        <span class="text-sm text-[#F4F2EC]"><strong class="font-medium text-white">Rohan</strong> / Backend Engineer Intern, Northwind Labs</span>
+      </div>
+      <div class="flex items-center gap-6 text-sm text-[#9AA3AE]">
+        <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-[#22C58B]"></span> GitHub</div>
+        <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-[#22C58B]"></span> Webhook</div>
+        <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-[#22C58B]"></span> Model</div>
+        <div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-[#22C58B]"></span> Rate limit</div>
+        <div class="flex items-center gap-2 bg-red-500/10 text-[#FF5C4D] border border-red-500/20 px-3 py-1 rounded-full text-xs font-medium">
+          <span class="w-2 h-2 rounded-full bg-[#FF5C4D]"></span> Hollow signals refused 14
+        </div>
+      </div>
+    </header>
+
+    <div class="flex h-[844px]">
+      <!-- Left Rail -->
+      <aside class="w-[64px] border-r border-white/10 flex flex-col items-center py-6 gap-6 bg-[#0E1117]/60">
+        <div class="w-10 h-10 rounded-xl flex flex-col items-center justify-center text-[#9AA3AE] text-[10px]">Start</div>
+        <div class="w-10 h-10 rounded-xl flex flex-col items-center justify-center text-[#9AA3AE] text-[10px]">Reqs</div>
+        <div class="w-10 h-10 rounded-xl flex flex-col items-center justify-center bg-[#22C58B]/10 text-[#22C58B] text-[10px] border-l-2 border-[#22C58B]">Dash</div>
+        <div class="w-10 h-10 rounded-xl flex flex-col items-center justify-center text-[#9AA3AE] text-[10px]">Contracts</div>
+        <div class="w-10 h-10 rounded-xl flex flex-col items-center justify-center text-[#9AA3AE] text-[10px]">Break-Me</div>
+        <div class="w-10 h-10 rounded-xl flex flex-col items-center justify-center text-[#9AA3AE] text-[10px]">Resume</div>
+        <div class="w-10 h-10 rounded-xl flex flex-col items-center justify-center text-[#9AA3AE] text-[10px]">Verify</div>
+      </aside>
+
+      <!-- Main Blurred Stage -->
+      <main class="flex-1 p-6 flex flex-col gap-4">
+        <!-- Metric Strip -->
+        <div class="grid grid-cols-4 gap-4">
+          <div class="glass-card rounded-2xl p-4 border-t-2 border-t-[#FF5C4D]">
+            <div class="text-4xl font-bold text-white">14 <span class="text-[#FF5C4D] text-2xl">•</span></div>
+            <div class="text-xs text-[#9AA3AE] mt-1">Hollow signals refused</div>
+          </div>
+          <div class="glass-card rounded-2xl p-4 border-t-2 border-t-[#7C8CA8]">
+            <div class="text-4xl font-bold text-white">128</div>
+            <div class="text-xs text-[#9AA3AE] mt-1">Files analyzed</div>
+          </div>
+          <div class="glass-card rounded-2xl p-4 border-t-2 border-t-[#8B7CFF]">
+            <div class="text-4xl font-bold text-white">1</div>
+            <div class="text-xs text-[#9AA3AE] mt-1">LLM calls</div>
+          </div>
+          <div class="glass-card rounded-2xl p-4 border-t-2 border-t-[#22C58B]">
+            <div class="text-4xl font-bold text-[#22C58B]">3.4<span class="text-xl">s</span></div>
+            <div class="text-xs text-[#9AA3AE] mt-1">Push to verdict</div>
+          </div>
+        </div>
+
+        <!-- 3 Columns Content -->
+        <div class="grid grid-cols-12 gap-4 flex-1">
+          <!-- Requirements List (Left 3 cols) -->
+          <div class="col-span-3 glass-card rounded-2xl p-4 flex flex-col gap-2">
+            <div class="text-xs font-semibold text-[#9AA3AE] uppercase tracking-wider mb-1">Requirements (7)</div>
+            <div class="p-2.5 rounded-xl bg-white/5 border border-white/10 flex justify-between items-center text-sm">
+              <span>SQL</span>
+              <span class="text-[11px] text-[#7C8CA8] font-bold">NOT SHOWN</span>
+            </div>
+            <div class="p-2.5 rounded-xl bg-[#22C58B]/10 border border-[#22C58B]/30 flex justify-between items-center text-sm text-[#22C58B]">
+              <span class="font-bold">REST API</span>
+              <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-[#22C58B]/20">PROVEN</span>
+            </div>
+            <div class="p-2.5 rounded-xl bg-white/5 border border-white/10 flex justify-between items-center text-sm">
+              <span>Testing</span>
+              <span class="text-[11px] text-[#22C58B] font-bold">PROVEN</span>
+            </div>
+            <div class="p-2.5 rounded-xl bg-white/5 border border-white/10 flex justify-between items-center text-sm">
+              <span>Python</span>
+              <span class="text-[11px] text-[#22C58B] font-bold">PROVEN</span>
+            </div>
+            <div class="p-2.5 rounded-xl bg-white/5 border border-white/10 flex justify-between items-center text-sm">
+              <span>Docker</span>
+              <span class="text-[11px] text-[#F5A524] font-bold">BASIC</span>
+            </div>
+            <div class="p-2.5 rounded-xl bg-white/5 border border-white/10 flex justify-between items-center text-sm">
+              <span>CI/CD</span>
+              <span class="text-[11px] text-[#8B7CFF] font-bold">UNCLEAR</span>
+            </div>
+            <div class="p-2.5 rounded-xl bg-white/5 border border-white/10 flex justify-between items-center text-sm">
+              <span>Caching</span>
+              <span class="text-[11px] text-[#8B7CFF] font-bold">UNCLEAR</span>
+            </div>
+          </div>
+
+          <!-- Proof Map Treemap (Center 5 cols) -->
+          <div class="col-span-5 glass-card rounded-2xl p-4 flex flex-col justify-between">
+            <div class="flex justify-between items-center mb-2">
+              <span class="text-xs font-semibold text-white">Proof Map</span>
+              <span class="text-[11px] text-[#22C58B] font-mono">LIVE MERKLE SYNC</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2 h-72">
+              <div class="col-span-2 row-span-2 bg-[#22C58B]/25 border border-[#22C58B]/50 rounded-xl p-3 flex flex-col justify-between">
+                <span class="font-bold text-white text-base">orders.py</span>
+                <span class="text-[10px] font-mono text-[#22C58B]">api/routes/orders.py</span>
+              </div>
+              <div class="bg-[#22C58B]/20 border border-[#22C58B]/30 rounded-xl p-2 text-xs">test_orders.py</div>
+              <div class="bg-[#F5A524]/20 border border-[#F5A524]/30 rounded-xl p-2 text-xs">Dockerfile</div>
+              <div class="bg-[#7C8CA8]/20 border border-[#7C8CA8]/30 rounded-xl p-2 text-xs">db/queries.py</div>
+              <div class="bg-[#8B7CFF]/20 border border-[#8B7CFF]/30 rounded-xl p-2 text-xs">cache.py</div>
+              <div class="col-span-2 bg-[#22C58B]/20 border border-[#22C58B]/30 rounded-xl p-2 text-xs">auth/jwt.py</div>
+            </div>
+            <div class="flex items-center gap-3 mt-3 pt-3 border-t border-white/10 text-[10px] text-[#9AA3AE]">
+              <span>Timeline: commit 9f3c2ab (09:42:10)</span>
+            </div>
+          </div>
+
+          <!-- Right Column (Gauge & Delta) -->
+          <div class="col-span-4 flex flex-col gap-4">
+            <div class="glass-card rounded-2xl p-5 flex flex-col items-center justify-center">
+              <div class="text-6xl font-extrabold text-[#22C58B]">58%</div>
+              <div class="text-xs text-[#9AA3AE] mt-1">Evidence coverage, 7 assessed requirements</div>
+            </div>
+            <div class="glass-card rounded-2xl p-4 border border-[#22C58B]/40 border-dashed">
+              <div class="text-[10px] font-bold text-[#22C58B] uppercase tracking-wider mb-1">Recommendation</div>
+              <div class="text-sm font-semibold text-white">Next commit: add one query + one test</div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Ambient Backdrop Darkener behind Drawer -->
+  <div class="absolute inset-0 bg-black/40 pointer-events-none"></div>
+
+  <!-- ========================================================================= -->
+  <!-- FOREGROUND: 520px RIGHT-SIDE DRAWER (The interactive inspection focus)   -->
+  <!-- ========================================================================= -->
+  <aside class="absolute top-0 right-0 w-[520px] h-[900px] glass-drawer flex flex-col z-30 shadow-2xl">
+    
+    <!-- Drawer Top Header / Navigation Strip -->
+    <div class="h-[56px] px-6 border-b border-white/10 flex items-center justify-between bg-black/30">
+      <div class="flex items-center gap-2.5">
+        <div class="w-2.5 h-2.5 rounded-full bg-[#22C58B] shadow-[0_0_8px_#22C58B]"></div>
+        <span class="text-xs font-mono tracking-wider text-[#9AA3AE] uppercase">ARTIFACT // AUDIT DOCKET</span>
+      </div>
+
+      <!-- Mode Toggle / Variant Switcher (PROVEN vs REJECTED candidate receipt) -->
+      <div class="flex items-center bg-[#15191E] p-1 rounded-lg border border-white/10">
+        <button id="btn-proven" onclick="switchVariant('proven')" class="px-3 py-1 rounded text-xs font-semibold tracking-wide transition-all bg-[#22C58B] text-[#0B0D10] shadow-[0_0_12px_rgba(34,197,139,0.35)]">
+          REST API (PROVEN)
+        </button>
+        <button id="btn-rejected" onclick="switchVariant('rejected')" class="px-3 py-1 rounded text-xs font-medium text-[#9AA3AE] hover:text-white transition-all">
+          Candidate (HOLLOW)
+        </button>
+      </div>
+
+      <!-- Close Action -->
+      <button class="w-7 h-7 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-[#9AA3AE] hover:text-white transition-colors" title="Close Drawer">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Drawer Body / Paper Receipts Stage -->
+    <div class="flex-1 p-6 flex flex-col justify-start overflow-hidden relative">
+      
+      <!-- Ambient light on the paper desk slot -->
+      <div class="absolute -top-10 right-10 w-72 h-72 rounded-full bg-[#22C58B]/10 blur-3xl pointer-events-none"></div>
+
+      <!-- ================================================================= -->
+      <!-- VARIANT A: THE PROVEN RECEIPT (Default Active)                   -->
+      <!-- ================================================================= -->
+      <div id="receipt-proven" class="flex flex-col transition-all duration-300 transform opacity-100 translate-y-0">
+        
+        <!-- Physical Paper Receipt Card with Perforated Saw-tooth Top Edge -->
+        <div class="paper-texture perforated-top-edge text-[#14171A] rounded-b-xl pt-6 px-6 pb-6 shadow-[0_30px_70px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.25)_inset] relative">
+          
+          <!-- Large Double-Border Rubber Stamp rotated -5 degrees hanging over top-right corner -->
+          <div class="absolute -top-3 -right-3 z-20 pointer-events-none">
+            <div class="rubber-stamp stamp-proven px-4 py-1.5 rounded-sm bg-[#FAF8F3]/95 flex items-center gap-2">
+              <svg class="w-5 h-5 text-[#22C58B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.8" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span class="font-extrabold tracking-widest text-[16px] leading-none" style="font-family: 'Space Grotesk', sans-serif;">PROVEN</span>
+            </div>
+          </div>
+
+          <!-- Receipt Top Header: Serial & Timestamp -->
+          <div class="flex items-center justify-between text-[11px] font-mono text-[#717882] pb-2 border-b border-black/10">
+            <div class="flex items-center gap-1.5">
+              <span>SERIAL: REC-0042</span>
+              <span>•</span>
+              <span>2024-03-29 14:02:18 UTC</span>
+            </div>
+            <!-- Barcode strip -->
+            <div class="flex items-center">
+              <span class="barcode-line w-[2px]"></span>
+              <span class="barcode-line w-[1px]"></span>
+              <span class="barcode-line w-[3px]"></span>
+              <span class="barcode-line w-[1px]"></span>
+              <span class="barcode-line w-[2px]"></span>
+              <span class="barcode-line w-[4px]"></span>
+              <span class="barcode-line w-[1px]"></span>
+              <span class="barcode-line w-[2px]"></span>
+            </div>
+          </div>
+
+          <!-- Top Row: "REST API" in Instrument Serif 32px -->
+          <div class="mt-4 flex items-baseline justify-between pr-24">
+            <h1 class="font-serif-inst text-[32px] leading-tight font-normal text-[#14171A] tracking-normal">
+              REST API
+            </h1>
+          </div>
+          <p class="text-xs text-[#575D65] mt-0.5 font-medium">Requirement 2 of 7 · Mandatory core skill</p>
+
+          <!-- Dark Code Block (#0F1318, 12 lines, line numbers, two highlighted lines with a green left bar, 14px JetBrains Mono) -->
+          <div class="mt-4 bg-[#0F1318] text-[#D4D8DE] rounded-lg p-3.5 border border-black/20 font-mono-code text-[13px] leading-[20px] shadow-inner overflow-hidden">
+            <!-- Line 1 -->
+            <div class="flex"><span class="w-7 text-[#4E5664] text-right pr-3 select-none text-xs">40</span><span class="text-[#8B7CFF]">from</span> <span class="text-[#E6EDF3]">fastapi</span> <span class="text-[#8B7CFF]">import</span> <span class="text-[#E6EDF3]">APIRouter, Depends, HTTPException</span></div>
+            <!-- Line 2 -->
+            <div class="flex"><span class="w-7 text-[#4E5664] text-right pr-3 select-none text-xs">41</span><span class="text-[#8B7CFF]">from</span> <span class="text-[#E6EDF3]">sqlalchemy.ext.asyncio</span> <span class="text-[#8B7CFF]">import</span> <span class="text-[#E6EDF3]">AsyncSession</span></div>
+            <!-- Line 3 -->
+            <div class="flex"><span class="w-7 text-[#4E5664] text-right pr-3 select-none text-xs">42</span><span class="text-[#E6EDF3]">router = APIRouter(prefix=</span><span class="text-[#22C58B]">"/orders"</span><span class="text-[#E6EDF3]">, tags=[</span><span class="text-[#22C58B]">"orders"</span><span class="text-[#E6EDF3]">])</span></div>
+            <!-- Line 4 -->
+            <div class="flex"><span class="w-7 text-[#4E5664] text-right pr-3 select-none text-xs">43</span><span class="text-[#4E5664] italic"># Deterministic order creation pipeline</span></div>
+            <!-- Line 5: HIGHLIGHTED 1 (Green left bar) -->
+            <div class="flex code-hl-emerald -mx-3.5 px-3.5 py-0.5"><span class="w-7 text-[#22C58B] font-semibold text-right pr-3 select-none text-xs">44</span><span class="text-[#22C58B]">@router.post(</span><span class="text-[#FAF8F3]">"/"</span><span class="text-[#22C58B]">, status_code=201, response_model=OrderReceipt)</span></div>
+            <!-- Line 6: HIGHLIGHTED 2 (Green left bar) -->
+            <div class="flex code-hl-emerald -mx-3.5 px-3.5 py-0.5"><span class="w-7 text-[#22C58B] font-semibold text-right pr-3 select-none text-xs">45</span><span class="text-[#8B7CFF]">async def</span> <span class="text-[#FAF8F3] font-medium">create_order</span><span class="text-[#E6EDF3]">(payload: OrderPayload, db: Session = Depends()):</span></div>
+            <!-- Line 7 -->
+            <div class="flex"><span class="w-7 text-[#4E5664] text-right pr-3 select-none text-xs">46</span><span class="text-[#E6EDF3]">&nbsp;&nbsp;&nbsp;&nbsp;validated = await validator.verify_items(payload.items)</span></div>
+            <!-- Line 8 -->
+            <div class="flex"><span class="w-7 text-[#4E5664] text-right pr-3 select-none text-xs">47</span><span class="text-[#E6EDF3]">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="text-[#8B7CFF]">if not</span> <span class="text-[#E6EDF3]">validated.is_ok:</span></div>
+            <!-- Line 9 -->
+            <div class="flex"><span class="w-7 text-[#4E5664] text-right pr-3 select-none text-xs">48</span><span class="text-[#E6EDF3]">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="text-[#8B7CFF]">raise</span> <span class="text-[#E6EDF3]">HTTPException(status_code=400, detail=</span><span class="text-[#22C58B]">"Invalid SKU"</span><span class="text-[#E6EDF3]">)</span></div>
+            <!-- Line 10 -->
+            <div class="flex"><span class="w-7 text-[#4E5664] text-right pr-3 select-none text-xs">49</span><span class="text-[#E6EDF3]">&nbsp;&nbsp;&nbsp;&nbsp;receipt = await orderService.process_transaction(payload)</span></div>
+            <!-- Line 11 -->
+            <div class="flex"><span class="w-7 text-[#4E5664] text-right pr-3 select-none text-xs">50</span><span class="text-[#E6EDF3]">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="text-[#8B7CFF]">return</span> <span class="text-[#E6EDF3]">receipt</span></div>
+            <!-- Line 12 -->
+            <div class="flex"><span class="w-7 text-[#4E5664] text-right pr-3 select-none text-xs">51</span><span class="text-[#4E5664]"># End route handler</span></div>
+          </div>
+
+          <!-- Under the code: Three chips with check icons ("Mounted route", "Returns values", "Tested") -->
+          <div class="mt-4 flex flex-wrap items-center gap-2">
+            <!-- Chip 1 -->
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#EBF8F2] border border-[#22C58B]/40 text-[#0F684B] text-xs font-semibold">
+              <svg class="w-3.5 h-3.5 text-[#22C58B]" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+              </svg>
+              <span>Mounted route</span>
+            </div>
+
+            <!-- Chip 2 -->
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#EBF8F2] border border-[#22C58B]/40 text-[#0F684B] text-xs font-semibold">
+              <svg class="w-3.5 h-3.5 text-[#22C58B]" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+              </svg>
+              <span>Returns values</span>
+            </div>
+
+            <!-- Chip 3 -->
+            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#EBF8F2] border border-[#22C58B]/40 text-[#0F684B] text-xs font-semibold">
+              <svg class="w-3.5 h-3.5 text-[#22C58B]" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+              </svg>
+              <span>Tested</span>
+            </div>
+          </div>
+
+          <!-- One line: "Evidence from 2 independent signals" -->
+          <div class="mt-3.5 text-[13px] text-[#2C3138] font-medium flex items-center gap-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#22C58B]"></span>
+            <span>Evidence from 2 independent signals</span>
+          </div>
+
+          <!-- Divider dotted line -->
+          <div class="my-4 border-b border-dashed border-black/15"></div>
+
+          <!-- Buttons: Solid ink "Open on GitHub", Quiet text "This evidence is wrong" -->
+          <div class="flex items-center justify-between gap-3">
+            <a href="#" class="flex-1 py-2.5 px-4 rounded-lg bg-[#14171A] hover:bg-[#20252A] text-[#FAF8F3] text-xs font-semibold flex items-center justify-center gap-2 shadow-sm transition-colors">
+              <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+              </svg>
+              <span>Open on GitHub</span>
+            </a>
+            <button class="text-xs text-[#717882] hover:text-[#14171A] font-medium px-2 py-2 transition-colors">
+              This evidence is wrong
+            </button>
+          </div>
+
+          <!-- Footer in 11px mono: path src/api/routes.py - commit 9f3c2ab -->
+          <div class="mt-3.5 pt-2.5 border-t border-black/10 flex items-center justify-between font-mono-code text-[11px] text-[#69707A]">
+            <span class="truncate">src/api/routes.py</span>
+            <span class="text-[#8B939E] font-medium">commit 9f3c2ab</span>
+          </div>
+
+        </div>
+
+        <!-- Verification Docket Note beneath receipt -->
+        <div class="mt-4 px-2 flex items-center justify-between text-xs text-[#9AA3AE]">
+          <span class="flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-[#22C58B]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+            <span>SHA-256 seal: <span class="font-mono text-[#D4D8DE]">b7d8...410f</span></span>
+          </span>
+          <span class="text-[#22C58B] font-mono text-[11px]">DETERMINISTIC VERDICT</span>
+        </div>
+      </div>
+
+      <!-- ================================================================= -->
+      <!-- VARIANT B: REJECTED CANDIDATE RECEIPT (Toggled via Header)        -->
+      <!-- ================================================================= -->
+      <div id="receipt-rejected" class="hidden flex-col transition-all duration-300 transform opacity-0 translate-y-2">
+        
+        <!-- Physical Paper Receipt Card with Perforated Saw-tooth Top Edge -->
+        <div class="paper-texture perforated-top-edge text-[#14171A] rounded-b-xl pt-6 px-6 pb-6 shadow-[0_30px_70px_rgba(0,0,0,0.65),0_0_0_1px_rgba(255,255,255,0.25)_inset] relative">
+          
+          <!-- Large HOLLOW Rubber Stamp at an Angle Overlapping Top-Right -->
+          <div class="absolute -top-3 -right-2 z-20 pointer-events-none">
+            <div class="rubber-stamp stamp-hollow px-4 py-1.5 rounded-sm bg-[#FAF8F3]/95 flex items-center gap-2">
+              <svg class="w-5 h-5 text-[#FF5C4D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.8" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+              </svg>
+              <span class="font-extrabold tracking-widest text-[16px] leading-none" style="font-family: 'Space Grotesk', sans-serif;">HOLLOW</span>
+            </div>
+          </div>
+
+          <!-- Receipt Top Header: Serial & Timestamp -->
+          <div class="flex items-center justify-between text-[11px] font-mono text-[#717882] pb-2 border-b border-black/10">
+            <div class="flex items-center gap-1.5">
+              <span>SERIAL: REC-0091</span>
+              <span>•</span>
+              <span>2024-03-29 14:02:18 UTC</span>
+            </div>
+            <!-- Barcode strip -->
+            <div class="flex items-center">
+              <span class="barcode-line w-[1px]"></span>
+              <span class="barcode-line w-[3px]"></span>
+              <span class="barcode-line w-[2px]"></span>
+              <span class="barcode-line w-[1px]"></span>
+              <span class="barcode-line w-[3px]"></span>
+              <span class="barcode-line w-[2px]"></span>
+            </div>
+          </div>
+
+          <!-- Top Row: "Automated Testing" in Instrument Serif 32px -->
+          <div class="mt-4 flex items-baseline justify-between pr-24">
+            <h1 class="font-serif-inst text-[32px] leading-tight font-normal text-[#14171A] tracking-normal">
+              Automated Testing
+            </h1>
+          </div>
+          <p class="text-xs text-[#828892] mt-0.5 font-medium">Candidate claim · tests/test_orders.py</p>
+
+          <!-- Faded Dark Code Block (#0F1318 with reduced contrast & hollow red highlight) -->
+          <div class="mt-4 bg-[#0F1318]/90 text-[#7C8592] rounded-lg p-3.5 border border-red-500/20 font-mono-code text-[13px] leading-[20px] shadow-inner overflow-hidden">
+            <div class="flex"><span class="w-7 text-[#383E48] text-right pr-3 select-none text-xs">01</span><span class="text-[#596273]">import</span> <span class="text-[#6D7789]">pytest</span></div>
+            <div class="flex"><span class="w-7 text-[#383E48] text-right pr-3 select-none text-xs">02</span><span class="text-[#596273]">from</span> <span class="text-[#6D7789]">api.client</span> <span class="text-[#596273]">import</span> <span class="text-[#6D7789]">TestClient</span></div>
+            <div class="flex"><span class="w-7 text-[#383E48] text-right pr-3 select-none text-xs">03</span><span class="text-[#383E48] italic"># Test mock stub without invariant verification</span></div>
+            <!-- Highlighted Faded Code with Red Left Bar -->
+            <div class="flex code-hl-red -mx-3.5 px-3.5 py-0.5"><span class="w-7 text-[#FF5C4D] font-semibold text-right pr-3 select-none text-xs">04</span><span class="text-[#FF5C4D]">def test_orders_endpoint_status():</span></div>
+            <div class="flex code-hl-red -mx-3.5 px-3.5 py-0.5"><span class="w-7 text-[#FF5C4D] font-semibold text-right pr-3 select-none text-xs">05</span><span class="text-[#D4D8DE]">&nbsp;&nbsp;&nbsp;&nbsp;response = client.get(</span><span class="text-[#F5A524]">"/orders"</span><span class="text-[#D4D8DE]">)</span></div>
+            <!-- The empty assertion trigger -->
+            <div class="flex code-hl-red -mx-3.5 px-3.5 py-0.5"><span class="w-7 text-[#FF5C4D] font-semibold text-right pr-3 select-none text-xs">06</span><span class="text-[#FF5C4D] font-bold">&nbsp;&nbsp;&nbsp;&nbsp;pass  # No assertion executed</span></div>
+            <div class="flex"><span class="w-7 text-[#383E48] text-right pr-3 select-none text-xs">07</span><span class="text-[#383E48]"># Assertion check skipped</span></div>
+            <div class="flex"><span class="w-7 text-[#383E48] text-right pr-3 select-none text-xs">08</span><span class="text-[#383E48]">def test_unverified_stub():</span></div>
+            <div class="flex"><span class="w-7 text-[#383E48] text-right pr-3 select-none text-xs">09</span><span class="text-[#383E48]">&nbsp;&nbsp;&nbsp;&nbsp;return True</span></div>
+          </div>
+
+          <!-- Single line: "Test has no assertions" -->
+          <div class="mt-4 flex items-center justify-between p-3 rounded-lg bg-[#FFF2F0] border border-[#FF5C4D]/30 text-[#BD271E]">
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4 text-[#FF5C4D]" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+              </svg>
+              <span class="text-sm font-bold">Test has no assertions</span>
+            </div>
+            <!-- Small line: "Refused, not counted" -->
+            <span class="text-xs uppercase font-mono tracking-wider font-semibold px-2 py-0.5 rounded bg-[#FF5C4D]/15 text-[#BD271E]">
+              Refused, not counted
+            </span>
+          </div>
+
+          <!-- Rejection Diagnostics -->
+          <div class="mt-3 text-[12px] text-[#575D65] flex items-center gap-2">
+            <span class="w-1.5 h-1.5 rounded-full bg-[#FF5C4D]"></span>
+            <span>Zero AST validation rules matched. Signal discarded as vanity bump.</span>
+          </div>
+
+          <!-- Divider dotted line -->
+          <div class="my-4 border-b border-dashed border-black/15"></div>
+
+          <!-- Buttons: Solid ink "Inspect in Raw Tree", Quiet text "Report false refusal" -->
+          <div class="flex items-center justify-between gap-3">
+            <a href="#" class="flex-1 py-2.5 px-4 rounded-lg bg-[#14171A] hover:bg-[#20252A] text-[#FAF8F3] text-xs font-semibold flex items-center justify-center gap-2 shadow-sm transition-colors">
+              <svg class="w-4 h-4 text-[#FF5C4D]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+              </svg>
+              <span>Inspect in Raw Tree</span>
+            </a>
+            <button class="text-xs text-[#717882] hover:text-[#14171A] font-medium px-2 py-2 transition-colors">
+              Report false refusal
+            </button>
+          </div>
+
+          <!-- Footer in 11px mono: path tests/test_orders.py - commit 9f3c2ab -->
+          <div class="mt-3.5 pt-2.5 border-t border-black/10 flex items-center justify-between font-mono-code text-[11px] text-[#69707A]">
+            <span class="truncate">tests/test_orders.py:4-6</span>
+            <span class="text-[#BD271E] font-medium">status: rejected (hollow)</span>
+          </div>
+
+        </div>
+
+        <!-- Guard Policy Note -->
+        <div class="mt-4 px-2 flex items-center justify-between text-xs text-[#9AA3AE]">
+          <span class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-[#FF5C4D]"></span>
+            <span>Policy: <strong>Zero-Assertion Pruning</strong></span>
+          </span>
+          <span class="text-[#FF5C4D] font-mono text-[11px]">DISCARDED SIGNAL</span>
+        </div>
+      </div>
+
+      <!-- Quick Command Tip at Bottom of Drawer -->
+      <div class="mt-auto pt-4 border-t border-white/10 flex items-center justify-between text-[11px] text-[#9AA3AE]">
+        <span class="font-mono">ESC to close drawer</span>
+        <span class="flex items-center gap-1 text-[#22C58B]">
+          <span class="w-1.5 h-1.5 rounded-full bg-[#22C58B] animate-pulse"></span>
+          Commit Contract ready
+        </span>
+      </div>
+
+    </div>
+  </aside>
+
+  <!-- Interactive JavaScript for Variant Toggle & ESC Key Listener -->
+  <script>
+    function switchVariant(variant) {
+      const provenEl = document.getElementById('receipt-proven');
+      const rejectedEl = document.getElementById('receipt-rejected');
+      const btnProven = document.getElementById('btn-proven');
+      const btnRejected = document.getElementById('btn-rejected');
+
+      if (variant === 'proven') {
+        provenEl.classList.remove('hidden');
+        provenEl.classList.add('flex');
+        setTimeout(() => {
+          provenEl.classList.remove('opacity-0', 'translate-y-2');
+          provenEl.classList.add('opacity-100', 'translate-y-0');
+        }, 10);
+
+        rejectedEl.classList.add('opacity-0', 'translate-y-2');
+        rejectedEl.classList.remove('opacity-100', 'translate-y-0');
+        setTimeout(() => {
+          rejectedEl.classList.add('hidden');
+          rejectedEl.classList.remove('flex');
+        }, 200);
+
+        btnProven.className = "px-3 py-1 rounded text-xs font-semibold tracking-wide transition-all bg-[#22C58B] text-[#0B0D10] shadow-[0_0_12px_rgba(34,197,139,0.35)]";
+        btnRejected.className = "px-3 py-1 rounded text-xs font-medium text-[#9AA3AE] hover:text-white transition-all";
+      } else {
+        rejectedEl.classList.remove('hidden');
+        rejectedEl.classList.add('flex');
+        setTimeout(() => {
+          rejectedEl.classList.remove('opacity-0', 'translate-y-2');
+          rejectedEl.classList.add('opacity-100', 'translate-y-0');
+        }, 10);
+
+        provenEl.classList.add('opacity-0', 'translate-y-2');
+        provenEl.classList.remove('opacity-100', 'translate-y-0');
+        setTimeout(() => {
+          provenEl.classList.add('hidden');
+          provenEl.classList.remove('flex');
+        }, 200);
+
+        btnRejected.className = "px-3 py-1 rounded text-xs font-semibold tracking-wide transition-all bg-[#FF5C4D] text-[#FAF8F3] shadow-[0_0_12px_rgba(255,92,77,0.4)]";
+        btnProven.className = "px-3 py-1 rounded text-xs font-medium text-[#9AA3AE] hover:text-white transition-all";
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        // Aesthetic affordance
+      }
+    });
+  </script>
+</body>
+</html>

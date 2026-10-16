@@ -1,0 +1,128 @@
+
+    :root {
+      --bg-dark: #0B0D10;
+      --desk-dot: rgba(255, 255, 255, 0.06);
+      --ink-emerald: #22C58B;
+      --ink-amber: #F5A524;
+      --ink-violet: #8B7CFF;
+      --ink-slate: #7C8CA8;
+      --ink-red: #FF5C4D;
+      --paper-cream: #FAF8F3;
+      --paper-text: #14171A;
+      --paper-sub: #575D65;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-dark);
+      color: #F4F2EC;
+      overflow: hidden;
+      width: 1440px;
+      height: 900px;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .font-serif-inst {
+      font-family: 'Instrument Serif', Georgia, serif;
+    }
+
+    .font-mono-code {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Desk dot pattern */
+    .desk-grid {
+      background-image: radial-gradient(var(--desk-dot) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+
+    /* Paper receipt saw-tooth torn top edge (12px teeth) */
+    .perforated-top-edge {
+      clip-path: polygon(
+        0% 12px,
+        2.5% 0px, 5% 12px, 7.5% 0px, 10% 12px, 12.5% 0px, 15% 12px, 17.5% 0px, 20% 12px,
+        22.5% 0px, 25% 12px, 27.5% 0px, 30% 12px, 32.5% 0px, 35% 12px, 37.5% 0px, 40% 12px,
+        42.5% 0px, 45% 12px, 47.5% 0px, 50% 12px, 52.5% 0px, 55% 12px, 57.5% 0px, 60% 12px,
+        62.5% 0px, 65% 12px, 67.5% 0px, 70% 12px, 72.5% 0px, 75% 12px, 77.5% 0px, 80% 12px,
+        82.5% 0px, 85% 12px, 87.5% 0px, 90% 12px, 92.5% 0px, 95% 12px, 97.5% 0px, 100% 12px,
+        100% 100%, 0% 100%
+      );
+    }
+
+    /* Rubber stamp styles */
+    .rubber-stamp {
+      mix-blend-mode: multiply;
+      transform: rotate(-5deg);
+      filter: url(#ink-bleed);
+    }
+
+    .stamp-proven {
+      border: 3.5px double var(--ink-emerald);
+      color: var(--ink-emerald);
+      box-shadow: 0 0 16px rgba(34, 197, 139, 0.28);
+    }
+
+    .stamp-hollow {
+      border: 3.5px double var(--ink-red);
+      color: var(--ink-red);
+      transform: rotate(-7deg);
+      box-shadow: 0 0 20px rgba(255, 92, 77, 0.35);
+    }
+
+    /* Subtle paper texture */
+    .paper-texture {
+      background-color: var(--paper-cream);
+      background-image: 
+        radial-gradient(rgba(0,0,0,0.02) 1px, transparent 0),
+        linear-gradient(to bottom, #FAF8F3, #F4F1E8);
+      background-size: 8px 8px, 100% 100%;
+    }
+
+    /* Glass Panels */
+    .glass-card {
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+    }
+
+    .glass-drawer {
+      background: rgba(14, 17, 22, 0.88);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      border-left: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: -24px 0 80px rgba(0, 0, 0, 0.85);
+    }
+
+    /* Code highlights */
+    .code-hl-emerald {
+      background: rgba(34, 197, 139, 0.12);
+      border-left: 3px solid var(--ink-emerald);
+    }
+    
+    .code-hl-red {
+      background: rgba(255, 92, 77, 0.10);
+      border-left: 3px solid var(--ink-red);
+    }
+
+    /* Barcode simulation */
+    .barcode-line {
+      display: inline-block;
+      height: 18px;
+      background-color: #2D3339;
+      margin-right: 2px;
+    }
+
+    /* Custom scrollbar for receipt body if needed */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  
