@@ -54,7 +54,7 @@ describe('Contract Schema Conformance Tests', () => {
   });
 
   it('validates CommitContractResponse mock against CommitContractResponseSchema', () => {
-    mockBackendContracts.forEach((contract) => {
+    mockBackendContracts.forEach((contract: any) => {
       const result = CommitContractResponseSchema.safeParse(contract);
       expect(result.success).toBe(true);
     });
@@ -80,11 +80,12 @@ describe('Contract Schema Conformance Tests', () => {
   });
 
   it('validates LedgerBlockResponse mocks against LedgerBlockResponseSchema', () => {
-    mockBackendLedgerBlocks.forEach((block) => {
+    mockBackendLedgerBlocks.forEach((block: any) => {
       const result = LedgerBlockResponseSchema.safeParse(block);
       expect(result.success).toBe(true);
     });
   });
+
 
   it('validates RepoScanResponse mock against RepoScanResponseSchema', () => {
     const result = RepoScanResponseSchema.safeParse(mockBackendScanner);
