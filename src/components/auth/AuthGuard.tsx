@@ -1,54 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { getCurrentUser } from '../../lib/api';
-import { UserSession } from '../../types/api';
+import { useAuth } from '../../context/AuthContext';
 
 export interface AuthGuardProps {
   children: React.ReactNode;
 }
 
 export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<UserSession | null>(null);
+  const { user, loading } = useAuth();
   const location = useLocation();
-
-  useEffect(() => {
-    let mounted = true;
-
-    const isDemo = sessionStorage.getItem('ps_demo_mode') === 'true' || location.search.includes('demo=1');
-    if (isDemo) {
-      setUser({
-        id: 'usr-demo',
-        login: 'demo-judge',
-        name: 'Demo Reviewer',
-        avatarUrl: '',
-        publicRepos: 12,
-        scopes: ['read:user', 'public_repo'],
-        sessionStartedAt: new Date().toISOString(),
-      });
-      setLoading(false);
-      return;
-    }
-
-    getCurrentUser()
-      .then((session) => {
-        if (mounted) {
-          setUser(session);
-          setLoading(false);
-        }
-      })
-      .catch(() => {
-        if (mounted) {
-          setUser(null);
-          setLoading(false);
-        }
-      });
-
-
-    return () => {
-      mounted = false;
-    };
-  }, [location.pathname]);
 
   if (loading) {
     return (

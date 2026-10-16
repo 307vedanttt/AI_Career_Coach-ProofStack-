@@ -18,6 +18,7 @@ import { ConsentPage } from './pages/auth/ConsentPage';
 import { AuthErrorPage } from './pages/auth/AuthErrorPage';
 import { RateLimitedPage } from './pages/auth/RateLimitedPage';
 import { AuthGuard } from './components/auth/AuthGuard';
+import { AuthProvider } from './context/AuthContext';
 
 const DemoModeManager: React.FC = () => {
   const location = useLocation();
@@ -44,15 +45,16 @@ const DemoModeManager: React.FC = () => {
 export const App: React.FC = () => {
   return (
     <BrowserRouter>
-      {/* WCAG Accessible Skip Link */}
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-[#34D399] focus:text-[#0A0C0F] focus:font-mono focus:font-bold focus:rounded-sm focus:shadow-xl focus:outline-none"
-      >
-        Skip to main content
-      </a>
-      <DemoModeManager />
-      <Routes>
+      <AuthProvider>
+        {/* WCAG Accessible Skip Link */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-[#34D399] focus:text-[#0A0C0F] focus:font-mono focus:font-bold focus:rounded-sm focus:shadow-xl focus:outline-none"
+        >
+          Skip to main content
+        </a>
+        <DemoModeManager />
+        <Routes>
         <Route path="/" element={<LandingPage />} />
         
         {/* Authentication Routes */}
@@ -124,6 +126,7 @@ export const App: React.FC = () => {
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+      </AuthProvider>
     </BrowserRouter>
   );
 };

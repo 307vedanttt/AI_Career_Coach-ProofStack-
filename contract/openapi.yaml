@@ -1,0 +1,2369 @@
+openapi: 3.1.0
+info:
+  title: "ProofStack \u2014 AI Career Coach"
+  description: Deterministic Evidence Engine & Commit Contracts for Engineering Roles
+  version: 4.0.0
+paths:
+  /api/health:
+    get:
+      summary: Health Check
+      operationId: health_check_api_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /api/jobs:
+    post:
+      summary: Create Job
+      operationId: create_job_api_jobs_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobCreateRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/requirements/{id}:
+    patch:
+      summary: Update Requirement
+      operationId: update_requirement_api_requirements__id__patch
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequirementUpdateRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequirementResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/repos:
+    post:
+      summary: Connect Repository
+      operationId: connect_repository_api_repos_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RepoConnectRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepoResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/analyze:
+    post:
+      summary: Start Assessment
+      operationId: start_assessment_api_analyze_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyzeRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/check-now:
+    post:
+      summary: Check Now
+      operationId: check_now_api_check_now_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/AnalyzeRequest'
+              - type: 'null'
+              title: Request
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/assessments:
+    get:
+      summary: Get Assessments
+      operationId: get_assessments_api_assessments_get
+      parameters:
+      - name: repo_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Repo Id
+      - name: job_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Job Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssessmentResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/evidence/{id}:
+    get:
+      summary: Get Evidence
+      operationId: get_evidence_api_evidence__id__get
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvidenceResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/coverage/{job_id}:
+    get:
+      summary: Get Coverage
+      operationId: get_coverage_api_coverage__job_id__get
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Job Id
+      - name: repo_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Repo Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoverageResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/proofmap/{job_id}:
+    get:
+      summary: Get Proofmap
+      operationId: get_proofmap_api_proofmap__job_id__get
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Job Id
+      - name: repo_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Repo Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProofMapResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/webhooks/github:
+    post:
+      summary: Github Webhook
+      operationId: github_webhook_api_webhooks_github_post
+      parameters:
+      - name: x-hub-signature-256
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Hub-Signature-256
+      - name: x-github-event
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: push
+          title: X-Github-Event
+      - name: x-github-delivery
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Github-Delivery
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/events/stream:
+    get:
+      summary: Event Stream
+      description: Server-Sent Events endpoint streaming real-time scan progress and
+        traces.
+      operationId: event_stream_api_events_stream_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/trace/{run_id}:
+    get:
+      summary: Get Trace Run
+      operationId: get_trace_run_api_trace__run_id__get
+      parameters:
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Run Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TraceResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/contracts:
+    get:
+      summary: List Contracts
+      operationId: list_contracts_api_contracts_get
+      parameters:
+      - name: repo_id
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Repo Id
+      - name: job_id
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Job Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CommitContractResponse'
+                title: Response List Contracts Api Contracts Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      summary: Create Contract
+      operationId: create_contract_api_contracts_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommitContractCreateRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommitContractResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/dry-run:
+    post:
+      summary: Dry Run Simulation
+      description: 'Hypothetical analysis: tests simulated files against requirements
+
+        without mutating the real repository or GitHub.'
+      operationId: dry_run_simulation_api_dry_run_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DryRunRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DryRunResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/corrections:
+    post:
+      summary: Submit Correction
+      operationId: submit_correction_api_corrections_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorrectionRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorrectionResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/me:
+    get:
+      summary: Get Current User Session
+      operationId: get_current_user_session_api_me_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSessionResponse'
+  /api/auth/logout:
+    post:
+      summary: Logout
+      operationId: logout_api_auth_logout_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /api/adversarial:
+    get:
+      summary: Get Adversarial Suite
+      operationId: get_adversarial_suite_api_adversarial_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdversarialSuiteResponse'
+  /api/adversarial/run:
+    post:
+      summary: Run Adversarial Suite
+      operationId: run_adversarial_suite_api_adversarial_run_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdversarialRunResponse'
+  /api/resume/attestation:
+    get:
+      summary: Get Resume Attestation
+      operationId: get_resume_attestation_api_resume_attestation_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResumeAttestationResponse'
+  /api/ledger/blocks:
+    get:
+      summary: Get Ledger Blocks
+      operationId: get_ledger_blocks_api_ledger_blocks_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/LedgerBlockResponse'
+                type: array
+                title: Response Get Ledger Blocks Api Ledger Blocks Get
+  /api/scanner/run:
+    post:
+      summary: Run Public Scanner
+      operationId: run_public_scanner_api_scanner_run_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RepoScanRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepoScanResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /health:
+    get:
+      summary: Health Check
+      operationId: health_check_health_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /jobs:
+    post:
+      summary: Create Job
+      operationId: create_job_jobs_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobCreateRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /requirements/{id}:
+    patch:
+      summary: Update Requirement
+      operationId: update_requirement_requirements__id__patch
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequirementUpdateRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RequirementResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /repos:
+    post:
+      summary: Connect Repository
+      operationId: connect_repository_repos_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RepoConnectRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepoResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /analyze:
+    post:
+      summary: Start Assessment
+      operationId: start_assessment_analyze_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyzeRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /check-now:
+    post:
+      summary: Check Now
+      operationId: check_now_check_now_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/AnalyzeRequest'
+              - type: 'null'
+              title: Request
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /assessments:
+    get:
+      summary: Get Assessments
+      operationId: get_assessments_assessments_get
+      parameters:
+      - name: repo_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Repo Id
+      - name: job_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Job Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssessmentResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /evidence/{id}:
+    get:
+      summary: Get Evidence
+      operationId: get_evidence_evidence__id__get
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvidenceResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /coverage/{job_id}:
+    get:
+      summary: Get Coverage
+      operationId: get_coverage_coverage__job_id__get
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Job Id
+      - name: repo_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Repo Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CoverageResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /proofmap/{job_id}:
+    get:
+      summary: Get Proofmap
+      operationId: get_proofmap_proofmap__job_id__get
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Job Id
+      - name: repo_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Repo Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProofMapResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /webhooks/github:
+    post:
+      summary: Github Webhook
+      operationId: github_webhook_webhooks_github_post
+      parameters:
+      - name: x-hub-signature-256
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Hub-Signature-256
+      - name: x-github-event
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          default: push
+          title: X-Github-Event
+      - name: x-github-delivery
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: X-Github-Delivery
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /events/stream:
+    get:
+      summary: Event Stream
+      description: Server-Sent Events endpoint streaming real-time scan progress and
+        traces.
+      operationId: event_stream_events_stream_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /trace/{run_id}:
+    get:
+      summary: Get Trace Run
+      operationId: get_trace_run_trace__run_id__get
+      parameters:
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Run Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TraceResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /contracts:
+    get:
+      summary: List Contracts
+      operationId: list_contracts_contracts_get
+      parameters:
+      - name: repo_id
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Repo Id
+      - name: job_id
+        in: query
+        required: true
+        schema:
+          type: string
+          title: Job Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CommitContractResponse'
+                title: Response List Contracts Contracts Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      summary: Create Contract
+      operationId: create_contract_contracts_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommitContractCreateRequest'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommitContractResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /dry-run:
+    post:
+      summary: Dry Run Simulation
+      description: 'Hypothetical analysis: tests simulated files against requirements
+
+        without mutating the real repository or GitHub.'
+      operationId: dry_run_simulation_dry_run_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DryRunRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DryRunResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /corrections:
+    post:
+      summary: Submit Correction
+      operationId: submit_correction_corrections_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CorrectionRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CorrectionResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /me:
+    get:
+      summary: Get Current User Session
+      operationId: get_current_user_session_me_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSessionResponse'
+  /auth/logout:
+    post:
+      summary: Logout
+      operationId: logout_auth_logout_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /adversarial:
+    get:
+      summary: Get Adversarial Suite
+      operationId: get_adversarial_suite_adversarial_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdversarialSuiteResponse'
+  /adversarial/run:
+    post:
+      summary: Run Adversarial Suite
+      operationId: run_adversarial_suite_adversarial_run_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdversarialRunResponse'
+  /resume/attestation:
+    get:
+      summary: Get Resume Attestation
+      operationId: get_resume_attestation_resume_attestation_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResumeAttestationResponse'
+  /ledger/blocks:
+    get:
+      summary: Get Ledger Blocks
+      operationId: get_ledger_blocks_ledger_blocks_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/LedgerBlockResponse'
+                type: array
+                title: Response Get Ledger Blocks Ledger Blocks Get
+  /scanner/run:
+    post:
+      summary: Run Public Scanner
+      operationId: run_public_scanner_scanner_run_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RepoScanRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepoScanResponse'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /:
+    get:
+      summary: Root
+      operationId: root__get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+components:
+  schemas:
+    AdversarialRunResponse:
+      properties:
+        results:
+          items:
+            $ref: '#/components/schemas/AttackVectorSchema'
+          type: array
+          title: Results
+        upgrades_granted:
+          type: integer
+          title: Upgrades Granted
+        guard_reasons_logged:
+          type: integer
+          title: Guard Reasons Logged
+      type: object
+      required:
+      - results
+      - upgrades_granted
+      - guard_reasons_logged
+      title: AdversarialRunResponse
+    AdversarialSuiteResponse:
+      properties:
+        attacks_sent:
+          type: integer
+          title: Attacks Sent
+        upgrades_granted:
+          type: integer
+          title: Upgrades Granted
+        guard_reasons_logged:
+          type: integer
+          title: Guard Reasons Logged
+        vectors:
+          items:
+            $ref: '#/components/schemas/AttackVectorSchema'
+          type: array
+          title: Vectors
+        protocol:
+          type: string
+          title: Protocol
+          default: BREAK-ME
+        spec:
+          type: string
+          title: Spec
+          default: ISO-27001-ZKP
+      type: object
+      required:
+      - attacks_sent
+      - upgrades_granted
+      - guard_reasons_logged
+      - vectors
+      title: AdversarialSuiteResponse
+    AnalyzeRequest:
+      properties:
+        repo_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Repo Id
+        job_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Job Id
+        force_rescan:
+          type: boolean
+          title: Force Rescan
+          default: false
+      type: object
+      title: AnalyzeRequest
+    AssessmentItem:
+      properties:
+        requirement_id:
+          type: string
+          title: Requirement Id
+        canonical_id:
+          type: string
+          title: Canonical Id
+        label:
+          type: string
+          title: Label
+        category:
+          type: string
+          title: Category
+        importance:
+          type: string
+          title: Importance
+        assessable:
+          type: string
+          title: Assessable
+        status:
+          type: string
+          title: Status
+        signal_count:
+          type: integer
+          title: Signal Count
+        signals_detail:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Signals Detail
+        reason:
+          type: string
+          title: Reason
+        commit_sha:
+          type: string
+          title: Commit Sha
+        evidence:
+          items:
+            $ref: '#/components/schemas/EvidenceResponse'
+          type: array
+          title: Evidence
+          default: []
+        rejected_candidates:
+          items:
+            $ref: '#/components/schemas/RejectedCandidateResponse'
+          type: array
+          title: Rejected Candidates
+          default: []
+      type: object
+      required:
+      - requirement_id
+      - canonical_id
+      - label
+      - category
+      - importance
+      - assessable
+      - status
+      - signal_count
+      - reason
+      - commit_sha
+      title: AssessmentItem
+    AssessmentResponse:
+      properties:
+        repo_id:
+          type: string
+          title: Repo Id
+        job_id:
+          type: string
+          title: Job Id
+        commit_sha:
+          type: string
+          title: Commit Sha
+        run_mode:
+          type: string
+          title: Run Mode
+        assessments:
+          items:
+            $ref: '#/components/schemas/AssessmentItem'
+          type: array
+          title: Assessments
+          default: []
+        coverage:
+          additionalProperties: true
+          type: object
+          title: Coverage
+        analyzed_at:
+          type: string
+          format: date-time
+          title: Analyzed At
+      type: object
+      required:
+      - repo_id
+      - job_id
+      - commit_sha
+      - run_mode
+      - coverage
+      - analyzed_at
+      title: AssessmentResponse
+    AttackVectorSchema:
+      properties:
+        id:
+          type: string
+          title: Id
+        name:
+          type: string
+          title: Name
+        category:
+          type: string
+          title: Category
+        target_file:
+          type: string
+          title: Target File
+        payload_preview:
+          type: string
+          title: Payload Preview
+        injection_type:
+          type: string
+          title: Injection Type
+        status:
+          type: string
+          title: Status
+        guard_reason:
+          type: string
+          title: Guard Reason
+        timestamp:
+          type: string
+          title: Timestamp
+        signature_hash:
+          type: string
+          title: Signature Hash
+        lines:
+          items:
+            type: integer
+          type: array
+          title: Lines
+      type: object
+      required:
+      - id
+      - name
+      - category
+      - target_file
+      - payload_preview
+      - injection_type
+      - status
+      - guard_reason
+      - timestamp
+      - signature_hash
+      - lines
+      title: AttackVectorSchema
+    CommitContractCreateRequest:
+      properties:
+        repo_id:
+          type: string
+          title: Repo Id
+        job_id:
+          type: string
+          title: Job Id
+        requirement_id:
+          type: string
+          title: Requirement Id
+        predicted_target_state:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Predicted Target State
+          default: Demonstrated (basic)
+      type: object
+      required:
+      - repo_id
+      - job_id
+      - requirement_id
+      title: CommitContractCreateRequest
+    CommitContractResponse:
+      properties:
+        id:
+          type: string
+          title: Id
+        repo_id:
+          type: string
+          title: Repo Id
+        job_id:
+          type: string
+          title: Job Id
+        requirement_id:
+          type: string
+          title: Requirement Id
+        current_state:
+          type: string
+          title: Current State
+        predicted_target_state:
+          type: string
+          title: Predicted Target State
+        acceptance_checks:
+          items:
+            type: string
+          type: array
+          title: Acceptance Checks
+        base_commit_sha:
+          type: string
+          title: Base Commit Sha
+        requirements_expected_to_change:
+          items:
+            type: string
+          type: array
+          title: Requirements Expected To Change
+        requirements_must_not_change:
+          items:
+            type: string
+          type: array
+          title: Requirements Must Not Change
+        effort_class:
+          type: string
+          title: Effort Class
+        verdict:
+          type: string
+          title: Verdict
+        reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reason
+        evaluated_commit_sha:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Evaluated Commit Sha
+      type: object
+      required:
+      - id
+      - repo_id
+      - job_id
+      - requirement_id
+      - current_state
+      - predicted_target_state
+      - acceptance_checks
+      - base_commit_sha
+      - requirements_expected_to_change
+      - requirements_must_not_change
+      - effort_class
+      - verdict
+      title: CommitContractResponse
+    CorrectionRequest:
+      properties:
+        evidence_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Evidence Id
+        requirement_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Requirement Id
+        repo_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Repo Id
+        user_correction:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: User Correction
+        reason:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Reason
+        feedback:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Feedback
+        notes:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Notes
+        corrected_snippet:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Corrected Snippet
+      type: object
+      title: CorrectionRequest
+    CorrectionResponse:
+      properties:
+        status:
+          type: string
+          title: Status
+          default: received
+        success:
+          type: boolean
+          title: Success
+          default: true
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+      - message
+      title: CorrectionResponse
+    CoverageResponse:
+      properties:
+        job_id:
+          type: string
+          title: Job Id
+        repo_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Repo Id
+        commit_sha:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Commit Sha
+        evidence_coverage:
+          type: number
+          title: Evidence Coverage
+        numerator:
+          type: number
+          title: Numerator
+        denominator:
+          type: number
+          title: Denominator
+        assessed_count:
+          type: integer
+          title: Assessed Count
+        required_count:
+          type: integer
+          title: Required Count
+        preferred_count:
+          type: integer
+          title: Preferred Count
+        unclear_count:
+          type: integer
+          title: Unclear Count
+        excluded_count:
+          type: integer
+          title: Excluded Count
+        sensitivity_ranges:
+          additionalProperties:
+            type: number
+          type: object
+          title: Sensitivity Ranges
+        label:
+          type: string
+          title: Label
+          default: Evidence coverage
+      type: object
+      required:
+      - job_id
+      - evidence_coverage
+      - numerator
+      - denominator
+      - assessed_count
+      - required_count
+      - preferred_count
+      - unclear_count
+      - excluded_count
+      - sensitivity_ranges
+      title: CoverageResponse
+    DryRunRequest:
+      properties:
+        repo_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Repo Id
+        job_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Job Id
+        contract_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Contract Id
+        simulated_files:
+          anyOf:
+          - additionalProperties:
+              type: string
+            type: object
+          - type: 'null'
+          title: Simulated Files
+        candidate_files:
+          anyOf:
+          - additionalProperties:
+              type: string
+            type: object
+          - type: 'null'
+          title: Candidate Files
+      type: object
+      title: DryRunRequest
+    DryRunResponse:
+      properties:
+        base_commit_sha:
+          type: string
+          title: Base Commit Sha
+        hypothetical_assessments:
+          items:
+            $ref: '#/components/schemas/AssessmentItem'
+          type: array
+          title: Hypothetical Assessments
+          default: []
+        hypothetical_coverage:
+          type: number
+          title: Hypothetical Coverage
+        before_percentage:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Before Percentage
+        after_percentage:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: After Percentage
+        checklist_results:
+          anyOf:
+          - additionalProperties:
+              type: boolean
+            type: object
+          - type: 'null'
+          title: Checklist Results
+        status:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status
+        delta_summary:
+          type: string
+          title: Delta Summary
+      type: object
+      required:
+      - base_commit_sha
+      - hypothetical_coverage
+      - delta_summary
+      title: DryRunResponse
+    EvidenceResponse:
+      properties:
+        id:
+          type: string
+          title: Id
+        repo_id:
+          type: string
+          title: Repo Id
+        requirement_id:
+          type: string
+          title: Requirement Id
+        detector_name:
+          type: string
+          title: Detector Name
+        signal_type:
+          type: string
+          title: Signal Type
+        file_path:
+          type: string
+          title: File Path
+        commit_sha:
+          type: string
+          title: Commit Sha
+        start_line:
+          type: integer
+          title: Start Line
+        end_line:
+          type: integer
+          title: End Line
+        code_snippet:
+          type: string
+          title: Code Snippet
+        explanation:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Explanation
+        reachability_status:
+          type: string
+          title: Reachability Status
+        llm_verified:
+          type: boolean
+          title: Llm Verified
+      type: object
+      required:
+      - id
+      - repo_id
+      - requirement_id
+      - detector_name
+      - signal_type
+      - file_path
+      - commit_sha
+      - start_line
+      - end_line
+      - code_snippet
+      - reachability_status
+      - llm_verified
+      title: EvidenceResponse
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    HealthResponse:
+      properties:
+        status:
+          type: string
+          title: Status
+          default: ok
+        version:
+          type: string
+          title: Version
+        run_mode:
+          type: string
+          title: Run Mode
+        database_status:
+          type: string
+          title: Database Status
+        llm_configured:
+          type: boolean
+          title: Llm Configured
+        github_configured:
+          type: boolean
+          title: Github Configured
+        timestamp:
+          type: string
+          format: date-time
+          title: Timestamp
+      type: object
+      required:
+      - version
+      - run_mode
+      - database_status
+      - llm_configured
+      - github_configured
+      - timestamp
+      title: HealthResponse
+    JobCreateRequest:
+      properties:
+        url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Url
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+        title:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Title
+          default: Software Engineering Role
+        company:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Company
+      type: object
+      title: JobCreateRequest
+    JobResponse:
+      properties:
+        id:
+          type: string
+          title: Id
+        title:
+          type: string
+          title: Title
+        company:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Company
+        source_type:
+          type: string
+          title: Source Type
+        source_url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Source Url
+        retrieval_date:
+          type: string
+          format: date-time
+          title: Retrieval Date
+        text_hash:
+          type: string
+          title: Text Hash
+        requirements:
+          items:
+            $ref: '#/components/schemas/RequirementResponse'
+          type: array
+          title: Requirements
+          default: []
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - title
+      - source_type
+      - retrieval_date
+      - text_hash
+      - created_at
+      title: JobResponse
+    LedgerBlockResponse:
+      properties:
+        block_height:
+          type: integer
+          title: Block Height
+        commit_hash:
+          type: string
+          title: Commit Hash
+        previous_hash:
+          type: string
+          title: Previous Hash
+        timestamp:
+          type: string
+          title: Timestamp
+        invariants_proven:
+          type: integer
+          title: Invariants Proven
+        author:
+          type: string
+          title: Author
+        merkle_root:
+          type: string
+          title: Merkle Root
+      type: object
+      required:
+      - block_height
+      - commit_hash
+      - previous_hash
+      - timestamp
+      - invariants_proven
+      - author
+      - merkle_root
+      title: LedgerBlockResponse
+    ProofMapFile:
+      properties:
+        path:
+          type: string
+          title: Path
+        language:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Language
+        size_bytes:
+          type: integer
+          title: Size Bytes
+        is_test:
+          type: boolean
+          title: Is Test
+        is_entry_point:
+          type: boolean
+          title: Is Entry Point
+        evidence_count:
+          type: integer
+          title: Evidence Count
+        matched_skills:
+          items:
+            type: string
+          type: array
+          title: Matched Skills
+          default: []
+      type: object
+      required:
+      - path
+      - size_bytes
+      - is_test
+      - is_entry_point
+      - evidence_count
+      title: ProofMapFile
+    ProofMapResponse:
+      properties:
+        job_id:
+          type: string
+          title: Job Id
+        repo_id:
+          type: string
+          title: Repo Id
+        commit_sha:
+          type: string
+          title: Commit Sha
+        files:
+          items:
+            $ref: '#/components/schemas/ProofMapFile'
+          type: array
+          title: Files
+        total_files:
+          type: integer
+          title: Total Files
+        assessed_requirements:
+          type: integer
+          title: Assessed Requirements
+      type: object
+      required:
+      - job_id
+      - repo_id
+      - commit_sha
+      - files
+      - total_files
+      - assessed_requirements
+      title: ProofMapResponse
+    RejectedCandidateResponse:
+      properties:
+        id:
+          type: string
+          title: Id
+        requirement_id:
+          type: string
+          title: Requirement Id
+        detector_name:
+          type: string
+          title: Detector Name
+        file_path:
+          type: string
+          title: File Path
+        commit_sha:
+          type: string
+          title: Commit Sha
+        rejection_reason:
+          type: string
+          title: Rejection Reason
+        rejected_snippet:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Rejected Snippet
+      type: object
+      required:
+      - id
+      - requirement_id
+      - detector_name
+      - file_path
+      - commit_sha
+      - rejection_reason
+      title: RejectedCandidateResponse
+    RepoConnectRequest:
+      properties:
+        repo_url:
+          type: string
+          title: Repo Url
+        default_branch:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Default Branch
+          default: main
+      type: object
+      required:
+      - repo_url
+      title: RepoConnectRequest
+    RepoResponse:
+      properties:
+        id:
+          type: string
+          title: Id
+        repo_url:
+          type: string
+          title: Repo Url
+        owner:
+          type: string
+          title: Owner
+        name:
+          type: string
+          title: Name
+        default_branch:
+          type: string
+          title: Default Branch
+        last_commit_sha:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Last Commit Sha
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - repo_url
+      - owner
+      - name
+      - default_branch
+      - created_at
+      title: RepoResponse
+    RepoScanBreakdown:
+      properties:
+        proven:
+          type: integer
+          title: Proven
+        basic:
+          type: integer
+          title: Basic
+        not_shown:
+          type: integer
+          title: Not Shown
+        unclear:
+          type: integer
+          title: Unclear
+      type: object
+      required:
+      - proven
+      - basic
+      - not_shown
+      - unclear
+      title: RepoScanBreakdown
+    RepoScanRequest:
+      properties:
+        username:
+          type: string
+          title: Username
+      type: object
+      required:
+      - username
+      title: RepoScanRequest
+    RepoScanResponse:
+      properties:
+        target_user:
+          type: string
+          title: Target User
+        target_repo:
+          type: string
+          title: Target Repo
+        audit_receipt_id:
+          type: string
+          title: Audit Receipt Id
+        timestamp:
+          type: string
+          title: Timestamp
+        coverage_pct:
+          type: number
+          title: Coverage Pct
+        assessed_count:
+          type: integer
+          title: Assessed Count
+        total_count:
+          type: integer
+          title: Total Count
+        organization:
+          type: string
+          title: Organization
+        breakdown:
+          $ref: '#/components/schemas/RepoScanBreakdown'
+        verified_files:
+          items:
+            type: string
+          type: array
+          title: Verified Files
+        is_attested:
+          type: boolean
+          title: Is Attested
+      type: object
+      required:
+      - target_user
+      - target_repo
+      - audit_receipt_id
+      - timestamp
+      - coverage_pct
+      - assessed_count
+      - total_count
+      - organization
+      - breakdown
+      - verified_files
+      - is_attested
+      title: RepoScanResponse
+    RequirementResponse:
+      properties:
+        id:
+          type: string
+          title: Id
+        job_id:
+          type: string
+          title: Job Id
+        canonical_id:
+          type: string
+          title: Canonical Id
+        label:
+          type: string
+          title: Label
+        category:
+          type: string
+          title: Category
+        importance:
+          type: string
+          title: Importance
+        exact_quote:
+          type: string
+          title: Exact Quote
+        assessable:
+          type: string
+          title: Assessable
+        detector_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Detector Name
+        user_status:
+          type: string
+          title: User Status
+        notes:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Notes
+      type: object
+      required:
+      - id
+      - job_id
+      - canonical_id
+      - label
+      - category
+      - importance
+      - exact_quote
+      - assessable
+      - user_status
+      title: RequirementResponse
+    RequirementUpdateRequest:
+      properties:
+        user_status:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: User Status
+        importance:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Importance
+        notes:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Notes
+        canonical_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Canonical Id
+        label:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Label
+      type: object
+      title: RequirementUpdateRequest
+    ResumeAttestationResponse:
+      properties:
+        candidate:
+          $ref: '#/components/schemas/ResumeCandidateSchema'
+        audit_identifier:
+          type: string
+          title: Audit Identifier
+        merkle_root:
+          type: string
+          title: Merkle Root
+        commit_hash:
+          type: string
+          title: Commit Hash
+        skills:
+          items:
+            $ref: '#/components/schemas/ResumeSkillCategory'
+          type: array
+          title: Skills
+        experience:
+          items:
+            $ref: '#/components/schemas/ResumeExperienceSchema'
+          type: array
+          title: Experience
+      type: object
+      required:
+      - candidate
+      - audit_identifier
+      - merkle_root
+      - commit_hash
+      - skills
+      - experience
+      title: ResumeAttestationResponse
+    ResumeBulletSchema:
+      properties:
+        text:
+          type: string
+          title: Text
+        commit_sha:
+          type: string
+          title: Commit Sha
+        is_attested:
+          type: boolean
+          title: Is Attested
+      type: object
+      required:
+      - text
+      - commit_sha
+      - is_attested
+      title: ResumeBulletSchema
+    ResumeCandidateSchema:
+      properties:
+        name:
+          type: string
+          title: Name
+        title:
+          type: string
+          title: Title
+        email:
+          type: string
+          title: Email
+        github:
+          type: string
+          title: Github
+        location:
+          type: string
+          title: Location
+        clearance:
+          type: string
+          title: Clearance
+        summary:
+          type: string
+          title: Summary
+      type: object
+      required:
+      - name
+      - title
+      - email
+      - github
+      - location
+      - clearance
+      - summary
+      title: ResumeCandidateSchema
+    ResumeExperienceSchema:
+      properties:
+        role:
+          type: string
+          title: Role
+        company:
+          type: string
+          title: Company
+        period:
+          type: string
+          title: Period
+        bullets:
+          items:
+            $ref: '#/components/schemas/ResumeBulletSchema'
+          type: array
+          title: Bullets
+      type: object
+      required:
+      - role
+      - company
+      - period
+      - bullets
+      title: ResumeExperienceSchema
+    ResumeSkillCategory:
+      properties:
+        category:
+          type: string
+          title: Category
+        items:
+          items:
+            $ref: '#/components/schemas/ResumeSkillItem'
+          type: array
+          title: Items
+      type: object
+      required:
+      - category
+      - items
+      title: ResumeSkillCategory
+    ResumeSkillItem:
+      properties:
+        name:
+          type: string
+          title: Name
+        status:
+          type: string
+          title: Status
+        footnote_ref:
+          type: integer
+          title: Footnote Ref
+      type: object
+      required:
+      - name
+      - status
+      - footnote_ref
+      title: ResumeSkillItem
+    TraceResponse:
+      properties:
+        run_id:
+          type: string
+          title: Run Id
+        repo_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Repo Id
+        job_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Job Id
+        status:
+          type: string
+          title: Status
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        finished_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Finished At
+        steps:
+          items:
+            $ref: '#/components/schemas/TraceStep'
+          type: array
+          title: Steps
+          default: []
+      type: object
+      required:
+      - run_id
+      - status
+      - created_at
+      title: TraceResponse
+    TraceStep:
+      properties:
+        step_id:
+          type: integer
+          title: Step Id
+        step_name:
+          type: string
+          title: Step Name
+        timestamp:
+          type: string
+          title: Timestamp
+        elapsed_ms:
+          type: number
+          title: Elapsed Ms
+        status:
+          type: string
+          title: Status
+        details:
+          additionalProperties: true
+          type: object
+          title: Details
+          default: {}
+      type: object
+      required:
+      - step_id
+      - step_name
+      - timestamp
+      - elapsed_ms
+      - status
+      title: TraceStep
+    UserSessionResponse:
+      properties:
+        id:
+          type: string
+          title: Id
+        login:
+          type: string
+          title: Login
+        name:
+          type: string
+          title: Name
+        avatar_url:
+          type: string
+          title: Avatar Url
+        public_repos:
+          type: integer
+          title: Public Repos
+        scopes:
+          items:
+            type: string
+          type: array
+          title: Scopes
+        session_started_at:
+          type: string
+          title: Session Started At
+      type: object
+      required:
+      - id
+      - login
+      - name
+      - avatar_url
+      - public_repos
+      - scopes
+      - session_started_at
+      title: UserSessionResponse
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError

@@ -45,6 +45,12 @@ async def async_client(test_db):
 
     app.dependency_overrides[get_db] = override_get_db
     transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+    csrf_token = "test_csrf_token_secret_conftest"
+    async with AsyncClient(
+        transport=transport,
+        base_url="http://testserver",
+        cookies={"ps_csrf_token": csrf_token},
+        headers={"X-CSRF-Token": csrf_token}
+    ) as client:
         yield client
     app.dependency_overrides.clear()

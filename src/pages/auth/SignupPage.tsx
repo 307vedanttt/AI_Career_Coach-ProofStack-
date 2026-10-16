@@ -9,36 +9,45 @@ import { StepPreview } from '../../components/auth/StepPreview';
 import { WhatWeAskGithubCard } from '../../components/auth/WhatWeAskGithubCard';
 import { CustomCheckbox } from '../../components/auth/CustomCheckbox';
 import { Button } from '../../components/ui/Button';
-import { getCurrentUser, getMockAuthPath } from '../../lib/api';
+import { getMockAuthPath } from '../../lib/api';
+import { useAuth } from '../../context/AuthContext';
+import { buildUrl } from '../../lib/api/client';
 
 export const SignupPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
   const headingRef = useRef<HTMLHeadingElement>(null);
   const shouldReduceMotion = useReducedMotion();
 
   const [agreedReadOnly, setAgreedReadOnly] = useState(false);
   const [agreedPrivacy, setAgreedPrivacy] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const isUsingMocks = import.meta.env.VITE_USE_MOCKS === 'true';
 
   const isFormComplete = agreedReadOnly && agreedPrivacy;
 
   useEffect(() => {
-    // Check if user is already signed in
-    getCurrentUser().then((user) => {
-      if (user) {
-        navigate('/app', { replace: true });
-      }
-    });
+    // Redirect signed-in users away from /signup
+    if (!loading && user) {
+      navigate('/app', { replace: true });
+    }
 
     // Move focus to heading on route load
     headingRef.current?.focus();
-  }, [navigate]);
+  }, [user, loading, navigate]);
 
   const handleSignup = (e: React.MouseEvent) => {
     e.preventDefault();
     if (!isFormComplete) return;
 
     setIsSubmitting(true);
+
+    if (!isUsingMocks) {
+      // Direct real OAuth handshake with backend
+      window.location.href = buildUrl('/auth/github/start');
+      return;
+    }
+
     const authPath = getMockAuthPath();
 
     setTimeout(() => {

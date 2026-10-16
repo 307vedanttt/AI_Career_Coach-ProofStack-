@@ -170,8 +170,8 @@ class Snapshot(Base):
     __tablename__ = "snapshots"
     
     id = Column(String(36), primary_key=True)
-    repo_id = Column(String(36), ForeignKey("repositories.id"), nullable=False, index=True)
-    job_id = Column(String(36), ForeignKey("jobs.id"), nullable=False, index=True)
+    repo_id = Column(String(36), ForeignKey("repositories.id", ondelete="SET NULL"), nullable=True, index=True)
+    job_id = Column(String(36), ForeignKey("jobs.id", ondelete="SET NULL"), nullable=True, index=True)
     commit_sha = Column(String(64), nullable=False)
     previous_commit_sha = Column(String(64), nullable=True)
     hash_chain = Column(String(64), nullable=False) # SHA-256 chain of state

@@ -105,8 +105,8 @@ class AssessmentItem(BaseModel):
     rejected_candidates: List[RejectedCandidateResponse] = []
 
 class AnalyzeRequest(BaseModel):
-    repo_id: str
-    job_id: str
+    repo_id: Optional[str] = None
+    job_id: Optional[str] = None
     force_rescan: bool = False
 
 class AssessmentResponse(BaseModel):
@@ -181,14 +181,20 @@ class CommitContractResponse(BaseModel):
 
 # --- Dry Run ---
 class DryRunRequest(BaseModel):
-    repo_id: str
-    job_id: str
-    simulated_files: Dict[str, str] # path -> content
+    repo_id: Optional[str] = None
+    job_id: Optional[str] = None
+    contract_id: Optional[str] = None
+    simulated_files: Optional[Dict[str, str]] = None
+    candidate_files: Optional[Dict[str, str]] = None
 
 class DryRunResponse(BaseModel):
     base_commit_sha: str
-    hypothetical_assessments: List[AssessmentItem]
+    hypothetical_assessments: List[AssessmentItem] = []
     hypothetical_coverage: float
+    before_percentage: Optional[float] = None
+    after_percentage: Optional[float] = None
+    checklist_results: Optional[Dict[str, bool]] = None
+    status: Optional[str] = None
     delta_summary: str
 
 # --- Trace ---
@@ -211,10 +217,124 @@ class TraceResponse(BaseModel):
 
 # --- Corrections ---
 class CorrectionRequest(BaseModel):
-    evidence_id: str
-    user_correction: str
+    evidence_id: Optional[str] = None
+    requirement_id: Optional[str] = None
+    repo_id: Optional[str] = None
+    user_correction: Optional[str] = None
+    reason: Optional[str] = None
+    feedback: Optional[str] = None
     notes: Optional[str] = None
+    corrected_snippet: Optional[str] = None
 
 class CorrectionResponse(BaseModel):
     status: str = "received"
+    success: bool = True
     message: str
+
+# --- User & Session ---
+class UserSessionResponse(BaseModel):
+    id: str
+    login: str
+    name: str
+    avatar_url: str
+    public_repos: int
+    scopes: List[str]
+    session_started_at: str
+
+# --- Adversarial Suite (BreakMe) ---
+class AttackVectorSchema(BaseModel):
+    id: str
+    name: str
+    category: str
+    target_file: str
+    payload_preview: str
+    injection_type: str
+    status: str # "refused" | "attack"
+    guard_reason: str
+    timestamp: str
+    signature_hash: str
+    lines: List[int]
+
+class AdversarialSuiteResponse(BaseModel):
+    attacks_sent: int
+    upgrades_granted: int
+    guard_reasons_logged: int
+    vectors: List[AttackVectorSchema]
+    protocol: str = "BREAK-ME"
+    spec: str = "ISO-27001-ZKP"
+
+class AdversarialRunResponse(BaseModel):
+    results: List[AttackVectorSchema]
+    upgrades_granted: int
+    guard_reasons_logged: int
+
+# --- Resume Attestation ---
+class ResumeCandidateSchema(BaseModel):
+    name: str
+    title: str
+    email: str
+    github: str
+    location: str
+    clearance: str
+    summary: str
+
+class ResumeSkillItem(BaseModel):
+    name: str
+    status: str
+    footnote_ref: int
+
+class ResumeSkillCategory(BaseModel):
+    category: str
+    items: List[ResumeSkillItem]
+
+class ResumeBulletSchema(BaseModel):
+    text: str
+    commit_sha: str
+    is_attested: bool
+
+class ResumeExperienceSchema(BaseModel):
+    role: str
+    company: str
+    period: str
+    bullets: List[ResumeBulletSchema]
+
+class ResumeAttestationResponse(BaseModel):
+    candidate: ResumeCandidateSchema
+    audit_identifier: str
+    merkle_root: str
+    commit_hash: str
+    skills: List[ResumeSkillCategory]
+    experience: List[ResumeExperienceSchema]
+
+# --- Ledger Blocks ---
+class LedgerBlockResponse(BaseModel):
+    block_height: int
+    commit_hash: str
+    previous_hash: str
+    timestamp: str
+    invariants_proven: int
+    author: str
+    merkle_root: str
+
+# --- Public Repo Scanner ---
+class RepoScanRequest(BaseModel):
+    username: str
+
+class RepoScanBreakdown(BaseModel):
+    proven: int
+    basic: int
+    not_shown: int
+    unclear: int
+
+class RepoScanResponse(BaseModel):
+    target_user: str
+    target_repo: str
+    audit_receipt_id: str
+    timestamp: str
+    coverage_pct: float
+    assessed_count: int
+    total_count: int
+    organization: str
+    breakdown: RepoScanBreakdown
+    verified_files: List[str]
+    is_attested: bool

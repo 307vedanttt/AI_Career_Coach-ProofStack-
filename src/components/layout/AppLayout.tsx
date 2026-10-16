@@ -1,5 +1,5 @@
-import React from 'react';
-import { NavLink, Link } from 'react-router-dom';
+import React, { useState, useRef, useEffect } from 'react';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   FileCheck2,
@@ -11,7 +11,10 @@ import {
   Zap,
   RotateCcw,
   Scale,
+  LogOut,
+  Trash2,
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import { SystemMetrics } from '../../types/api';
 import { HealthChip, CounterChip } from '../ui/Chips';
 import { Button } from '../ui/Button';
@@ -34,6 +37,25 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   appState = 'normal',
   onResetState,
 }) => {
+  const { user, logout, deleteMyData } = useAuth();
+  const navigate = useNavigate();
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+    if (userMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [userMenuOpen]);
+
   const navItems = [
     { to: '/app', label: 'Dash', icon: LayoutDashboard },
     { to: '/app/contracts', label: 'Contracts', icon: FileCheck2 },
@@ -104,12 +126,64 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           })}
         </nav>
 
-        {/* User Avatar */}
-        <div
-          className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-[11px] font-bold text-white shadow"
-          title="Rohan (Intern @ Northwind Labs)"
-        >
-          RN
+        {/* User Avatar & Menu */}
+        <div className="relative" ref={menuRef}>
+          <button
+            type="button"
+            onClick={() => setUserMenuOpen((prev) => !prev)}
+            className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-[11px] font-bold text-white shadow hover:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 overflow-hidden"
+            title={user ? `${user.name || user.login} (@${user.login})` : 'Account menu'}
+            aria-label="User account security menu"
+            data-testid="user-menu-trigger"
+          >
+            {user?.avatarUrl ? (
+              <img src={user.avatarUrl} alt={user.login} className="w-full h-full object-cover" />
+            ) : (
+              <span>{user ? user.login.slice(0, 2).toUpperCase() : 'RN'}</span>
+            )}
+          </button>
+
+          {userMenuOpen && (
+            <div
+              data-testid="user-dropdown-menu"
+              className="absolute left-12 bottom-0 w-60 rounded-[12px] bg-[#12161B] border border-white/15 shadow-2xl p-3 z-50 flex flex-col gap-2 font-mono text-xs backdrop-blur-xl"
+            >
+              <div className="pb-2 border-b border-white/10">
+                <div className="text-[10px] text-[#9AA3AE] uppercase">Signed in as</div>
+                <div className="text-white font-bold truncate">@{user?.login || 'guest'}</div>
+              </div>
+
+              <button
+                type="button"
+                data-testid="logout-button"
+                onClick={async () => {
+                  setUserMenuOpen(false);
+                  await logout();
+                  navigate('/login');
+                }}
+                className="flex items-center gap-2 p-2 rounded hover:bg-white/5 text-[#9AA3AE] hover:text-white transition-colors text-left"
+              >
+                <LogOut className="w-3.5 h-3.5 text-[#34D399]" />
+                <span>Sign out</span>
+              </button>
+
+              <button
+                type="button"
+                data-testid="delete-my-data-button"
+                onClick={async () => {
+                  if (window.confirm('Eradicate all your data? This will record an immutable cryptographic tombstone on the ledger and permanently remove your user records.')) {
+                    setUserMenuOpen(false);
+                    await deleteMyData();
+                    navigate('/login');
+                  }
+                }}
+                className="flex items-center gap-2 p-2 rounded hover:bg-red-500/10 text-red-400 hover:text-red-300 transition-colors text-left"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                <span>Eradicate all my data</span>
+              </button>
+            </div>
+          )}
         </div>
       </aside>
 

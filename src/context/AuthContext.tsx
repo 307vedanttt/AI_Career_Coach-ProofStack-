@@ -1,0 +1,107 @@
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { UserSession } from '../types/api';
+import { getCurrentUser, logoutUser, deleteMyData as apiDeleteMyData } from '../lib/api';
+
+export interface AuthContextValue {
+  user: UserSession | null;
+  loading: boolean;
+  error: Error | null;
+  refreshUser: () => Promise<UserSession | null>;
+  logout: () => Promise<void>;
+  deleteMyData: () => Promise<void>;
+}
+
+export const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<UserSession | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const refreshUser = useCallback(async (): Promise<UserSession | null> => {
+    const isDemo =
+      (typeof window !== 'undefined' &&
+        new URLSearchParams(window.location.search).get('demo') === '1') ||
+      (typeof sessionStorage !== 'undefined' &&
+        sessionStorage.getItem('ps_demo_mode') === 'true');
+
+    if (isDemo) {
+      const demoUser: UserSession = {
+        id: 'usr-demo',
+        login: 'demo-judge',
+        name: 'Demo Reviewer',
+        avatarUrl: '',
+        publicRepos: 12,
+        scopes: ['read:user', 'public_repo'],
+        sessionStartedAt: new Date().toISOString(),
+      };
+      setUser(demoUser);
+      setLoading(false);
+      return demoUser;
+    }
+
+    try {
+      setLoading(true);
+      const session = await getCurrentUser();
+      setUser(session);
+      setError(null);
+      return session;
+    } catch (err) {
+      const e = err instanceof Error ? err : new Error(String(err));
+      setError(e);
+      setUser(null);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refreshUser();
+  }, [refreshUser]);
+
+  const logout = useCallback(async () => {
+    try {
+      await logoutUser();
+    } finally {
+      setUser(null);
+    }
+  }, []);
+
+  const deleteMyData = useCallback(async () => {
+    try {
+      await apiDeleteMyData();
+    } finally {
+      setUser(null);
+    }
+  }, []);
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        error,
+        refreshUser,
+        logout,
+        deleteMyData,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+const defaultAuthContext: AuthContextValue = {
+  user: null,
+  loading: false,
+  error: null,
+  refreshUser: async () => null,
+  logout: async () => {},
+  deleteMyData: async () => {},
+};
+
+export const useAuth = (): AuthContextValue => {
+  const context = useContext(AuthContext);
+  return context || defaultAuthContext;
+};

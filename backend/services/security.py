@@ -165,3 +165,81 @@ def redact_sensitive(text: str) -> str:
     redacted = re.sub(r"(sk-[a-zA-Z0-9]{20,})", "sk-***REDACTED***", redacted)
     redacted = re.sub(r"(Bearer\s+)[a-zA-Z0-9\-_\.]+", r"\1***REDACTED***", redacted)
     return redacted
+
+import time
+import secrets
+from typing import Dict, List
+
+def sign_data(payload: str, secret: str = settings.APP_SESSION_SECRET) -> str:
+    """
+    Signs payload with HMAC-SHA256 and embeds timestamp: payload.timestamp.sig
+    """
+    ts = str(int(time.time()))
+    data_to_sign = f"{payload}.{ts}"
+    sig = hmac.new(secret.encode("utf-8"), data_to_sign.encode("utf-8"), hashlib.sha256).hexdigest()
+    return f"{payload}.{ts}.{sig}"
+
+def verify_signed_data(signed_str: Optional[str], secret: str = settings.APP_SESSION_SECRET, max_age: Optional[int] = None) -> Optional[str]:
+    """
+    Verifies payload.timestamp.sig. Returns original payload or None.
+    """
+    if not signed_str or not isinstance(signed_str, str):
+        return None
+    parts = signed_str.split(".")
+    if len(parts) != 3:
+        return None
+    payload, ts_str, sig = parts
+    try:
+        ts = int(ts_str)
+    except ValueError:
+        return None
+    
+    if max_age is not None:
+        if time.time() - ts > max_age:
+            return None # Expired
+            
+    data_to_sign = f"{payload}.{ts_str}"
+    expected_sig = hmac.new(secret.encode("utf-8"), data_to_sign.encode("utf-8"), hashlib.sha256).hexdigest()
+    if hmac.compare_digest(sig, expected_sig):
+        return payload
+    return None
+
+def generate_csrf_token() -> str:
+    """
+    Generates a cryptographically random CSRF token.
+    """
+    return secrets.token_urlsafe(32)
+
+def verify_csrf_token(cookie_token: Optional[str], header_token: Optional[str]) -> bool:
+    """
+    Performs constant-time verification of CSRF double-submit token.
+    """
+    if not cookie_token or not header_token:
+        return False
+    return hmac.compare_digest(cookie_token.strip(), header_token.strip())
+
+class InMemoryRateLimiter:
+    """
+    Thread-safe sliding window rate limiter for security-sensitive endpoints.
+    """
+    def __init__(self):
+        self._requests: Dict[str, List[float]] = {}
+
+    def check(self, key: str, limit: int = 10, window_seconds: int = 60) -> Tuple[bool, int]:
+        now = time.time()
+        timestamps = self._requests.get(key, [])
+        valid_timestamps = [t for t in timestamps if now - t < window_seconds]
+        if len(valid_timestamps) >= limit:
+            oldest = valid_timestamps[0]
+            retry_after = max(1, int(window_seconds - (now - oldest)))
+            self._requests[key] = valid_timestamps
+            return False, retry_after
+        valid_timestamps.append(now)
+        self._requests[key] = valid_timestamps
+        return True, 0
+
+    def reset(self):
+        self._requests.clear()
+
+auth_rate_limiter = InMemoryRateLimiter()
+

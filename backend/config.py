@@ -6,9 +6,11 @@ class Settings(BaseModel):
     # App
     APP_NAME: str = "ProofStack — AI Career Coach"
     APP_VERSION: str = "4.0.0"
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
     DEBUG: bool = os.getenv("DEBUG", "false").lower() in ("true", "1")
     RUN_MODE: str = os.getenv("RUN_MODE", "deterministic") # deterministic or llm_assisted
     PUBLIC_BASE_URL: str = os.getenv("PUBLIC_BASE_URL", "http://localhost:8000")
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:5173")
     
     # Database
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./proofstack.db")
@@ -17,8 +19,11 @@ class Settings(BaseModel):
     APP_SESSION_SECRET: str = os.getenv("APP_SESSION_SECRET", "proofstack_development_session_secret_32bytes_min")
     APP_ENC_KEY: str = os.getenv("APP_ENC_KEY", "proofstack_development_encryption_key_32b!")
     
-    # GitHub Integration
+    # GitHub Integration & OAuth
     GITHUB_TOKEN: Optional[str] = os.getenv("GITHUB_TOKEN", None)
+    GITHUB_CLIENT_ID: Optional[str] = os.getenv("GITHUB_CLIENT_ID", None)
+    GITHUB_CLIENT_SECRET: Optional[str] = os.getenv("GITHUB_CLIENT_SECRET", None)
+    GITHUB_REDIRECT_URI: Optional[str] = os.getenv("GITHUB_REDIRECT_URI", None)
     GITHUB_WEBHOOK_SECRET: str = os.getenv("GITHUB_WEBHOOK_SECRET", "dev_webhook_secret_key_proofstack")
     
     # Polling & Concurrency

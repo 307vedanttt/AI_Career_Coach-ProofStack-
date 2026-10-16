@@ -5,6 +5,8 @@ import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { LoginPage } from '../pages/auth/LoginPage';
 import { SignupPage } from '../pages/auth/SignupPage';
 import { AuthErrorPage } from '../pages/auth/AuthErrorPage';
+import { AuthGuard } from '../components/auth/AuthGuard';
+import { AuthContext } from '../context/AuthContext';
 import { setMockSignedIn } from '../lib/api';
 
 describe('Auth Screens Component & Security Tests', () => {
@@ -138,6 +140,72 @@ describe('Auth Screens Component & Security Tests', () => {
 
     const statusElement = screen.getByTestId('error-message');
     expect(statusElement).toHaveTextContent('The authorization request was declined.');
+  });
+
+  it('renders security handshake token mismatch for reason=state', () => {
+    render(
+      <MemoryRouter initialEntries={['/auth/error?reason=state']}>
+        <Routes>
+          <Route path="/auth/error" element={<AuthErrorPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    const statusElement = screen.getByTestId('error-message');
+    expect(statusElement).toHaveTextContent('Security handshake token mismatch.');
+  });
+
+  it('redirects unauthenticated users accessing /app to /login via AuthGuard', () => {
+    render(
+      <MemoryRouter initialEntries={['/app']}>
+        <Routes>
+          <Route
+            path="/app"
+            element={
+              <AuthGuard>
+                <div data-testid="protected-content">Protected Enclave</div>
+              </AuthGuard>
+            }
+          />
+          <Route path="/login" element={<div data-testid="login-screen">Login Screen</div>} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    expect(screen.getByTestId('login-screen')).toBeInTheDocument();
+    expect(screen.queryByTestId('protected-content')).not.toBeInTheDocument();
+  });
+
+  it('redirects signed-in users away from /login to /app', () => {
+    const mockAuthValue: any = {
+      user: {
+        id: 'usr-alice',
+        login: 'alice',
+        name: 'Alice Dev',
+        avatarUrl: '',
+        publicRepos: 5,
+        scopes: ['read:user'],
+        sessionStartedAt: new Date().toISOString(),
+      },
+      loading: false,
+      error: null,
+      refreshUser: async () => null,
+      logout: async () => {},
+      deleteMyData: async () => {},
+    };
+
+    render(
+      <AuthContext.Provider value={mockAuthValue}>
+        <MemoryRouter initialEntries={['/login']}>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/app" element={<div data-testid="dashboard-screen">Dashboard Enclave</div>} />
+          </Routes>
+        </MemoryRouter>
+      </AuthContext.Provider>
+    );
+
+    expect(screen.getByTestId('dashboard-screen')).toBeInTheDocument();
   });
 });
 

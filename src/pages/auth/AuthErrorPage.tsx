@@ -11,6 +11,7 @@ const ALLOWED_REASONS: Record<string, string> = {
   access_denied: 'Access was denied by GitHub provider.',
   session_expired: 'The sign-in window timed out.',
   state_mismatch: 'Security handshake token mismatch.',
+  state: 'Security handshake token mismatch.',
   network_error: 'Unable to reach identity provider.',
 };
 

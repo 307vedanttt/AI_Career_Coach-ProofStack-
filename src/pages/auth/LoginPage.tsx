@@ -5,26 +5,29 @@ import { AuthSplitLayout } from '../../components/layout/AuthSplitLayout';
 import { AuthPanel, AuthItem } from '../../components/auth/AuthPanel';
 import { ReceiptStackLogin } from '../../components/auth/ReceiptStackLogin';
 import { Button } from '../../components/ui/Button';
-import { getCurrentUser, getMockAuthPath, setMockAuthPath, MockAuthPath } from '../../lib/api';
+import { getMockAuthPath, setMockAuthPath, MockAuthPath } from '../../lib/api';
 
+
+import { useAuth } from '../../context/AuthContext';
+import { buildUrl } from '../../lib/api/client';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
   const headingRef = useRef<HTMLHeadingElement>(null);
   const [authPath, setAuthPath] = useState<MockAuthPath>(getMockAuthPath());
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const isUsingMocks = import.meta.env.VITE_USE_MOCKS === 'true';
 
   useEffect(() => {
-    // Check if user is already signed in
-    getCurrentUser().then((user) => {
-      if (user) {
-        navigate('/app', { replace: true });
-      }
-    });
+    // Redirect signed-in users away from /login
+    if (!loading && user) {
+      navigate('/app', { replace: true });
+    }
 
     // Move focus to heading on route load for accessibility
     headingRef.current?.focus();
-  }, [navigate]);
+  }, [user, loading, navigate]);
 
   const handleAuthPathChange = (path: MockAuthPath) => {
     setAuthPath(path);
@@ -35,8 +38,13 @@ export const LoginPage: React.FC = () => {
     e.preventDefault();
     setIsRedirecting(true);
 
-    // In a production backend, this directs to GET /auth/github/start
-    // When using mocks, simulate based on dev selector
+    if (!isUsingMocks) {
+      // Direct real OAuth handshake with backend
+      window.location.href = buildUrl('/auth/github/start');
+      return;
+    }
+
+    // In dev mock mode, simulate based on dev selector
     setTimeout(() => {
       if (authPath === 'declined') {
         navigate('/auth/error?reason=declined');
