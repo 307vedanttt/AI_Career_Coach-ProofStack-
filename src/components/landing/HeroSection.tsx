@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { gsap } from 'gsap';
 import { Stamp } from '../stamps/Stamp';
@@ -9,6 +10,7 @@ import { Shield, ArrowRight, GitCommit, Play, Sparkles, FileText } from 'lucide-
 import { JobPostingIntakeModal } from '../posting/JobPostingIntakeModal';
 
 export const HeroSection: React.FC = () => {
+  const navigate = useNavigate();
   const shouldReduceMotion = useReducedMotion();
   const heroRef = useRef<HTMLDivElement>(null);
   const cardsContainerRef = useRef<HTMLDivElement>(null);
@@ -197,10 +199,7 @@ async def create_order(payload: OrderPayload):
               <Button
                 variant="solid_paper"
                 size="lg"
-                onClick={() => {
-                  const el = document.getElementById('how-it-works');
-                  el?.scrollIntoView({ behavior: 'smooth' });
-                }}
+                onClick={() => navigate('/app')}
                 icon={<ArrowRight className="w-4 h-4 text-[#14171A]" />}
                 aria-label="Analyze my repository now"
               >

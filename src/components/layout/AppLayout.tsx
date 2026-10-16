@@ -13,11 +13,13 @@ import {
   Scale,
   LogOut,
   Trash2,
+  Key,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { SystemMetrics } from '../../types/api';
 import { HealthChip, CounterChip } from '../ui/Chips';
 import { Button } from '../ui/Button';
+import { SettingsModal } from '../settings/SettingsModal';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -40,6 +42,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const { user, logout, deleteMyData } = useAuth();
   const navigate = useNavigate();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -155,6 +158,19 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
 
               <button
                 type="button"
+                data-testid="settings-menu-button"
+                onClick={() => {
+                  setUserMenuOpen(false);
+                  setIsSettingsOpen(true);
+                }}
+                className="flex items-center gap-2 p-2 rounded hover:bg-white/5 text-[#9AA3AE] hover:text-white transition-colors text-left"
+              >
+                <Key className="w-3.5 h-3.5 text-emerald-400" />
+                <span>API Keys & Engine</span>
+              </button>
+
+              <button
+                type="button"
                 data-testid="logout-button"
                 onClick={async () => {
                   setUserMenuOpen(false);
@@ -247,6 +263,18 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
               B&W
             </button>
 
+            {/* API Keys & Engine Configuration Trigger */}
+            <button
+              onClick={() => setIsSettingsOpen(true)}
+              title="Configure API Keys (Gemini, OpenAI, Claude, GitHub)"
+              aria-label="Configure API Keys and Engine"
+              data-testid="api-keys-header-button"
+              className="px-2.5 py-1 text-[11px] font-mono rounded border border-white/10 hover:border-emerald-500/40 bg-white/[0.03] text-[#9AA3AE] hover:text-white transition-colors flex items-center gap-1.5 focus:outline-none focus:ring-1 focus:ring-emerald-400"
+            >
+              <Key className="w-3.5 h-3.5 text-emerald-400" />
+              <span>API Keys</span>
+            </button>
+
             {/* Hollow Signals Refused Counter */}
             <CounterChip
               label="Hollow signals refused"
@@ -285,6 +313,12 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         {/* BODY CONTAINER */}
         <main id="main-content" className="flex-1 p-6 lg:p-8 flex flex-col">{children}</main>
       </div>
+
+      {/* API Keys & Engine Settings Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+      />
     </div>
   );
 };

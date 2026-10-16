@@ -807,8 +807,8 @@ export function emitEvent(event: ProofStackEvent) {
   eventSubscribers.forEach((cb) => cb(event));
 }
 
-export function triggerScriptedPush() {
-  emitEvent({
+export async function triggerScriptedPush(): Promise<void> {
+  const pushEvent: ProofStackEvent = {
     id: `evt-${Date.now()}`,
     type: 'push',
     timestamp: 'Just now',
@@ -818,7 +818,22 @@ export function triggerScriptedPush() {
     affectedFileId: 'f3',
     newPercentage: 72,
     newStatus: 'proven',
-  });
+  };
+
+  if (!USE_MOCKS) {
+    try {
+      const res = await apiClient<{ new_percentage?: number; new_status?: string }>('/api/demo/push', {
+        method: 'POST',
+      });
+      if (res && res.new_percentage) {
+        pushEvent.newPercentage = res.new_percentage;
+      }
+    } catch {
+      // Graceful fallback to simulated event
+    }
+  }
+
+  emitEvent(pushEvent);
 
   setTimeout(() => {
     emitEvent({
@@ -828,7 +843,7 @@ export function triggerScriptedPush() {
       message: 'Requirement SQL flipped from NOT SHOWN IN SCOPE to PROVEN (+14 PTS)',
       affectedRequirementId: 'req-sql',
       newStatus: 'proven',
-      newPercentage: 72,
+      newPercentage: pushEvent.newPercentage || 72,
     });
   }, 600);
 }
@@ -1308,3 +1323,83 @@ export async function deleteMyData(): Promise<void> {
     currentMockSession = null;
   }
 }
+
+export interface AppSettings {
+  llm_provider: string;
+  llm_model: string;
+  has_llm_key: boolean;
+  has_github_token: boolean;
+  run_mode: string;
+  masked_llm_key: string;
+  masked_github_token: string;
+}
+
+export async function getSettings(): Promise<AppSettings> {
+  if (USE_MOCKS) {
+    return {
+      llm_provider: 'mock',
+      llm_model: 'gemini-1.5-flash',
+      has_llm_key: false,
+      has_github_token: false,
+      run_mode: 'deterministic',
+      masked_llm_key: 'not set (mock mode)',
+      masked_github_token: 'not set (mock mode)',
+    };
+  }
+  try {
+    return await apiClient<AppSettings>('/api/settings');
+  } catch {
+    return {
+      llm_provider: 'none',
+      llm_model: 'gemini-1.5-flash',
+      has_llm_key: false,
+      has_github_token: false,
+      run_mode: 'deterministic',
+      masked_llm_key: 'not set',
+      masked_github_token: 'not set',
+    };
+  }
+}
+
+export async function updateSettings(settings: {
+  llm_provider?: string;
+  llm_api_key?: string;
+  llm_model?: string;
+  github_token?: string;
+}): Promise<AppSettings> {
+  if (USE_MOCKS) {
+    return {
+      llm_provider: settings.llm_provider || 'mock',
+      llm_model: settings.llm_model || 'gemini-1.5-flash',
+      has_llm_key: Boolean(settings.llm_api_key),
+      has_github_token: Boolean(settings.github_token),
+      run_mode: settings.llm_api_key ? 'llm_assisted' : 'deterministic',
+      masked_llm_key: settings.llm_api_key ? '***configured***' : 'not set',
+      masked_github_token: settings.github_token ? '***configured***' : 'not set',
+    };
+  }
+  return await apiClient<AppSettings>('/api/settings', {
+    method: 'POST',
+    body: JSON.stringify(settings),
+  });
+}
+
+export async function createJobPosting(data: {
+  title: string;
+  description: string;
+  company?: string;
+}): Promise<any> {
+  if (USE_MOCKS) {
+    return {
+      id: `job-${Date.now()}`,
+      title: data.title,
+      company: data.company || 'Northwind Labs',
+      requirements_count: 5,
+    };
+  }
+  return await apiClient<any>('/api/jobs', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+

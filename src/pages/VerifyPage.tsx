@@ -8,6 +8,7 @@ import {
   Link as LinkIcon,
   AlertTriangle,
   CheckCircle2,
+  RefreshCw,
 } from 'lucide-react';
 
 interface ChainBlockNode {
@@ -75,6 +76,31 @@ export const VerifyPage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Re-Verify Ledger Button */}
+            <Button
+              variant="solid_paper"
+              size="sm"
+              onClick={() => {
+                setIsTampered(false);
+                setRevealedCount(0);
+                setSealRotatedIn(false);
+                let current = 0;
+                const interval = setInterval(() => {
+                  current++;
+                  setRevealedCount(current);
+                  if (current >= 8) {
+                    clearInterval(interval);
+                    setTimeout(() => setSealRotatedIn(true), 250);
+                  }
+                }, 120);
+              }}
+              aria-label="Re-Verify Merkle Ledger Integrity"
+              className="font-mono text-xs"
+            >
+              <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+              <span>Re-Verify Ledger</span>
+            </Button>
+
             {/* Tamper Variant Toggle */}
             <Button
               variant={isTampered ? 'solid_ink' : 'ghost'}

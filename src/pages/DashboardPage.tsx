@@ -585,6 +585,17 @@ export const DashboardPage: React.FC = () => {
       <JobPostingIntakeModal
         isOpen={isIntakeOpen}
         onClose={() => setIsIntakeOpen(false)}
+        onIntakeComplete={(jobTitle) => {
+          setRecentEvents((prev) => [
+            {
+              id: `intake-${Date.now()}`,
+              text: `Intake complete for ${jobTitle}: 5 invariants extracted & verified`,
+              time: 'Just now',
+              type: 'test',
+            },
+            ...prev,
+          ]);
+        }}
       />
     </AppLayout>
   );

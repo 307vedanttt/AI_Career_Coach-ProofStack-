@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { HealthChip, CounterChip } from '../ui/Chips';
 import { Button } from '../ui/Button';
 import { ArrowRight, Terminal } from 'lucide-react';
 
 export const LandingNav: React.FC = () => {
+  const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -99,10 +100,7 @@ export const LandingNav: React.FC = () => {
           <Button
             variant="solid_paper"
             size="sm"
-            onClick={() => {
-              const el = document.getElementById('cta-receipt');
-              el?.scrollIntoView({ behavior: 'smooth' });
-            }}
+            onClick={() => navigate('/app')}
             aria-label="Analyze my repository"
             icon={<ArrowRight className="w-3.5 h-3.5 text-[#14171A]" />}
           >

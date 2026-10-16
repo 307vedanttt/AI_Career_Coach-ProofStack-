@@ -338,3 +338,20 @@ class RepoScanResponse(BaseModel):
     breakdown: RepoScanBreakdown
     verified_files: List[str]
     is_attested: bool
+
+# --- Settings & API Keys ---
+class SettingsResponse(BaseModel):
+    llm_provider: str
+    llm_model: str
+    has_llm_key: bool
+    has_github_token: bool
+    run_mode: str
+    masked_llm_key: str
+    masked_github_token: str
+
+class SettingsUpdateRequest(BaseModel):
+    llm_provider: Optional[str] = None
+    llm_api_key: Optional[str] = None
+    llm_model: Optional[str] = None
+    github_token: Optional[str] = None
+

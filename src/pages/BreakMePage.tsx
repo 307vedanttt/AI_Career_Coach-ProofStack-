@@ -8,6 +8,7 @@ import {
   Download,
   Lock,
   CheckCircle2,
+  FolderOpen,
 } from 'lucide-react';
 
 interface StreamingAttackRow extends AttackVector {
@@ -82,6 +83,19 @@ export const BreakMePage: React.FC = () => {
     };
   }, [isStreaming]);
 
+  const handleLoadStoredRun = () => {
+    setIsStreaming(false);
+    const storedRows: StreamingAttackRow[] = mockAttackVectors.map((v, i) => ({
+      ...v,
+      id: `${v.id}-stored-${i}`,
+      streamState: 'REFUSED',
+      displayedAt: Date.now() - (10 - i) * 1000,
+    }));
+    setRows(storedRows);
+    setAttacksCount(10);
+    setGuardsCount(10);
+  };
+
   const handleExportAudit = () => {
     const data = {
       protocol: 'BREAK-ME',
@@ -121,6 +135,17 @@ export const BreakMePage: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLoadStoredRun}
+              className="font-mono text-xs text-white border-white/10 hover:bg-white/5"
+              title="Load full 10-vector benchmark run"
+            >
+              <FolderOpen className="w-3.5 h-3.5 mr-1.5 text-emerald-400" />
+              <span>Load Stored Run</span>
+            </Button>
+
             <Button
               variant="ghost"
               size="sm"
