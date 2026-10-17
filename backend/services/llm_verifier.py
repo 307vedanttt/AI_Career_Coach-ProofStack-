@@ -146,6 +146,64 @@ class LLMVerifier:
                         parsed = json.loads(raw_text)
                         return bool(parsed.get("verdict", False)), str(parsed.get("reason", "Verified by Anthropic."))
 
+            elif self.provider in ("opencode", "opencode_ai"):
+                # OpenCode Console free models support (deepseek-v4.1-flash-free, glm-5.3-flash-free, nemotron-3.5-lightning-free, jev-1.13-free)
+                if self.model and "jev" in self.model.lower():
+                    # Jev System One structured evaluation endpoint
+                    async with httpx.AsyncClient(timeout=10.0) as client:
+                        resp = await client.post(
+                            "https://opencode.ai/inference/systemone/v1/systemone",
+                            headers={
+                                "Authorization": f"Bearer {self.api_key}",
+                                "Content-Type": "application/json"
+                            },
+                            json={
+                                "model": self.model or "jev-1.13-free",
+                                "state": f"Snippet:\n{snippet[:1500]}\nFile: {file_path}",
+                                "questions": {
+                                    "is_verified": {
+                                        "type": "noul",
+                                        "instructions": f"Does this code snippet genuinely demonstrate practical implementation of '{requirement_label}' (detector: {detector_name})? Reject hollow stubs or mere keywords."
+                                    }
+                                }
+                            }
+                        )
+                        if resp.status_code == 200:
+                            data = resp.json()
+                            answers = data.get("answers", {}) or data.get("results", {})
+                            verdict = answers.get("is_verified", {}).get("value", True)
+                            return bool(verdict), f"Verified via OpenCode Jev System One ({self.model})."
+                        else:
+                            logger.warning(f"OpenCode Jev error {resp.status_code}: {resp.text}")
+                else:
+                    # OpenAI-compatible chat completions endpoint
+                    model_name = self.model or "deepseek-v4.1-flash-free"
+                    async with httpx.AsyncClient(timeout=10.0) as client:
+                        resp = await client.post(
+                            "https://opencode.ai/inference/openai/v1/chat/completions",
+                            headers={
+                                "Authorization": f"Bearer {self.api_key}",
+                                "Content-Type": "application/json"
+                            },
+                            json={
+                                "model": model_name,
+                                "messages": [
+                                    {"role": "system", "content": SYSTEM_PROMPT},
+                                    {"role": "user", "content": user_content}
+                                ],
+                                "temperature": 0.0,
+                                "max_tokens": 150,
+                                "response_format": {"type": "json_object"}
+                            }
+                        )
+                        if resp.status_code == 200:
+                            data = resp.json()
+                            raw_json = data["choices"][0]["message"]["content"]
+                            parsed = json.loads(raw_json)
+                            return bool(parsed.get("verdict", False)), str(parsed.get("reason", f"Verified by OpenCode {model_name}."))
+                        else:
+                            logger.warning(f"OpenCode API error {resp.status_code}: {resp.text}")
+
         except Exception as e:
             logger.error(f"LLM verification failed gracefully: {str(e)}")
 

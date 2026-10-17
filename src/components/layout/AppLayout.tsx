@@ -24,6 +24,7 @@ import {
   Layers,
   GitFork,
   Github,
+  FileUp,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useProofStack } from '../../context/ProofStackContext';
@@ -31,9 +32,10 @@ import { SystemMetrics } from '../../types/api';
 import { CounterChip } from '../ui/Chips';
 import { Button } from '../ui/Button';
 import { BackButton } from '../ui/BackButton';
-import { initialMetrics, getDiagnostics, DiagnosticsResult } from '../../lib/api';
+import { initialMetrics, getDiagnostics, DiagnosticsResult, getRepoRejections } from '../../lib/api';
 import { SettingsModal } from '../settings/SettingsModal';
 import { ConnectGitHubModal } from '../common/ConnectGitHubModal';
+import { RefusedSignalsDrawer } from '../drawer/RefusedSignalsDrawer';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -62,9 +64,32 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const [mobileMoreOpen, setMobileMoreOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [connectModalOpen, setConnectModalOpen] = useState(false);
+  const [refusedDrawerOpen, setRefusedDrawerOpen] = useState(false);
   const [liveDiagnostics, setLiveDiagnostics] = useState<DiagnosticsResult | null>(null);
+  const [liveRefusedCount, setLiveRefusedCount] = useState<number | null>(null);
 
   const { repository, resetDemoData } = useProofStack();
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchRefusals = async () => {
+      try {
+        const repoId = repository?.id || 'default';
+        const data = await getRepoRejections(repoId);
+        if (isMounted && typeof data.total_refused_count === 'number') {
+          setLiveRefusedCount(data.total_refused_count);
+        }
+      } catch {
+        // fallback to metrics
+      }
+    };
+    fetchRefusals();
+    const interval = setInterval(fetchRefusals, 15000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [repository?.id]);
 
   useEffect(() => {
     let isMounted = true;
@@ -232,6 +257,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
     { to: '/app/evidence', label: 'Evidence', icon: FileCheck2 },
     { to: '/app/contracts', label: 'Contracts', icon: FileText },
     { to: '/app/proof-map', label: 'ProofMap', icon: Layers },
+    { to: '/resume', label: 'Resume', icon: FileUp },
   ];
 
   // Mobile 5-Tab Bar items (4 primary + More sheet)
@@ -662,11 +688,18 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             </div>
 
             {/* Hollow Signals Refused Counter */}
-            <CounterChip
-              label="Hollow signals refused"
-              count={metrics.hollowSignalsRefused}
-              variant="attack"
-            />
+            <button
+              type="button"
+              onClick={() => setRefusedDrawerOpen(true)}
+              className="hover:scale-105 active:scale-95 transition-transform cursor-pointer focus:outline-none"
+              title="Click to view refused signals ledger"
+            >
+              <CounterChip
+                label="Hollow signals refused"
+                count={liveRefusedCount ?? metrics.hollowSignalsRefused}
+                variant="attack"
+              />
+            </button>
 
             {/* Quick Demo Script Button: Simulate Push */}
             {onSimulatePush && (
@@ -864,6 +897,13 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           resetDemoData();
           navigate('/app');
         }}
+      />
+
+      {/* Refused Signals Ledger Drawer */}
+      <RefusedSignalsDrawer
+        isOpen={refusedDrawerOpen}
+        onClose={() => setRefusedDrawerOpen(false)}
+        repoId={repository?.id || 'default'}
       />
     </div>
   );

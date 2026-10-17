@@ -84,12 +84,16 @@ class EvidenceResponse(BaseModel):
 
 class RejectedCandidateResponse(BaseModel):
     id: str
-    requirement_id: str
+    requirement_id: Optional[str] = None
+    detector: Optional[str] = None
     detector_name: str
+    detector_version: Optional[str] = "1.0.0"
     file_path: str
     commit_sha: str
+    guard_reason: Optional[str] = None
     rejection_reason: str
     rejected_snippet: Optional[str] = None
+    created_at: Optional[Any] = None
 
 class AssessmentItem(BaseModel):
     requirement_id: str
@@ -161,25 +165,37 @@ class ProofMapResponse(BaseModel):
 # --- Commit Contracts ---
 class CommitContractCreateRequest(BaseModel):
     repo_id: str
-    job_id: str
-    requirement_id: str
-    predicted_target_state: Optional[str] = "Demonstrated (basic)"
+    job_id: Optional[str] = None
+    requirement_id: Optional[str] = None
+    predicted_target_state: Optional[str] = None
+    generate_all_missing: Optional[bool] = False
 
 class CommitContractResponse(BaseModel):
     id: str
     repo_id: str
     job_id: str
     requirement_id: str
+    requirement_name: Optional[str] = None
     current_state: str
     predicted_target_state: str
-    acceptance_checks: List[str]
+    acceptance_checks: List[str] = []
+    acceptance_checks_json: Optional[List[Dict[str, Any]]] = []
     base_commit_sha: str
-    requirements_expected_to_change: List[str]
-    requirements_must_not_change: List[str]
-    effort_class: str
-    verdict: str # "Pending", "Fulfilled", "Partly fulfilled", "Not fulfilled"
+    requirements_expected_to_change: List[str] = []
+    requirements_must_not_change: List[str] = []
+    must_not_move_json: Optional[List[str]] = []
+    effort_class: str = "small"
+    ci_status: str = "not_run" # "passed", "failed", "not_run", "pending"
+    adjudication_json: Optional[Dict[str, Any]] = None
+    task_description: Optional[str] = None
+    suggested_file_path: Optional[str] = None
+    recommendation_skeleton: Optional[str] = None
+    gain_arithmetic: Optional[str] = None
+    verdict: str = "Open" # "Open", "Pending", "Fulfilled", "Partly", "Not fulfilled"
     reason: Optional[str] = None
     evaluated_commit_sha: Optional[str] = None
+    created_at: Optional[Any] = None
+    updated_at: Optional[Any] = None
 
 # --- Dry Run ---
 class DryRunRequest(BaseModel):
@@ -356,4 +372,94 @@ class SettingsUpdateRequest(BaseModel):
     llm_api_key: Optional[str] = None
     llm_model: Optional[str] = None
     github_token: Optional[str] = None
+
+# --- Repository Provenance ---
+class RepoProvenanceFlag(BaseModel):
+    code: str
+    severity: str # "info" or "review"
+    title: str
+    observed_values: Dict[str, Any]
+    why_it_can_be_innocent: str
+    permalink: Optional[str] = None
+
+class RepoProvenanceResponse(BaseModel):
+    id: str
+    repo_id: str
+    snapshot_version: Optional[str] = None
+    detector_version: str
+    signals: Dict[str, Any]
+    flags: List[RepoProvenanceFlag]
+    created_at: str
+
+
+# --- Commit History Analysis ---
+class TimelineItem(BaseModel):
+    week_start: str
+    commits_count: int
+    additions: int
+    deletions: int
+
+class DailyHeatmapItem(BaseModel):
+    date: str
+    count: int
+    level: int
+
+class LargeAdditionItem(BaseModel):
+    sha: str
+    short_sha: str
+    message: str
+    author_login: str
+    committed_at: Optional[str] = None
+    additions: int
+    deletions: int
+    files_changed: int
+    share_pct: float
+    verified: bool
+    permalink: str
+    snapshot: Optional[Dict[str, Any]] = None
+
+class AuthorBreakdownItem(BaseModel):
+    login: str
+    name: str
+    email: Optional[str] = None
+    is_signed_in_user: bool
+    commits_count: int
+    commits_share_pct: float
+    additions: int
+    deletions: int
+    lines_share_pct: float
+
+class HistoryFlagItem(BaseModel):
+    id: Optional[str] = None
+    code: str
+    severity: str # "review" or "info"
+    title: str
+    rule: str
+    observed: Dict[str, Any]
+    innocent_note: str
+    created_at: Optional[str] = None
+
+class CommitHistoryResponse(BaseModel):
+    repo_id: str
+    repo_full_name: str
+    default_branch: str
+    commit_cap: int
+    total_commits_analyzed: int
+    cap_reached: bool
+    cap_banner_message: Optional[str] = None
+    disclaimer: str
+    timeline: List[TimelineItem]
+    daily_contributions: List[DailyHeatmapItem]
+    large_additions: List[LargeAdditionItem]
+    authors: List[AuthorBreakdownItem]
+    flags_count: int
+    flags: List[HistoryFlagItem]
+    thresholds: Dict[str, Any]
+
+class HistoryFlagsResponse(BaseModel):
+    repo_id: str
+    flags: List[HistoryFlagItem]
+    thresholds: Dict[str, Any]
+    disclaimer: str
+
 

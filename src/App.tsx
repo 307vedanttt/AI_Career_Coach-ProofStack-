@@ -5,6 +5,7 @@ import { OverviewPage } from './pages/OverviewPage';
 import { RepositoryAuditPage } from './pages/RepositoryAuditPage';
 import { EvidenceValidationPage } from './pages/EvidenceValidationPage';
 import { CommitContractPage } from './pages/CommitContractPage';
+import { ContractsPage } from './pages/ContractsPage';
 import { ProofMapPage } from './pages/ProofMapPage';
 import { DashboardPage } from './pages/DashboardPage';
 import { BreakMePage } from './pages/BreakMePage';
@@ -115,6 +116,22 @@ export const App: React.FC = () => {
             {/* 4. Commit Contract */}
             <Route
               path="/app/contracts"
+              element={
+                <AuthGuard>
+                  <ContractsPage />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/app/commit-contracts"
+              element={
+                <AuthGuard>
+                  <ContractsPage />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/app/contracts-simulation"
               element={
                 <AuthGuard>
                   <CommitContractPage />

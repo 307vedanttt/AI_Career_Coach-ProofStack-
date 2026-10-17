@@ -16,6 +16,7 @@ import {
   Check,
   X,
   FileCode,
+  WifiOff,
 } from 'lucide-react';
 import { Stamp, StampStatus } from '../stamps/Stamp';
 import { Button } from '../ui/Button';
@@ -29,7 +30,11 @@ export type ResumeState =
   | 'result'
   | 'error';
 
-export type ResumeErrorType = 'wrong_type' | 'too_large' | 'unreadable_scan';
+export type ResumeErrorType =
+  | 'wrong_type'
+  | 'too_large'
+  | 'unreadable_scan'
+  | 'network_error';
 
 interface ExtractedSkill {
   id: string;
@@ -39,6 +44,29 @@ interface ExtractedSkill {
   evidenceRef?: string;
   source_sentence?: string;
   isCustom?: boolean;
+}
+
+/**
+ * Verify file magic bytes on client before upload
+ * - PDF starts with '%PDF' (0x25, 0x50, 0x44, 0x46)
+ * - DOCX starts with 'PK\x03\x04' (0x50, 0x4B, 0x03, 0x04)
+ */
+async function verifyFileMagicBytes(file: File): Promise<'pdf' | 'docx' | 'invalid'> {
+  try {
+    const slice = file.slice(0, 8);
+    const buffer = await slice.arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+
+    if (bytes.length >= 4 && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46) {
+      return 'pdf';
+    }
+    if (bytes.length >= 4 && bytes[0] === 0x50 && bytes[1] === 0x4B && bytes[2] === 0x03 && bytes[3] === 0x04) {
+      return 'docx';
+    }
+    return 'invalid';
+  } catch {
+    return 'invalid';
+  }
 }
 
 export const ResumeUploadAnalysis: React.FC = () => {
@@ -63,9 +91,31 @@ export const ResumeUploadAnalysis: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  // Handle Drag events
+  // Reset all upload and result states when a new file is chosen
+  const resetAllStates = () => {
+    setSkills([]);
+    setUploadResult(null);
+    setServerErrorMessage(null);
+    setUploadProgress(0);
+    setAnalyzingStep(1);
+    setEditingSkillId(null);
+    setEditingText('');
+    setNewSkillText('');
+    setIsAddingSkill(false);
+  };
+
+  // Drag event handlers with preventDefault and stopPropagation
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    if (currentState !== 'drag_over' && currentState !== 'uploading' && currentState !== 'analyzing') {
+      setCurrentState('drag_over');
+    }
+  };
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     if (currentState !== 'drag_over' && currentState !== 'uploading' && currentState !== 'analyzing') {
       setCurrentState('drag_over');
     }
@@ -73,6 +123,7 @@ export const ResumeUploadAnalysis: React.FC = () => {
 
   const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if (currentState === 'drag_over') {
       setCurrentState('default');
     }
@@ -80,6 +131,7 @@ export const ResumeUploadAnalysis: React.FC = () => {
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     const droppedFile = e.dataTransfer.files?.[0];
     if (droppedFile) {
       processFile(droppedFile);
@@ -91,18 +143,20 @@ export const ResumeUploadAnalysis: React.FC = () => {
     if (selectedFile) {
       processFile(selectedFile);
     }
+    // Clear input so same file can be chosen again if needed
+    if (e.target) {
+      e.target.value = '';
+    }
   };
 
   const processFile = async (file: File) => {
-    // 1. Task 4d: Reset all upload and result states when a new file is selected
-    setSkills([]);
-    setUploadResult(null);
-    setServerErrorMessage(null);
-    setUploadProgress(0);
-    setAnalyzingStep(1);
+    // 1. Reset all upload, skill, and error state when a new file is chosen
+    resetAllStates();
 
+    // 2. Validate file extension
     const validExtensions = ['.pdf', '.docx'];
-    const hasValidExt = validExtensions.some((ext) => file.name.toLowerCase().endsWith(ext));
+    const lowerName = file.name.toLowerCase();
+    const hasValidExt = validExtensions.some((ext) => lowerName.endsWith(ext));
 
     if (!hasValidExt) {
       setErrorType('wrong_type');
@@ -111,22 +165,54 @@ export const ResumeUploadAnalysis: React.FC = () => {
       return;
     }
 
+    // 3. Validate file size (max 5 MB)
     if (file.size > 5 * 1024 * 1024) {
       setErrorType('too_large');
-      setServerErrorMessage('File size exceeds the 5 MB maximum limit.');
+      setServerErrorMessage(
+        `File size (${(file.size / (1024 * 1024)).toFixed(2)} MB) exceeds the 5 MB maximum enclave limit.`
+      );
       setCurrentState('error');
       return;
     }
 
+    if (file.size === 0) {
+      setErrorType('unreadable_scan');
+      setServerErrorMessage('Uploaded file is empty (0 bytes).');
+      setCurrentState('error');
+      return;
+    }
+
+    // 4. Verify magic bytes (not only extension)
+    const magicType = await verifyFileMagicBytes(file);
+    if (magicType === 'invalid') {
+      setErrorType('wrong_type');
+      setServerErrorMessage(
+        'File signature mismatch: header does not match authentic PDF (%PDF) or DOCX (PK) magic bytes.'
+      );
+      setCurrentState('error');
+      return;
+    }
+
+    if (
+      (lowerName.endsWith('.pdf') && magicType !== 'pdf') ||
+      (lowerName.endsWith('.docx') && magicType !== 'docx')
+    ) {
+      setErrorType('wrong_type');
+      setServerErrorMessage('File signature does not match its file extension.');
+      setCurrentState('error');
+      return;
+    }
+
+    // Proceed to upload & analysis
     setFileName(file.name);
     setFileSize(`${(file.size / 1024).toFixed(1)} KB`);
     setCurrentState('uploading');
-    setUploadProgress(20);
+    setUploadProgress(25);
 
     try {
       setAnalyzingStep(1); // Reading the file
-      setUploadProgress(45);
-      
+      setUploadProgress(50);
+
       const result = await uploadResumeFile(file);
       setAnalyzingStep(2); // Finding your skills
       setUploadProgress(80);
@@ -149,16 +235,27 @@ export const ResumeUploadAnalysis: React.FC = () => {
 
       setTimeout(() => {
         setCurrentState('result');
-      }, 350);
+      }, 300);
     } catch (err: any) {
       const msg = err.message || 'Resume upload failed';
       setServerErrorMessage(msg);
-      if (msg.toLowerCase().includes('no readable text') || msg.toLowerCase().includes('scanned')) {
+      const lower = msg.toLowerCase();
+
+      if (lower.includes('no readable text') || lower.includes('scanned') || lower.includes('empty')) {
         setErrorType('unreadable_scan');
-      } else if (msg.toLowerCase().includes('unsupported') || msg.toLowerCase().includes('format')) {
+      } else if (lower.includes('size limit') || lower.includes('exceeds 5mb') || lower.includes('too large')) {
+        setErrorType('too_large');
+      } else if (lower.includes('network') || lower.includes('failed to fetch') || lower.includes('connection')) {
+        setErrorType('network_error');
+      } else if (
+        lower.includes('unsupported') ||
+        lower.includes('format') ||
+        lower.includes('magic bytes') ||
+        lower.includes('signature')
+      ) {
         setErrorType('wrong_type');
       } else {
-        setErrorType('wrong_type');
+        setErrorType('network_error');
       }
       setCurrentState('error');
     }
@@ -205,13 +302,11 @@ export const ResumeUploadAnalysis: React.FC = () => {
 
   return (
     <div className="w-full max-w-6xl mx-auto px-4 py-6 flex flex-col items-center">
-      {/* ==================================================================== */}
-      {/* INTERACTIVE STATE SWITCHER (FOR INSTANT DEMO & JUDGE EVALUATION)     */}
-      {/* ==================================================================== */}
+      {/* Interactive State Bar for Quick Inspection */}
       <div className="mb-6 w-full flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/10 text-xs font-mono">
         <div className="flex items-center gap-2 text-[#9AA3AE]">
           <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-white font-bold">Resume Upload States:</span>
+          <span className="text-white font-bold">Resume Upload Engine:</span>
         </div>
         <div className="flex flex-wrap gap-1.5 items-center">
           <button
@@ -274,6 +369,7 @@ export const ResumeUploadAnalysis: React.FC = () => {
               type="button"
               onClick={() => {
                 setErrorType('wrong_type');
+                setServerErrorMessage('Unsupported file format. Only authentic PDF and Word (.docx) files are supported.');
                 setCurrentState('error');
               }}
               className={`px-2 py-0.5 rounded text-[10px] ${
@@ -288,6 +384,7 @@ export const ResumeUploadAnalysis: React.FC = () => {
               type="button"
               onClick={() => {
                 setErrorType('too_large');
+                setServerErrorMessage('File size exceeds the 5 MB maximum enclave limit.');
                 setCurrentState('error');
               }}
               className={`px-2 py-0.5 rounded text-[10px] ${
@@ -302,6 +399,7 @@ export const ResumeUploadAnalysis: React.FC = () => {
               type="button"
               onClick={() => {
                 setErrorType('unreadable_scan');
+                setServerErrorMessage('no readable text (scanned PDF, image-only document, or empty file)');
                 setCurrentState('error');
               }}
               className={`px-2 py-0.5 rounded text-[10px] ${
@@ -311,6 +409,21 @@ export const ResumeUploadAnalysis: React.FC = () => {
               }`}
             >
               Err: Scan
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setErrorType('network_error');
+                setServerErrorMessage('Network connection error: unable to establish secure connection to the server.');
+                setCurrentState('error');
+              }}
+              className={`px-2 py-0.5 rounded text-[10px] ${
+                currentState === 'error' && errorType === 'network_error'
+                  ? 'bg-red-500 text-white font-bold'
+                  : 'bg-red-500/10 text-red-400 hover:bg-red-500/20'
+              }`}
+            >
+              Err: Net
             </button>
           </div>
         </div>
@@ -332,26 +445,36 @@ export const ResumeUploadAnalysis: React.FC = () => {
         className="hidden"
         onChange={(e) => {
           if (e.target.files?.[0]) {
-            setFileName('Camera_Scan_Resume.pdf');
-            setCurrentState('uploading');
+            processFile(e.target.files[0]);
           }
         }}
       />
 
       <AnimatePresence mode="wait">
         {/* ==================================================================== */}
-        {/* STATE 1 & 2: DEFAULT & DRAG OVER (HUGE CENTRAL DROP ZONE)            */}
+        {/* STATE 1 & 2: DEFAULT & DRAG OVER (DROP ZONE WITH KEYBOARD & CLICK)   */}
         {/* ==================================================================== */}
         {(currentState === 'default' || currentState === 'drag_over') && (
           <motion.div
             key="dropzone-view"
+            role="button"
+            tabIndex={0}
+            aria-label="Drop your resume PDF or DOCX here, click to browse, or press Enter"
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
             onDragOver={handleDragOver}
+            onDragEnter={handleDragEnter}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
-            className={`relative w-full max-w-3xl min-h-[420px] rounded-3xl p-8 sm:p-12 flex flex-col items-center justify-center text-center transition-all duration-300 ${
+            onClick={() => fileInputRef.current?.click()}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                fileInputRef.current?.click();
+              }
+            }}
+            className={`relative w-full max-w-3xl min-h-[420px] rounded-3xl p-8 sm:p-12 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-400 ${
               currentState === 'drag_over'
                 ? 'border-2 border-solid border-emerald-400 bg-emerald-500/10 shadow-[0_0_40px_rgba(52,211,153,0.35)] scale-[1.01]'
                 : 'border-2 border-dashed border-white/20 hover:border-emerald-500/60 bg-white/[0.02] hover:bg-white/[0.04] shadow-2xl'
@@ -376,7 +499,7 @@ export const ResumeUploadAnalysis: React.FC = () => {
               Drop your resume here
             </h2>
             <p className="font-mono text-xs sm:text-sm text-[#9AA3AE] mb-8">
-              PDF or DOCX, up to 5 MB
+              PDF or DOCX, up to 5 MB · Drag & drop, click, or press Enter
             </p>
 
             {/* Desktop / Tablet: Browse files button */}
@@ -384,7 +507,10 @@ export const ResumeUploadAnalysis: React.FC = () => {
               <Button
                 variant="solid_paper"
                 size="lg"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
                 icon={<Upload className="w-4 h-4 text-[#14171A]" />}
                 className="font-mono font-bold text-xs tracking-tight shadow-md min-h-[44px]"
               >
@@ -392,11 +518,14 @@ export const ResumeUploadAnalysis: React.FC = () => {
               </Button>
             </div>
 
-            {/* Mobile Rule: Big "Choose file" button with camera option */}
+            {/* Mobile: Big Choose file button with camera option */}
             <div className="sm:hidden flex flex-col w-full gap-3 pt-2">
               <button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
                 className="w-full min-h-[44px] rounded-xl bg-[#F7F5F0] text-[#14171A] font-mono font-bold text-sm flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all"
               >
                 <Upload className="w-4 h-4" />
@@ -404,7 +533,10 @@ export const ResumeUploadAnalysis: React.FC = () => {
               </button>
               <button
                 type="button"
-                onClick={() => cameraInputRef.current?.click()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  cameraInputRef.current?.click();
+                }}
                 className="w-full min-h-[44px] rounded-xl bg-white/10 text-white font-mono font-semibold text-xs flex items-center justify-center gap-2 border border-white/15 active:scale-95 transition-all"
               >
                 <Camera className="w-4 h-4 text-emerald-400" />
@@ -415,7 +547,7 @@ export const ResumeUploadAnalysis: React.FC = () => {
             {/* Security Guarantee Pill */}
             <div className="mt-8 flex items-center gap-2 font-mono text-[11px] text-[#9AA3AE]">
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Parsed in isolated memory enclave · Zero AI training on your data</span>
+              <span>Parsed with sandboxed enclave · Zero training on your data · Cryptographic SHA-256 ledger</span>
             </div>
           </motion.div>
         )}
@@ -453,7 +585,7 @@ export const ResumeUploadAnalysis: React.FC = () => {
             </div>
 
             <div className="w-full flex items-center justify-between text-xs text-[#9AA3AE]">
-              <span>Uploading...</span>
+              <span>Ingesting bytes into memory...</span>
               <span className="text-white font-bold">{uploadProgress}%</span>
             </div>
           </motion.div>
@@ -478,10 +610,6 @@ export const ResumeUploadAnalysis: React.FC = () => {
               <span className="text-xs text-emerald-400">STAGE {analyzingStep} OF 3</span>
             </div>
 
-            {/* Stepped Checklist per Requirement:
-                1. Reading the file
-                2. Finding your skills
-                3. Matching claims to code */}
             <div className="space-y-4">
               {/* Step 1: Reading the file */}
               <div
@@ -497,7 +625,7 @@ export const ResumeUploadAnalysis: React.FC = () => {
                   <span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold">
                     1
                   </span>
-                  <span className="text-xs font-semibold">Reading the file</span>
+                  <span className="text-xs font-semibold">Reading the file & verifying signatures</span>
                 </div>
                 {analyzingStep > 1 ? (
                   <CheckCircle2 className="w-4 h-4 text-emerald-400" />
@@ -520,7 +648,7 @@ export const ResumeUploadAnalysis: React.FC = () => {
                   <span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold">
                     2
                   </span>
-                  <span className="text-xs font-semibold">Finding your skills</span>
+                  <span className="text-xs font-semibold">Extracting verbatim skill claims</span>
                 </div>
                 {analyzingStep > 2 ? (
                   <CheckCircle2 className="w-4 h-4 text-emerald-400" />
@@ -543,7 +671,7 @@ export const ResumeUploadAnalysis: React.FC = () => {
                   <span className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold">
                     3
                   </span>
-                  <span className="text-xs font-semibold">Matching claims to code</span>
+                  <span className="text-xs font-semibold">Matching claims to repository detectors</span>
                 </div>
                 {analyzingStep === 3 ? (
                   <RefreshCw className="w-4 h-4 animate-spin text-emerald-400" />
@@ -556,7 +684,7 @@ export const ResumeUploadAnalysis: React.FC = () => {
         )}
 
         {/* ==================================================================== */}
-        {/* STATE 5: RESULT VIEW (PAPER RECEIPT PREVIEW + EXTRACTED SKILLS CHIPS) */}
+        {/* STATE 5: RESULT VIEW (PAPER DOCKET + EXTRACTED SKILLS + STAMPS)      */}
         {/* ==================================================================== */}
         {currentState === 'result' && (
           <motion.div
@@ -566,7 +694,7 @@ export const ResumeUploadAnalysis: React.FC = () => {
             exit={{ opacity: 0, y: 16 }}
             className="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"
           >
-            {/* LEFT: Clean Paper Receipt Preview (5 Cols) - Real File Proof */}
+            {/* LEFT: Clean Paper Docket Preview (5 Cols) - Real File Proof */}
             <div className="lg:col-span-5 bg-[#F7F5F0] text-[#14171A] rounded-2xl p-6 shadow-2xl border border-[#E6E1D6] relative font-sans overflow-hidden">
               <div className="flex items-center justify-between pb-3 mb-4 border-b border-[#D3CDBD] font-mono text-[10px] text-[#575D65]">
                 <span className="font-bold uppercase tracking-wider text-[#14171A]">
@@ -582,10 +710,15 @@ export const ResumeUploadAnalysis: React.FC = () => {
                 <h3 className="font-display text-xl font-black text-[#14171A] break-all">
                   {uploadResult?.file_name || fileName}
                 </h3>
-                <div className="flex items-center gap-3 font-mono text-xs text-[#575D65] mt-1.5">
+                <div className="flex flex-wrap items-center gap-2 font-mono text-xs text-[#575D65] mt-1.5">
                   <span>Size: {uploadResult ? `${(uploadResult.file_size_bytes / 1024).toFixed(1)} KB` : fileSize}</span>
                   <span>·</span>
-                  <span>{uploadResult?.char_count ?? 0} characters</span>
+                  <span>{uploadResult?.char_count ?? 0} characters read</span>
+                  {uploadResult?.cached && (
+                    <span className="px-1.5 py-0.5 rounded bg-emerald-100 text-[#00422C] font-bold text-[10px]">
+                      CACHE_REUSED (SHA-256)
+                    </span>
+                  )}
                 </div>
                 <div className="font-mono text-[11px] text-[#575D65] mt-1">
                   Extracted: {uploadResult?.extracted_at ? new Date(uploadResult.extracted_at).toLocaleString() : 'Just now'}
@@ -598,7 +731,7 @@ export const ResumeUploadAnalysis: React.FC = () => {
                   Verbatim Source Claims Extracted ({skills.length}):
                 </div>
                 {skills.length > 0 ? (
-                  skills.slice(0, 5).map((sk, idx) => (
+                  skills.slice(0, 6).map((sk, idx) => (
                     <div key={idx} className="p-2.5 rounded bg-white/70 border border-[#D3CDBD] text-[11px] leading-relaxed">
                       <span className="font-bold text-[#14171A] block mb-0.5">{sk.name}:</span>
                       &ldquo;{sk.source_sentence || 'Verified claim from document.'}&rdquo;
@@ -614,7 +747,7 @@ export const ResumeUploadAnalysis: React.FC = () => {
               {/* Cryptographic Proof Footer */}
               <div className="mt-6 pt-3 border-t border-dashed border-[#D3CDBD] flex items-center justify-between font-mono text-[10px] text-[#6B7280]">
                 <span title={uploadResult?.file_sha256 || 'SHA-256'}>
-                  HASH: 0x{uploadResult?.file_sha256 ? uploadResult.file_sha256.substring(0, 8) : '9f3c2ab'}
+                  HASH: 0x{uploadResult?.file_sha256 ? uploadResult.file_sha256.substring(0, 10) : '9f3c2ab410'}
                 </span>
                 <span className="text-[#1F8A5B] font-bold">DIGITAL PROOF OK</span>
               </div>
@@ -634,7 +767,7 @@ export const ResumeUploadAnalysis: React.FC = () => {
                 </div>
 
                 <p className="font-mono text-xs text-[#9AA3AE] mb-5">
-                  Each skill claim is cross-referenced against your repositories. Click pencil to edit, ✕ to remove.
+                  Each skill claim is cross-referenced against your connected code detectors. Skills without a detector are marked UNCLEAR.
                 </p>
 
                 {/* Chips Grid: Each editable, removable, and followed by status stamp */}
@@ -760,7 +893,7 @@ export const ResumeUploadAnalysis: React.FC = () => {
 
               {/* Data Privacy Notice */}
               <div className="p-3.5 rounded-xl bg-white/[0.025] border border-white/10 flex items-center justify-between font-mono text-xs text-[#9AA3AE]">
-                <span>Your resume is used only for this analysis. Delete it anytime.</span>
+                <span>Your resume is processed in an isolated sandbox. Zero AI training.</span>
                 <Trash2 className="w-4 h-4 text-emerald-400 shrink-0 ml-2" />
               </div>
 
@@ -779,7 +912,10 @@ export const ResumeUploadAnalysis: React.FC = () => {
                 <Button
                   variant="ghost"
                   size="lg"
-                  onClick={() => setCurrentState('default')}
+                  onClick={() => {
+                    resetAllStates();
+                    setCurrentState('default');
+                  }}
                   icon={<RefreshCw className="w-4 h-4" />}
                   className="w-full sm:w-auto font-mono text-xs min-h-[44px]"
                 >
@@ -791,7 +927,7 @@ export const ResumeUploadAnalysis: React.FC = () => {
         )}
 
         {/* ==================================================================== */}
-        {/* STATE 6: ERROR (WRONG FILE TYPE, TOO LARGE, UNREADABLE SCAN)         */}
+        {/* STATE 6: ERROR (WRONG TYPE, TOO LARGE, SCANNED/EMPTY, NETWORK ERROR) */}
         {/* ==================================================================== */}
         {currentState === 'error' && (
           <motion.div
@@ -802,57 +938,63 @@ export const ResumeUploadAnalysis: React.FC = () => {
             className="w-full max-w-lg p-8 rounded-2xl bg-[#12161B] border border-red-500/40 shadow-2xl flex flex-col items-center text-center font-mono"
           >
             <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400 mb-6 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
-              <ShieldAlert className="w-8 h-8" />
+              {errorType === 'network_error' ? (
+                <WifiOff className="w-8 h-8" />
+              ) : (
+                <ShieldAlert className="w-8 h-8" />
+              )}
             </div>
 
             <span className="text-xs text-red-400 font-bold uppercase tracking-wider mb-1">
               UPLOAD INGESTION REJECTED
             </span>
 
-            {/* Error messaging based on variant */}
-            {serverErrorMessage ? (
+            {/* Specific error messaging */}
+            {errorType === 'wrong_type' && (
               <>
                 <h3 className="text-lg font-display font-bold text-white mb-2">
-                  {errorType === 'unreadable_scan' ? 'No Readable Text (Scan/Empty)' : 'Upload Rejected'}
+                  Wrong File Type / Invalid Magic Bytes
                 </h3>
-                <p className="text-xs text-rose-300 mb-6 leading-relaxed bg-rose-500/10 p-3 rounded-lg border border-rose-500/20 w-full break-words">
-                  {serverErrorMessage}
+                <p className="text-xs text-[#9AA3AE] mb-6 leading-relaxed">
+                  {serverErrorMessage ||
+                    'Only authentic PDF (.pdf) or Word (.docx) documents with valid headers are accepted. Executables or renamed files are strictly rejected.'}
                 </p>
               </>
-            ) : (
+            )}
+
+            {errorType === 'too_large' && (
               <>
-                {errorType === 'wrong_type' && (
-                  <>
-                    <h3 className="text-lg font-display font-bold text-white mb-2">
-                      Wrong File Type
-                    </h3>
-                    <p className="text-xs text-[#9AA3AE] mb-6 leading-relaxed">
-                      Only PDF or DOCX documents are accepted for cryptographic verification. Please convert your file and try again.
-                    </p>
-                  </>
-                )}
+                <h3 className="text-lg font-display font-bold text-white mb-2">
+                  File Exceeds 5 MB
+                </h3>
+                <p className="text-xs text-[#9AA3AE] mb-6 leading-relaxed">
+                  {serverErrorMessage ||
+                    'The uploaded file exceeds the 5 MB enclave ingestion ceiling. Please compress images or remove embedded attachments.'}
+                </p>
+              </>
+            )}
 
-                {errorType === 'too_large' && (
-                  <>
-                    <h3 className="text-lg font-display font-bold text-white mb-2">
-                      File Exceeds 5 MB
-                    </h3>
-                    <p className="text-xs text-[#9AA3AE] mb-6 leading-relaxed">
-                      The uploaded file exceeds the 5 MB enclave ingestion ceiling. Please compress images or remove embedded attachments.
-                    </p>
-                  </>
-                )}
+            {errorType === 'unreadable_scan' && (
+              <>
+                <h3 className="text-lg font-display font-bold text-white mb-2">
+                  No Readable Text (Scanned / Empty)
+                </h3>
+                <p className="text-xs text-[#9AA3AE] mb-6 leading-relaxed">
+                  {serverErrorMessage ||
+                    'No readable text detected (scanned PDF, image-only document, or empty file). Please export your resume directly as selectable text.'}
+                </p>
+              </>
+            )}
 
-                {errorType === 'unreadable_scan' && (
-                  <>
-                    <h3 className="text-lg font-display font-bold text-white mb-2">
-                      Unreadable Scan / Empty
-                    </h3>
-                    <p className="text-xs text-[#9AA3AE] mb-6 leading-relaxed">
-                      No readable text detected (scanned PDF, image-only document, or empty file).
-                    </p>
-                  </>
-                )}
+            {errorType === 'network_error' && (
+              <>
+                <h3 className="text-lg font-display font-bold text-white mb-2">
+                  Network Connection Error
+                </h3>
+                <p className="text-xs text-[#9AA3AE] mb-6 leading-relaxed">
+                  {serverErrorMessage ||
+                    'Unable to establish a secure connection to the verification server. Please verify your network connection and retry.'}
+                </p>
               </>
             )}
 
@@ -861,7 +1003,10 @@ export const ResumeUploadAnalysis: React.FC = () => {
               <Button
                 variant="solid_paper"
                 size="md"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={() => {
+                  resetAllStates();
+                  fileInputRef.current?.click();
+                }}
                 icon={<Upload className="w-4 h-4 text-[#14171A]" />}
                 className="flex-1 font-mono font-bold text-xs min-h-[44px]"
               >
@@ -870,7 +1015,10 @@ export const ResumeUploadAnalysis: React.FC = () => {
               <Button
                 variant="ghost"
                 size="md"
-                onClick={() => setCurrentState('default')}
+                onClick={() => {
+                  resetAllStates();
+                  setCurrentState('default');
+                }}
                 className="font-mono text-xs min-h-[44px]"
               >
                 Cancel

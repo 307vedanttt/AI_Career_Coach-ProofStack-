@@ -127,6 +127,8 @@ async def csrf_protect_middleware(request: Request, call_next):
             "/auth/dev-login",
             "/api/check-now",
             "/check-now",
+            "/api/resume/upload",
+            "/resume/upload",
         )
         if not any(path.startswith(prefix) for prefix in exempt_prefixes):
             csrf_cookie = request.cookies.get("ps_csrf_token")

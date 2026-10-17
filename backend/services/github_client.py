@@ -112,4 +112,128 @@ class GitHubClient:
             new_etag = resp.headers.get("ETag")
             return True, new_etag
 
+    async def get_commits(
+        self,
+        owner: str,
+        repo: str,
+        branch: Optional[str] = None,
+        max_commits: int = 200,
+        etag: Optional[str] = None
+    ) -> Tuple[List[Dict[str, Any]], bool, Optional[str]]:
+        """
+        Retrieves commits with pagination up to max_commits (default 200).
+        Returns (commits_list, cap_hit, latest_etag).
+        """
+        commits: List[Dict[str, Any]] = []
+        cap_hit = False
+        latest_etag = None
+        per_page = 100
+        page = 1
+        max_pages = (max_commits + per_page - 1) // per_page
+
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            while len(commits) < max_commits and page <= max_pages:
+                url = f"{self.base_url}/repos/{owner}/{repo}/commits"
+                params = {"per_page": per_page, "page": page}
+                if branch:
+                    params["sha"] = branch
+                headers = self._get_headers(etag=etag if page == 1 else None)
+                resp = await client.get(url, headers=headers, params=params)
+                if resp.status_code == 304:
+                    return [], False, etag
+                if resp.status_code == 404:
+                    raise GitHubAPIError(f"Repository {owner}/{repo} not found on GitHub.")
+                if resp.status_code == 403:
+                    raise GitHubAPIError(f"GitHub API rate limit exceeded: {resp.text}")
+                if resp.status_code != 200:
+                    break
+
+                if page == 1:
+                    latest_etag = resp.headers.get("ETag")
+
+                batch = resp.json()
+                if not isinstance(batch, list) or not batch:
+                    break
+
+                commits.extend(batch)
+                if len(batch) < per_page:
+                    break
+                page += 1
+
+        if len(commits) >= max_commits:
+            cap_hit = True
+            commits = commits[:max_commits]
+
+        return commits, cap_hit, latest_etag
+
+    async def get_first_commit(self, owner: str, repo: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves the earliest (initial) commit of a repository.
+        Uses Link header pagination if available for efficiency.
+        """
+        url = f"{self.base_url}/repos/{owner}/{repo}/commits"
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(url, headers=self._get_headers(), params={"per_page": 1})
+            if resp.status_code != 200:
+                return None
+            link_header = resp.headers.get("Link", "")
+            last_url = None
+            if 'rel="last"' in link_header:
+                m = re.search(r'<([^>]+)>;\s*rel="last"', link_header)
+                if m:
+                    last_url = m.group(1)
+            if last_url:
+                last_resp = await client.get(last_url, headers=self._get_headers())
+                if last_resp.status_code == 200:
+                    data = last_resp.json()
+                    if isinstance(data, list) and data:
+                        return data[-1]
+            data = resp.json()
+            if isinstance(data, list) and data:
+                return data[-1]
+            return None
+
+    async def compare_commits(self, owner: str, repo: str, base: str, head: str) -> Dict[str, Any]:
+        """
+        Compares two commits or branches: base...head.
+        Returns compare payload or error dictionary if 404/failure.
+        """
+        url = f"{self.base_url}/repos/{owner}/{repo}/compare/{base}...{head}"
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.get(url, headers=self._get_headers())
+            if resp.status_code == 404:
+                return {"status": "not_found", "ahead_by": 0, "behind_by": 0, "commits": [], "error": "404 Not Found"}
+            if resp.status_code != 200:
+                return {"status": "error", "ahead_by": 0, "behind_by": 0, "commits": [], "error": f"HTTP {resp.status_code}"}
+            return resp.json()
+
+    async def get_tree_map(self, owner: str, repo: str, commit_or_branch: str) -> Dict[str, str]:
+        """
+        Returns a map of {path: blob_sha} for the repository tree.
+        Uses the recursive tree once.
+        """
+        try:
+            tree = await self.get_tree(owner, repo, commit_or_branch)
+            return {item["path"]: item.get("sha", "") for item in tree if item.get("type") == "blob" and "path" in item}
+        except Exception as e:
+            logger.warning(f"Failed to fetch tree map for {owner}/{repo}@{commit_or_branch}: {e}")
+            return {}
+
+    async def get_commit_detail(self, owner: str, repo: str, sha: str) -> Optional[Dict[str, Any]]:
+        """
+        Retrieves detailed stats (additions, deletions, files) for a specific commit.
+        """
+        url = f"{self.base_url}/repos/{owner}/{repo}/commits/{sha}"
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.get(url, headers=self._get_headers())
+            if resp.status_code == 200:
+                return resp.json()
+            if resp.status_code == 404:
+                return None
+            if resp.status_code == 403:
+                raise GitHubAPIError(f"GitHub API rate limit exceeded: {resp.text}")
+            logger.warning(f"Failed to fetch commit {sha}: HTTP {resp.status_code}")
+            return None
+
 github_client = GitHubClient()
+

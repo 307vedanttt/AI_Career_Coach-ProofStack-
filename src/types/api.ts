@@ -61,25 +61,49 @@ export interface RejectedCandidate {
 
 export interface ContractChecklistItem {
   id: string;
+  ruleId?: string;
   label: string;
-  file: string;
+  description?: string;
+  file?: string;
+  line?: number;
   satisfied: boolean;
-  statusLabel: string;
+  statusLabel?: string;
+  reason?: string;
 }
 
 export interface Contract {
   id: string;
+  repoId?: string;
+  jobId?: string;
+  requirementId?: string;
   title: string;
   description: string;
   requirementTarget: string;
+  currentState?: string;
+  predictedTargetState?: string;
   pointsDelta: number;
   diffEstimate: 'SMALL' | 'MEDIUM' | 'LARGE';
   timeEstimate: string;
+  effortClass?: 'small' | 'medium' | 'large';
   checklist: ContractChecklistItem[];
+  acceptanceChecks?: string[];
+  mustNotMove?: string[];
   frozenScope: string;
   gitCommand: string;
   status: 'fulfilled' | 'partly' | 'not_fulfilled' | 'pending';
   targetStatus: StampStatus;
+  ciStatus?: 'passed' | 'failed' | 'not_run' | 'pending';
+  adjudication?: {
+    verdict: string;
+    summary: string;
+    checks: ContractChecklistItem[];
+    must_not_move_violations?: string[];
+    ci_status?: string;
+  };
+  suggestedFilePath?: string;
+  recommendationSkeleton?: string;
+  gainArithmetic?: string;
+  reason?: string;
 }
 
 export interface TreemapFileItem {

@@ -12,4 +12,6 @@ export * from './auth/AuthPanel';
 export * from './auth/CustomCheckbox';
 export * from './auth/StepPreview';
 export * from './layout/AuthSplitLayout';
+export * from './provenance/ProvenanceCard';
+export * from './history/CommitHistoryAnalysis';
 

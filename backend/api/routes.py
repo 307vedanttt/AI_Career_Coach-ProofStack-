@@ -20,7 +20,8 @@ from backend.db.session import get_db, AsyncSessionLocal
 from backend.models.models import (
     User, Job, Requirement, Repository, RepositoryFile,
     FileEvidence, RejectedCandidate, Assessment, Snapshot,
-    CommitContract, WebhookDelivery, LLMCache, TraceRun, ResumeExtraction, utcnow
+    CommitContract, WebhookDelivery, LLMCache, TraceRun, ResumeExtraction,
+    RepoProvenance, CommitStats, HistoryFlag, utcnow
 )
 from backend.services.resume_service import process_resume_upload, extract_text_from_pdf
 from backend.schemas.schemas import (
@@ -35,7 +36,9 @@ from backend.schemas.schemas import (
     ResumeAttestationResponse, ResumeCandidateSchema, ResumeSkillCategory, ResumeSkillItem,
     ResumeExperienceSchema, ResumeBulletSchema, LedgerBlockResponse,
     RepoScanRequest, RepoScanResponse, RepoScanBreakdown,
-    SettingsResponse, SettingsUpdateRequest
+    SettingsResponse, SettingsUpdateRequest,
+    RepoProvenanceResponse, RepoProvenanceFlag,
+    CommitHistoryResponse, HistoryFlagsResponse
 )
 from backend.services.security import (
     SecurityError, sign_data, verify_signed_data,
@@ -43,6 +46,8 @@ from backend.services.security import (
 )
 from backend.services.job_extractor import job_extractor
 from backend.services.github_client import github_client, GitHubAPIError
+from backend.services.provenance_service import provenance_service
+from backend.services.commit_history_service import commit_history_service
 from backend.services.detectors import get_detector
 from backend.services.evidence_guard import evidence_guard
 from backend.services.llm_verifier import llm_verifier
@@ -359,6 +364,172 @@ async def poll_repository(repo_id: str, db: AsyncSession = Depends(get_db)):
         })
     return poll_result
 
+@router.get("/repos/{repo_id}/provenance", response_model=RepoProvenanceResponse)
+async def get_repository_provenance(
+    repo_id: str,
+    request: Request,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Retrieves the latest repository provenance record (owner only).
+    Executes pure signals detector if not yet analyzed.
+    """
+    user = None
+    try:
+        user = await get_authenticated_user(request, db)
+    except HTTPException:
+        user = await get_or_create_default_user(db)
+
+    stmt = select(Repository).where(Repository.id == repo_id)
+    repo = (await db.execute(stmt)).scalar_one_or_none()
+    if not repo:
+        raise HTTPException(status_code=404, detail="Repository not found.")
+
+    if repo.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Forbidden: You are not the owner of this repository.")
+
+    prov = await provenance_service.get_latest_provenance(db, repo.id)
+    if not prov:
+        prov = await provenance_service.analyze_repository_provenance(
+            db=db,
+            repo=repo,
+            candidate_username=user.username
+        )
+
+    return RepoProvenanceResponse(**prov)
+
+@router.post("/repos/{repo_id}/provenance/analyze", response_model=RepoProvenanceResponse)
+async def analyze_repository_provenance_endpoint(
+    repo_id: str,
+    request: Request,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Runs a fresh provenance analysis on a repository (owner only).
+    """
+    user = None
+    try:
+        user = await get_authenticated_user(request, db)
+    except HTTPException:
+        user = await get_or_create_default_user(db)
+
+    stmt = select(Repository).where(Repository.id == repo_id)
+    repo = (await db.execute(stmt)).scalar_one_or_none()
+    if not repo:
+        raise HTTPException(status_code=404, detail="Repository not found.")
+
+    if repo.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Forbidden: You are not the owner of this repository.")
+
+    prov = await provenance_service.analyze_repository_provenance(
+        db=db,
+        repo=repo,
+        candidate_username=user.username
+    )
+    return RepoProvenanceResponse(**prov)
+
+@router.get("/repos/{repo_id}/history", response_model=CommitHistoryResponse)
+async def get_repository_history(
+    repo_id: str,
+    request: Request,
+    commit_cap: Optional[int] = None,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Retrieves commit history analysis for a repository (owner only).
+    Syncs commit stats and evaluates deterministic review flags.
+    """
+    user = None
+    try:
+        user = await get_authenticated_user(request, db)
+    except HTTPException:
+        user = await get_or_create_default_user(db)
+
+    stmt = select(Repository).where(Repository.id == repo_id)
+    repo = (await db.execute(stmt)).scalar_one_or_none()
+    if not repo:
+        raise HTTPException(status_code=404, detail="Repository not found.")
+
+    if repo.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Forbidden: You are not the owner of this repository.")
+
+    history_data = await commit_history_service.sync_repository_history(
+        db=db,
+        repo=repo,
+        candidate_username=user.username,
+        candidate_email=getattr(user, "email", None),
+        commit_cap=commit_cap
+    )
+    return CommitHistoryResponse(**history_data)
+
+@router.get("/repos/{repo_id}/history/flags", response_model=HistoryFlagsResponse)
+async def get_repository_history_flags(
+    repo_id: str,
+    request: Request,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Retrieves active history review flags and threshold configuration (owner only).
+    """
+    user = None
+    try:
+        user = await get_authenticated_user(request, db)
+    except HTTPException:
+        user = await get_or_create_default_user(db)
+
+    stmt = select(Repository).where(Repository.id == repo_id)
+    repo = (await db.execute(stmt)).scalar_one_or_none()
+    if not repo:
+        raise HTTPException(status_code=404, detail="Repository not found.")
+
+    if repo.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Forbidden: You are not the owner of this repository.")
+
+    flag_stmt = select(HistoryFlag).where(HistoryFlag.repo_id == repo.id)
+    flags_res = await db.execute(flag_stmt)
+    flags_rows = flags_res.scalars().all()
+
+    from backend.services.commit_history_service import load_thresholds, DISCLAIMER_COPY
+    thresholds = load_thresholds()
+
+    if not flags_rows:
+        history_data = await commit_history_service.sync_repository_history(
+            db=db,
+            repo=repo,
+            candidate_username=user.username,
+            candidate_email=getattr(user, "email", None)
+        )
+        return HistoryFlagsResponse(
+            repo_id=repo.id,
+            flags=history_data["flags"],
+            thresholds=history_data["thresholds"],
+            disclaimer=DISCLAIMER_COPY
+        )
+
+    formatted_flags = []
+    for fl in flags_rows:
+        try:
+            obs = json.loads(fl.observed_json)
+        except Exception:
+            obs = {}
+        formatted_flags.append({
+            "id": fl.id,
+            "code": fl.code,
+            "severity": fl.severity,
+            "title": fl.title,
+            "rule": fl.rule,
+            "observed": obs,
+            "innocent_note": fl.innocent_note,
+            "created_at": fl.created_at.isoformat() if fl.created_at else None
+        })
+
+    return HistoryFlagsResponse(
+        repo_id=repo.id,
+        flags=formatted_flags,
+        thresholds=thresholds,
+        disclaimer=DISCLAIMER_COPY
+    )
+
 async def run_assessment_pipeline(
     repo_id: str,
     job_id: str,
@@ -612,24 +783,48 @@ async def run_assessment_pipeline(
     )
     db.add(new_snapshot)
 
-    # Evaluate pending commit contracts
-    stmt_contracts = select(CommitContract).where(CommitContract.repo_id == repo_id, CommitContract.job_id == job_id, CommitContract.verdict == "Pending")
+    # Evaluate open/pending commit contracts with zero-execution acceptance checks
+    stmt_contracts = select(CommitContract).where(
+        CommitContract.repo_id == repo_id,
+        CommitContract.verdict.in_(["Pending", "Open"])
+    )
     pending_contracts = (await db.execute(stmt_contracts)).scalars().all()
 
-    assessment_map = {a["requirement_id"]: a["status"] for a in assessment_results}
+    # Get repository full_name for read-only CI checks API
+    stmt_repo = select(Repository).where(Repository.id == repo_id)
+    repo_obj = (await db.execute(stmt_repo)).scalar_one_or_none()
+    repo_full_name = f"{repo_obj.owner}/{repo_obj.name}" if repo_obj and repo_obj.owner and repo_obj.name else ""
+
+    # Fetch CI status
+    ci_status = await contracts_service.fetch_ci_status(
+        repo_full_name=repo_full_name,
+        commit_sha=commit_sha,
+        github_token=settings.GITHUB_TOKEN
+    )
+
+    assessment_map = {a["label"]: a["status"] for a in assessment_results}
+    for a in assessment_results:
+        assessment_map[a["requirement_id"]] = a["status"]
+
     for c in pending_contracts:
-        verdict, v_reason = contracts_service.evaluate_contract(
+        adjudication = contracts_service.adjudicate_contract(
             contract={
                 "requirement_id": c.requirement_id,
                 "current_state": c.current_state,
                 "predicted_target_state": c.predicted_target_state,
-                "requirements_must_not_change": json.loads(c.requirements_must_not_change or "[]")
+                "acceptance_checks_json": c.acceptance_checks_json,
+                "must_not_move_json": c.must_not_move_json,
+                "requirements_must_not_change": c.requirements_must_not_change
             },
-            new_assessment_map=assessment_map,
-            new_commit_sha=commit_sha
+            files=files,
+            ci_status=ci_status,
+            new_assessments=assessment_map,
+            is_dry_run=False
         )
-        c.verdict = verdict
-        c.reason = v_reason
+        c.verdict = adjudication["verdict"]
+        c.reason = adjudication["summary"]
+        c.ci_status = ci_status
+        c.adjudication_json = json.dumps(adjudication)
         c.evaluated_commit_sha = commit_sha
 
     await db.commit()
@@ -1144,6 +1339,68 @@ async def get_trace_run(run_id: str):
 # 4. Coaching, Commit Contracts, and What-If Analysis
 # =========================================================================
 
+def _serialize_contract(c: CommitContract, req_name: Optional[str] = None) -> CommitContractResponse:
+    checks = []
+    if c.acceptance_checks:
+        try:
+            checks = json.loads(c.acceptance_checks) if isinstance(c.acceptance_checks, str) else c.acceptance_checks
+        except Exception:
+            checks = [str(c.acceptance_checks)]
+
+    checks_json = []
+    if c.acceptance_checks_json:
+        try:
+            checks_json = json.loads(c.acceptance_checks_json) if isinstance(c.acceptance_checks_json, str) else c.acceptance_checks_json
+        except Exception:
+            checks_json = []
+
+    must_not_move = []
+    if c.must_not_move_json:
+        try:
+            must_not_move = json.loads(c.must_not_move_json) if isinstance(c.must_not_move_json, str) else c.must_not_move_json
+        except Exception:
+            must_not_move = []
+    elif c.requirements_must_not_change:
+        try:
+            must_not_move = json.loads(c.requirements_must_not_change) if isinstance(c.requirements_must_not_change, str) else c.requirements_must_not_change
+        except Exception:
+            must_not_move = []
+
+    adjudication = None
+    if c.adjudication_json:
+        try:
+            adjudication = json.loads(c.adjudication_json) if isinstance(c.adjudication_json, str) else c.adjudication_json
+        except Exception:
+            adjudication = None
+
+    return CommitContractResponse(
+        id=c.id,
+        repo_id=c.repo_id,
+        job_id=c.job_id,
+        requirement_id=c.requirement_id,
+        requirement_name=req_name,
+        current_state=c.current_state,
+        predicted_target_state=c.predicted_target_state,
+        acceptance_checks=checks if isinstance(checks, list) else [str(checks)],
+        acceptance_checks_json=checks_json,
+        base_commit_sha=c.base_commit_sha,
+        requirements_expected_to_change=json.loads(c.requirements_expected_to_change or "[]") if isinstance(c.requirements_expected_to_change, str) else (c.requirements_expected_to_change or []),
+        requirements_must_not_change=must_not_move,
+        must_not_move_json=must_not_move,
+        effort_class=c.effort_class or "small",
+        ci_status=c.ci_status or "not_run",
+        adjudication_json=adjudication,
+        task_description=c.task_description,
+        suggested_file_path=c.suggested_file_path,
+        recommendation_skeleton=c.recommendation_skeleton,
+        gain_arithmetic=c.gain_arithmetic,
+        verdict=c.verdict or "Open",
+        reason=c.reason,
+        evaluated_commit_sha=c.evaluated_commit_sha,
+        created_at=c.created_at,
+        updated_at=c.updated_at
+    )
+
 @router.get("/contracts", response_model=List[CommitContractResponse])
 async def list_contracts(
     repo_id: Optional[str] = Query(None),
@@ -1155,91 +1412,242 @@ async def list_contracts(
         stmt = stmt.where(CommitContract.repo_id == repo_id)
     if job_id:
         stmt = stmt.where(CommitContract.job_id == job_id)
+    stmt = stmt.order_by(desc(CommitContract.created_at))
     contracts = (await db.execute(stmt)).scalars().all()
     if not contracts:
-        stmt_all = select(CommitContract).limit(10)
+        stmt_all = select(CommitContract).order_by(desc(CommitContract.created_at)).limit(10)
         contracts = (await db.execute(stmt_all)).scalars().all()
 
-    return [
-        CommitContractResponse(
-            id=c.id,
-            repo_id=c.repo_id,
-            job_id=c.job_id,
-            requirement_id=c.requirement_id,
-            current_state=c.current_state,
-            predicted_target_state=c.predicted_target_state,
-            acceptance_checks=json.loads(c.acceptance_checks or "[]") if isinstance(c.acceptance_checks, str) else (c.acceptance_checks or []),
-            base_commit_sha=c.base_commit_sha,
-            requirements_expected_to_change=json.loads(c.requirements_expected_to_change or "[]") if isinstance(c.requirements_expected_to_change, str) else (c.requirements_expected_to_change or []),
-            requirements_must_not_change=json.loads(c.requirements_must_not_change or "[]") if isinstance(c.requirements_must_not_change, str) else (c.requirements_must_not_change or []),
-            effort_class=c.effort_class,
-            verdict=c.verdict,
-            reason=c.reason,
-            evaluated_commit_sha=c.evaluated_commit_sha
-        )
-        for c in contracts
-    ]
+    # Pre-fetch requirement labels
+    req_ids = [c.requirement_id for c in contracts]
+    req_map = {}
+    if req_ids:
+        stmt_reqs = select(Requirement).where(Requirement.id.in_(req_ids))
+        for r in (await db.execute(stmt_reqs)).scalars().all():
+            req_map[r.id] = r.label
+
+    return [_serialize_contract(c, req_map.get(c.requirement_id)) for c in contracts]
+
+@router.get("/contracts/{contract_id}", response_model=CommitContractResponse)
+async def get_contract(contract_id: str, db: AsyncSession = Depends(get_db)):
+    stmt = select(CommitContract).where(CommitContract.id == contract_id)
+    contract = (await db.execute(stmt)).scalar_one_or_none()
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found.")
+
+    stmt_req = select(Requirement).where(Requirement.id == contract.requirement_id)
+    req = (await db.execute(stmt_req)).scalar_one_or_none()
+    req_name = req.label if req else None
+
+    return _serialize_contract(contract, req_name)
 
 @router.post("/contracts", response_model=CommitContractResponse)
 async def create_contract(request: CommitContractCreateRequest, db: AsyncSession = Depends(get_db)):
-    stmt_req = select(Requirement).where(Requirement.id == request.requirement_id)
-    req = (await db.execute(stmt_req)).scalar_one_or_none()
-    if not req:
-        raise HTTPException(status_code=404, detail="Requirement not found.")
+    """
+    Generates targeted Commit Contracts for missing skills (Not demonstrated or Basic)
+    using only allow-listed rule IDs.
+    """
+    job_id = request.job_id
+    if not job_id:
+        stmt_j = select(Job).order_by(desc(Job.created_at))
+        latest_job = (await db.execute(stmt_j)).scalars().first()
+        job_id = latest_job.id if latest_job else None
 
-    stmt_all = select(Requirement).where(Requirement.job_id == request.job_id)
-    all_reqs = [{"id": r.id, "label": r.label, "user_status": r.user_status} for r in (await db.execute(stmt_all)).scalars().all()]
+    if not job_id:
+        raise HTTPException(status_code=400, detail="No active job found for contract generation.")
 
+    # Fetch all requirements
+    stmt_all = select(Requirement).where(Requirement.job_id == job_id)
+    all_reqs_objs = (await db.execute(stmt_all)).scalars().all()
+    all_reqs = [{"id": r.id, "label": r.label, "status": STATUS_NOT_DEMONSTRATED} for r in all_reqs_objs]
+
+    # Fetch current assessments
     stmt_ass = select(Assessment).where(
         Assessment.repo_id == request.repo_id,
-        Assessment.requirement_id == request.requirement_id
+        Assessment.job_id == job_id
     )
-    current_ass = (await db.execute(stmt_ass)).scalar_one_or_none()
-    current_state = current_ass.status if current_ass else STATUS_NOT_DEMONSTRATED
-    base_commit = current_ass.commit_sha if current_ass else ("0" * 40)
+    assessments = (await db.execute(stmt_ass)).scalars().all()
+    ass_map = {a.requirement_id: a.status for a in assessments}
+    for r in all_reqs:
+        if r["id"] in ass_map:
+            r["status"] = ass_map[r["id"]]
 
-    contract_data = contracts_service.generate_contract(
-        requirement={"id": req.id, "label": req.label, "canonical_id": req.canonical_id, "category": req.category},
-        current_status=current_state,
-        base_commit_sha=base_commit,
-        all_requirements=all_reqs,
-        target_state=request.predicted_target_state
-    )
+    # Fetch repository files for framework heuristic
+    stmt_files = select(RepositoryFile).where(RepositoryFile.repo_id == request.repo_id)
+    repo_files = {rf.file_path: rf.content for rf in (await db.execute(stmt_files)).scalars().all()}
 
-    contract_obj = CommitContract(
-        id=contract_data["id"],
-        repo_id=request.repo_id,
-        job_id=request.job_id,
-        requirement_id=request.requirement_id,
-        current_state=contract_data["current_state"],
-        predicted_target_state=contract_data["predicted_target_state"],
-        acceptance_checks=json.dumps(contract_data["acceptance_checks"]),
-        base_commit_sha=contract_data["base_commit_sha"],
-        requirements_expected_to_change=json.dumps(contract_data["requirements_expected_to_change"]),
-        requirements_must_not_change=json.dumps(contract_data["requirements_must_not_change"]),
-        effort_class=contract_data["effort_class"],
-        verdict="Pending"
-    )
-    db.add(contract_obj)
+    # Determine target requirements to generate contracts for
+    target_req_objs = []
+    if request.requirement_id:
+        stmt_target = select(Requirement).where(Requirement.id == request.requirement_id)
+        target = (await db.execute(stmt_target)).scalar_one_or_none()
+        if target:
+            target_req_objs.append(target)
+    else:
+        # Generate for all missing (Not demonstrated or Basic)
+        for r_obj in all_reqs_objs:
+            curr = ass_map.get(r_obj.id, STATUS_NOT_DEMONSTRATED)
+            if curr in (STATUS_NOT_DEMONSTRATED, STATUS_BASIC):
+                target_req_objs.append(r_obj)
+
+    if not target_req_objs:
+        # Fallback to first requirement if all demonstrated
+        target_req_objs = all_reqs_objs[:1]
+
+    created_contracts = []
+    for req_obj in target_req_objs:
+        curr_state = ass_map.get(req_obj.id, STATUS_NOT_DEMONSTRATED)
+        contract_data = contracts_service.generate_contract(
+            requirement={
+                "id": req_obj.id,
+                "label": req_obj.label,
+                "canonical_id": req_obj.canonical_id,
+                "category": req_obj.category
+            },
+            current_status=curr_state,
+            base_commit_sha="HEAD",
+            all_requirements=all_reqs,
+            target_state=request.predicted_target_state,
+            repo_files=repo_files
+        )
+
+        contract_obj = CommitContract(
+            id=contract_data["id"],
+            repo_id=request.repo_id,
+            job_id=job_id,
+            requirement_id=req_obj.id,
+            current_state=contract_data["current_state"],
+            predicted_target_state=contract_data["predicted_target_state"],
+            acceptance_checks=json.dumps(contract_data["acceptance_checks"]),
+            acceptance_checks_json=json.dumps(contract_data["acceptance_checks_json"]),
+            base_commit_sha=contract_data["base_commit_sha"],
+            requirements_expected_to_change=json.dumps(contract_data["requirements_expected_to_change"]),
+            requirements_must_not_change=json.dumps(contract_data["requirements_must_not_change"]),
+            must_not_move_json=json.dumps(contract_data["must_not_move_json"]),
+            effort_class=contract_data["effort_class"],
+            ci_status="not_run",
+            adjudication_json=None,
+            task_description=contract_data["task_description"],
+            suggested_file_path=contract_data["suggested_file_path"],
+            recommendation_skeleton=contract_data["recommendation_skeleton"],
+            gain_arithmetic=contract_data["gain_arithmetic"],
+            verdict="Open"
+        )
+        db.add(contract_obj)
+        created_contracts.append(contract_obj)
+
     await db.commit()
-    await db.refresh(contract_obj)
+    for c in created_contracts:
+        await db.refresh(c)
 
-    return CommitContractResponse(
-        id=contract_obj.id,
-        repo_id=contract_obj.repo_id,
-        job_id=contract_obj.job_id,
-        requirement_id=contract_obj.requirement_id,
-        current_state=contract_obj.current_state,
-        predicted_target_state=contract_obj.predicted_target_state,
-        acceptance_checks=contract_data["acceptance_checks"],
-        base_commit_sha=contract_obj.base_commit_sha,
-        requirements_expected_to_change=contract_data["requirements_expected_to_change"],
-        requirements_must_not_change=contract_data["requirements_must_not_change"],
-        effort_class=contract_obj.effort_class,
-        verdict=contract_obj.verdict,
-        reason=contract_obj.reason,
-        evaluated_commit_sha=contract_obj.evaluated_commit_sha
+    primary = created_contracts[0]
+    stmt_req = select(Requirement).where(Requirement.id == primary.requirement_id)
+    r_obj = (await db.execute(stmt_req)).scalar_one_or_none()
+    req_name = r_obj.label if r_obj else None
+
+    return _serialize_contract(primary, req_name)
+
+@router.post("/contracts/{contract_id}/dry-run", response_model=DryRunResponse)
+async def dry_run_contract(
+    contract_id: str,
+    request: DryRunRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Zero-execution dry run for a specific Commit Contract.
+    Evaluates proposed files alongside existing base files with exact detector parity.
+    """
+    stmt = select(CommitContract).where(CommitContract.id == contract_id)
+    contract = (await db.execute(stmt)).scalar_one_or_none()
+    if not contract:
+        raise HTTPException(status_code=404, detail="Contract not found.")
+
+    proposed_files = request.simulated_files or request.candidate_files or {}
+
+    # Fetch base files from repo
+    stmt_files = select(RepositoryFile).where(RepositoryFile.repo_id == contract.repo_id)
+    merged_files = {rf.file_path: rf.content for rf in (await db.execute(stmt_files)).scalars().all()}
+    merged_files.update(proposed_files)
+
+    # Evaluate static acceptance checks
+    adjudication = contracts_service.adjudicate_contract(
+        contract={
+            "requirement_id": contract.requirement_id,
+            "current_state": contract.current_state,
+            "predicted_target_state": contract.predicted_target_state,
+            "acceptance_checks_json": contract.acceptance_checks_json,
+            "must_not_move_json": contract.must_not_move_json
+        },
+        files=merged_files,
+        ci_status="not_run",
+        is_dry_run=True
     )
+
+    checklist_results = {c["rule_id"]: c["passed"] for c in adjudication["checks"]}
+    verdict_status = adjudication["verdict"].lower()
+
+    # Calculate coverage change
+    stmt_cov = select(Snapshot).where(Snapshot.repo_id == contract.repo_id).order_by(desc(Snapshot.created_at))
+    latest_snap = (await db.execute(stmt_cov)).scalars().first()
+    before_cov = latest_snap.coverage_score if latest_snap else 50.0
+
+    # If fulfilled, gain coverage
+    gain = 12.5 if adjudication["verdict"] == "Fulfilled" else (6.0 if adjudication["verdict"] == "Partly" else 0.0)
+    after_cov = min(100.0, before_cov + gain)
+
+    return DryRunResponse(
+        base_commit_sha=contract.base_commit_sha,
+        hypothetical_assessments=[],
+        hypothetical_coverage=after_cov,
+        before_percentage=before_cov,
+        after_percentage=after_cov,
+        checklist_results=checklist_results,
+        status=verdict_status,
+        delta_summary=adjudication["summary"]
+    )
+
+@router.get("/repos/{id}/rejections")
+async def list_repo_rejections(
+    id: str,
+    detector: Optional[str] = Query(None),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Returns rejected candidates with filters by detector, count summary, and reasons.
+    """
+    stmt = select(RejectedCandidate).where(RejectedCandidate.repo_id == id)
+    if detector:
+        stmt = stmt.where((RejectedCandidate.detector == detector) | (RejectedCandidate.detector_name == detector))
+    stmt = stmt.order_by(desc(RejectedCandidate.created_at))
+    rejections = (await db.execute(stmt)).scalars().all()
+
+    # Get total count and counts per detector
+    detector_counts: Dict[str, int] = {}
+    stmt_all = select(RejectedCandidate).where(RejectedCandidate.repo_id == id)
+    all_rejections = (await db.execute(stmt_all)).scalars().all()
+    for r in all_rejections:
+        det = r.detector or r.detector_name or "generic"
+        detector_counts[det] = detector_counts.get(det, 0) + 1
+
+    return {
+        "repo_id": id,
+        "total_refused_count": len(all_rejections),
+        "filtered_count": len(rejections),
+        "detector_counts": detector_counts,
+        "items": [
+            {
+                "id": r.id,
+                "file_path": r.file_path,
+                "commit_sha": r.commit_sha,
+                "detector": r.detector or r.detector_name,
+                "detector_version": r.detector_version or "1.0.0",
+                "guard_reason": r.guard_reason or r.rejection_reason,
+                "rejected_snippet": r.rejected_snippet,
+                "created_at": r.created_at.isoformat() if r.created_at else None
+            }
+            for r in rejections
+        ]
+    }
 
 @router.post("/dry-run", response_model=DryRunResponse)
 async def dry_run_simulation(request: DryRunRequest, db: AsyncSession = Depends(get_db)):

@@ -1,0 +1,11 @@
+{
+  "bulk_import_line_share_pct": 50.0,
+  "burst_window_hours": 2.0,
+  "burst_min_commits": 15,
+  "burst_silence_days": 14.0,
+  "large_add_delete_ratio": 0.70,
+  "large_add_delete_window_hours": 48.0,
+  "date_skew_hours": 48.0,
+  "candidate_skill_file_min_share_pct": 20.0,
+  "generic_message_min_pct": 30.0
+}

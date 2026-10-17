@@ -37,14 +37,27 @@ async def init_db():
             await conn.execute(text("PRAGMA foreign_keys=ON;"))
         await conn.run_sync(Base.metadata.create_all)
         if "sqlite" in settings.DATABASE_URL:
-            try:
-                await conn.execute(text("ALTER TABLE repositories ADD COLUMN last_synced_at DATETIME;"))
-            except Exception:
-                pass
-            try:
-                await conn.execute(text("ALTER TABLE repositories ADD COLUMN last_sync_trigger VARCHAR;"))
-            except Exception:
-                pass
+            cols = [
+                ("repositories", "last_synced_at", "DATETIME"),
+                ("repositories", "last_sync_trigger", "VARCHAR"),
+                ("commit_contracts", "acceptance_checks_json", "TEXT"),
+                ("commit_contracts", "must_not_move_json", "TEXT"),
+                ("commit_contracts", "effort_class", "VARCHAR(50)"),
+                ("commit_contracts", "ci_status", "VARCHAR(50)"),
+                ("commit_contracts", "adjudication_json", "TEXT"),
+                ("commit_contracts", "task_description", "TEXT"),
+                ("commit_contracts", "suggested_file_path", "VARCHAR(512)"),
+                ("commit_contracts", "recommendation_skeleton", "TEXT"),
+                ("commit_contracts", "gain_arithmetic", "TEXT"),
+                ("rejected_candidates", "detector", "VARCHAR(100)"),
+                ("rejected_candidates", "detector_version", "VARCHAR(50)"),
+                ("rejected_candidates", "guard_reason", "TEXT"),
+            ]
+            for tbl, col, col_type in cols:
+                try:
+                    await conn.execute(text(f"ALTER TABLE {tbl} ADD COLUMN {col} {col_type};"))
+                except Exception:
+                    pass
 
 async def get_db():
     """Dependency for obtaining async db sessions."""

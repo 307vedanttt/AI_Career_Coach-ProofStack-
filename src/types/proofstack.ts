@@ -197,3 +197,162 @@ export interface AssessmentActivityRecord {
   summary: string;
   badgeText: string;
 }
+
+// --- Pure Signal Provenance Types ---
+export interface ProvenanceFlag {
+  code: string;
+  severity: 'info' | 'review';
+  title: string;
+  observed_values: Record<string, any>;
+  why_it_can_be_innocent: string;
+  permalink?: string;
+}
+
+export interface ProvenanceSignals {
+  age?: {
+    created_at: string;
+    pushed_at: string;
+    first_commit_date: string;
+    repo_age_days: number;
+    default_branch: string;
+  };
+  analysis_limits?: {
+    analyzed_commits_count: number;
+    commit_cap: number;
+    cap_hit: boolean;
+    banner_text?: string | null;
+  };
+  fork_and_upstream?: {
+    is_fork: boolean;
+    upstream_status: string;
+    parent_full_name?: string | null;
+    parent_url?: string | null;
+    source_full_name?: string | null;
+    source_url?: string | null;
+    ahead_by: number;
+    behind_by: number;
+    user_commits_ahead: number;
+  };
+  contributions?: {
+    total_analyzed_commits: number;
+    candidate_username: string;
+    candidate_commit_count: number;
+    candidate_commit_share: number;
+    distinct_contributors_count: number;
+    authors_by_login?: Record<string, number>;
+    authors_by_email?: Record<string, number>;
+    co_authors?: Array<{ name: string; email: string }>;
+  };
+  signed_commits?: {
+    verified_count: number;
+    unverified_count: number;
+    unsigned_count: number;
+    percentage_signed: number;
+  };
+  evidence_files_provenance?: Record<string, {
+    file_path: string;
+    local_sha?: string;
+    file_candidate_commits: number;
+    file_total_commits: number;
+    file_candidate_share: number;
+    upstream_status: 'unchanged from upstream' | 'modified from upstream' | 'added in this repo' | 'standalone';
+    reason?: string;
+  }>;
+  history_rewrite_hints?: Array<{
+    event: string;
+    timestamp?: string;
+    details: string;
+  }>;
+}
+
+export interface RepoProvenanceRecord {
+  id: string;
+  repo_id: string;
+  snapshot_version?: string;
+  detector_version: string;
+  signals: ProvenanceSignals;
+  flags: ProvenanceFlag[];
+  created_at: string;
+}
+
+// --- Commit History Analysis Types ---
+export interface TimelineItem {
+  week_start: string;
+  commits_count: number;
+  additions: number;
+  deletions: number;
+}
+
+export interface DailyHeatmapItem {
+  date: string;
+  count: number;
+  level: number;
+}
+
+export interface LargeAdditionItem {
+  sha: string;
+  short_sha: string;
+  message: string;
+  author_login: string;
+  committed_at?: string | null;
+  additions: number;
+  deletions: number;
+  files_changed: number;
+  share_pct: number;
+  verified: boolean;
+  permalink: string;
+  snapshot?: {
+    snapshot_id: string;
+    coverage_score: number;
+  } | null;
+}
+
+export interface AuthorBreakdownItem {
+  login: string;
+  name: string;
+  email?: string | null;
+  is_signed_in_user: boolean;
+  commits_count: number;
+  commits_share_pct: number;
+  additions: number;
+  deletions: number;
+  lines_share_pct: number;
+}
+
+export interface HistoryFlagItem {
+  id?: string;
+  code: string;
+  severity: 'review' | 'info';
+  title: string;
+  rule: string;
+  observed: Record<string, any>;
+  innocent_note: string;
+  created_at?: string | null;
+}
+
+export interface CommitHistoryData {
+  repo_id: string;
+  repo_full_name: string;
+  default_branch: string;
+  commit_cap: number;
+  total_commits_analyzed: number;
+  cap_reached: boolean;
+  cap_banner_message?: string | null;
+  disclaimer: string;
+  timeline: TimelineItem[];
+  daily_contributions: DailyHeatmapItem[];
+  large_additions: LargeAdditionItem[];
+  authors: AuthorBreakdownItem[];
+  flags_count: number;
+  flags: HistoryFlagItem[];
+  thresholds: Record<string, any>;
+}
+
+export interface HistoryFlagsData {
+  repo_id: string;
+  flags: HistoryFlagItem[];
+  thresholds: Record<string, any>;
+  disclaimer: string;
+}
+
+

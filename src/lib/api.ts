@@ -15,7 +15,7 @@ import {
   UserSession,
   ConnectedRepository,
 } from '../types/api';
-import { apiClient, buildUrl } from './api/client';
+import { apiClient, buildUrl, getCsrfTokenFromCookie } from './api/client';
 import {
   AssessmentResponseSchema,
   EvidenceResponseSchema,
@@ -118,31 +118,82 @@ export async function getCoverage(jobId?: string): Promise<{
   };
 }
 
-export async function getContracts(): Promise<Contract[]> {
-  const raw = await apiClient<z.infer<typeof CommitContractResponseSchema>[]>('/api/contracts', {
+export async function getContracts(repoId?: string, jobId?: string): Promise<Contract[]> {
+  const params = new URLSearchParams();
+  if (repoId) params.append('repo_id', repoId);
+  if (jobId) params.append('job_id', jobId);
+  const q = params.toString() ? `?${params.toString()}` : '';
+  const raw = await apiClient<z.infer<typeof CommitContractResponseSchema>[]>(`/api/contracts${q}`, {
     schema: z.array(CommitContractResponseSchema),
   });
   if (!raw || !Array.isArray(raw)) return [];
   return raw.map(adaptCommitContract);
 }
 
-export async function postDryRun(contractId: string): Promise<{
+export async function generateContracts(repoId: string, jobId?: string, requirementId?: string): Promise<Contract> {
+  const raw = await apiClient<any>('/api/contracts', {
+    method: 'POST',
+    body: JSON.stringify({
+      repo_id: repoId,
+      job_id: jobId,
+      requirement_id: requirementId,
+      generate_all_missing: !requirementId,
+    }),
+    schema: CommitContractResponseSchema,
+  });
+  return adaptCommitContract(raw);
+}
+
+export async function postDryRun(contractId: string, simulatedFiles?: Record<string, string>): Promise<{
   beforePercentage: number;
   afterPercentage: number;
   checklistResults: Record<string, boolean>;
   status: 'fulfilled' | 'partly' | 'not_fulfilled';
+  deltaSummary?: string;
 }> {
-  const raw: any = await apiClient('/api/dry-run', {
+  const raw: any = await apiClient(`/api/contracts/${contractId}/dry-run`, {
     method: 'POST',
-    body: JSON.stringify({ contract_id: contractId }),
+    body: JSON.stringify({
+      contract_id: contractId,
+      simulated_files: simulatedFiles || {}
+    }),
     schema: DryRunResponseSchema,
-  });
+  }).catch(() =>
+    // Fallback to general dry-run endpoint
+    apiClient('/api/dry-run', {
+      method: 'POST',
+      body: JSON.stringify({ contract_id: contractId, simulated_files: simulatedFiles || {} }),
+      schema: DryRunResponseSchema,
+    })
+  );
+
   return {
     beforePercentage: raw.before_percentage ?? 0,
     afterPercentage: raw.after_percentage ?? Math.round(Number(raw.hypothetical_coverage || 0)),
     checklistResults: (raw.checklist_results as Record<string, boolean>) ?? {},
     status: (raw.status as any) || 'fulfilled',
+    deltaSummary: raw.delta_summary || '',
   };
+}
+
+export async function getRepoRejections(repoId: string, detector?: string): Promise<{
+  repo_id: string;
+  total_refused_count: number;
+  filtered_count: number;
+  detector_counts: Record<string, number>;
+  items: Array<{
+    id: string;
+    file_path: string;
+    commit_sha: string;
+    detector: string;
+    detector_version: string;
+    guard_reason: string;
+    rejected_snippet?: string;
+    created_at?: string;
+  }>;
+}> {
+  const url = detector ? `/api/repos/${repoId}/rejections?detector=${encodeURIComponent(detector)}` : `/api/repos/${repoId}/rejections`;
+  return apiClient<any>(url);
 }
 
 export async function getProofMap(jobId?: string): Promise<{
@@ -463,6 +514,7 @@ export interface ResumeUploadResult {
   file_sha256: string;
   char_count: number;
   extracted_at: string;
+  cached?: boolean;
   skills: Array<{
     category: string;
     name: string;
@@ -475,8 +527,15 @@ export async function uploadResumeFile(file: File): Promise<ResumeUploadResult> 
   const formData = new FormData();
   formData.append('file', file);
 
+  const headers: Record<string, string> = {};
+  const csrfToken = getCsrfTokenFromCookie();
+  if (csrfToken) {
+    headers['X-CSRF-Token'] = csrfToken;
+  }
+
   const res = await fetch(buildUrl('/api/resume/upload'), {
     method: 'POST',
+    headers,
     body: formData,
     credentials: 'include',
   });

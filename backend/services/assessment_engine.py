@@ -68,9 +68,25 @@ class AssessmentEngine:
                 []
             )
 
-        # Analyze surviving signal types
-        detector_names = set(e.get("detector_name") for e in evidence_list)
-        signal_types = sorted(list(set(e.get("signal_type") for e in evidence_list)))
+        # Block evidence in files unchanged from upstream from upgrading skill beyond Unclear
+        valid_evidence = [
+            e for e in evidence_list
+            if e.get("upstream_status") != "unchanged from upstream"
+            and not e.get("is_identical_to_upstream")
+            and e.get("rejection_reason") != "identical to upstream file"
+        ]
+        if evidence_list and not valid_evidence:
+            return (
+                STATUS_UNCLEAR,
+                "identical to upstream file",
+                0,
+                []
+            )
+
+        # Analyze surviving signal types from valid candidate evidence
+        active_evidence = valid_evidence if valid_evidence else evidence_list
+        detector_names = set(e.get("detector_name") for e in active_evidence)
+        signal_types = sorted(list(set(e.get("signal_type") for e in active_evidence)))
         signal_count = len(signal_types)
 
         # If only generic detector found evidence, it is strictly capped at basic

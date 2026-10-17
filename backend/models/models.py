@@ -85,6 +85,9 @@ class Repository(Base):
     assessments = relationship("Assessment", back_populates="repository", cascade="all, delete-orphan")
     snapshots = relationship("Snapshot", back_populates="repository", cascade="all, delete-orphan")
     contracts = relationship("CommitContract", back_populates="repository", cascade="all, delete-orphan")
+    provenance_records = relationship("RepoProvenance", back_populates="repository", cascade="all, delete-orphan")
+    commit_stats = relationship("CommitStats", back_populates="repository", cascade="all, delete-orphan")
+    history_flags = relationship("HistoryFlag", back_populates="repository", cascade="all, delete-orphan")
 
 
 class RepositoryFile(Base):
@@ -134,11 +137,14 @@ class RejectedCandidate(Base):
     
     id = Column(String(36), primary_key=True)
     repo_id = Column(String(36), ForeignKey("repositories.id"), nullable=False, index=True)
-    requirement_id = Column(String(36), ForeignKey("requirements.id"), nullable=False, index=True)
+    requirement_id = Column(String(36), ForeignKey("requirements.id"), nullable=True, index=True)
+    detector = Column(String(100), nullable=True)
     detector_name = Column(String(100), nullable=False)
+    detector_version = Column(String(50), default="1.0.0", nullable=True)
     file_path = Column(String(512), nullable=False)
     commit_sha = Column(String(64), nullable=False)
-    rejection_reason = Column(String(255), nullable=False)
+    guard_reason = Column(Text, nullable=True)
+    rejection_reason = Column(String(500), nullable=False)
     rejected_snippet = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), default=utcnow)
     
@@ -196,12 +202,20 @@ class CommitContract(Base):
     requirement_id = Column(String(36), ForeignKey("requirements.id"), nullable=False, index=True)
     current_state = Column(String(50), nullable=False)
     predicted_target_state = Column(String(50), nullable=False)
-    acceptance_checks = Column(Text, nullable=False) # JSON list of criteria
+    acceptance_checks = Column(Text, nullable=True) # JSON list of criteria
+    acceptance_checks_json = Column(Text, nullable=True) # Allow-listed rule checks JSON
     base_commit_sha = Column(String(64), nullable=False)
     requirements_expected_to_change = Column(Text, nullable=True) # JSON list
     requirements_must_not_change = Column(Text, nullable=True) # JSON list
+    must_not_move_json = Column(Text, nullable=True) # Negative predictions JSON
     effort_class = Column(String(50), default="small") # "small", "medium", "large"
-    verdict = Column(String(50), default="Pending") # "Pending", "Fulfilled", "Partly fulfilled", "Not fulfilled"
+    ci_status = Column(String(50), default="not_run") # "passed", "failed", "not_run", "pending"
+    adjudication_json = Column(Text, nullable=True) # Full rule adjudication results JSON
+    task_description = Column(Text, nullable=True)
+    suggested_file_path = Column(String(512), nullable=True)
+    recommendation_skeleton = Column(Text, nullable=True)
+    gain_arithmetic = Column(Text, nullable=True)
+    verdict = Column(String(50), default="Open") # "Open", "Pending", "Fulfilled", "Partly", "Not fulfilled"
     reason = Column(Text, nullable=True)
     evaluated_commit_sha = Column(String(64), nullable=True)
     created_at = Column(DateTime(timezone=True), default=utcnow)
@@ -266,3 +280,66 @@ class ResumeExtraction(Base):
     __table_args__ = (
         Index("idx_resume_user_sha", "user_id", "file_sha256", unique=True),
     )
+
+
+class RepoProvenance(Base):
+    __tablename__ = "repo_provenance"
+    
+    id = Column(String(36), primary_key=True)
+    repo_id = Column(String(36), ForeignKey("repositories.id", ondelete="CASCADE"), nullable=False, index=True)
+    snapshot_version = Column(String(64), nullable=True)
+    detector_version = Column(String(50), default="provenance_detector@v1.0", nullable=False)
+    signals_json = Column(Text, nullable=False, default="{}")
+    flags_json = Column(Text, nullable=False, default="[]")
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    
+    repository = relationship("Repository", back_populates="provenance_records")
+
+
+class CommitStats(Base):
+    __tablename__ = "commit_stats"
+    
+    id = Column(String(36), primary_key=True)
+    repo_id = Column(String(36), ForeignKey("repositories.id", ondelete="CASCADE"), nullable=False, index=True)
+    sha = Column(String(64), nullable=False, index=True)
+    author_login = Column(String(100), nullable=True, index=True)
+    author_name = Column(String(255), nullable=True)
+    author_email = Column(String(255), nullable=True)
+    authored_at = Column(DateTime(timezone=True), nullable=True)
+    committer_login = Column(String(100), nullable=True)
+    committer_name = Column(String(255), nullable=True)
+    committer_email = Column(String(255), nullable=True)
+    committed_at = Column(DateTime(timezone=True), nullable=True)
+    message_first_line = Column(Text, nullable=True)
+    additions = Column(Integer, default=0)
+    deletions = Column(Integer, default=0)
+    files_changed = Column(Integer, default=0)
+    parents_count = Column(Integer, default=1)
+    verified = Column(Boolean, default=False)
+    verification_reason = Column(String(100), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    
+    repository = relationship("Repository", back_populates="commit_stats")
+
+    __table_args__ = (
+        Index("idx_commit_stats_repo_sha", "repo_id", "sha", unique=True),
+    )
+
+
+class HistoryFlag(Base):
+    __tablename__ = "history_flags"
+    
+    id = Column(String(36), primary_key=True)
+    repo_id = Column(String(36), ForeignKey("repositories.id", ondelete="CASCADE"), nullable=False, index=True)
+    snapshot_version = Column(String(64), nullable=True)
+    code = Column(String(100), nullable=False, index=True)
+    severity = Column(String(50), default="review", nullable=False) # "review", "info"
+    title = Column(String(255), nullable=False)
+    observed_json = Column(Text, nullable=False, default="{}")
+    rule = Column(Text, nullable=False)
+    innocent_note = Column(Text, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    
+    repository = relationship("Repository", back_populates="history_flags")
+
+

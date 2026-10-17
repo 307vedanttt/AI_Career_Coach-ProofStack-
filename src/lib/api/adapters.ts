@@ -2,10 +2,12 @@ import {
   Assessment,
   Evidence,
   Contract,
+  ContractChecklistItem,
   UserSession,
   RepoScanResult,
   LedgerBlock,
 } from '../../types/api';
+import { StampStatus } from '../../components/stamps/Stamp';
 
 export function adaptAssessmentItem(raw: any): Assessment {
   return {
@@ -59,19 +61,88 @@ export function adaptProofMap(raw: any): any[] {
 }
 
 export function adaptCommitContract(raw: any): Contract {
+  const verdictRaw = (raw.verdict || raw.status || 'pending').toLowerCase();
+  let status: 'fulfilled' | 'partly' | 'not_fulfilled' | 'pending' = 'pending';
+  if (verdictRaw.includes('partly')) status = 'partly';
+  else if (verdictRaw.includes('fulfilled')) status = 'fulfilled';
+  else if (verdictRaw.includes('not')) status = 'not_fulfilled';
+  else if (verdictRaw.includes('open') || verdictRaw.includes('pending')) status = 'pending';
+
+  let checklist: ContractChecklistItem[] = [];
+  if (raw.adjudication_json && Array.isArray(raw.adjudication_json.checks)) {
+    checklist = raw.adjudication_json.checks.map((c: any, idx: number) => ({
+      id: c.rule_id || `check-${idx}`,
+      ruleId: c.rule_id,
+      label: c.label || c.rule_id || `Check ${idx + 1}`,
+      description: c.description || '',
+      file: c.file || raw.suggested_file_path || '',
+      line: c.line,
+      satisfied: Boolean(c.passed),
+      statusLabel: c.passed ? 'PASSED' : 'PENDING',
+      reason: c.reason || ''
+    }));
+  } else if (Array.isArray(raw.acceptance_checks_json) && raw.acceptance_checks_json.length > 0) {
+    checklist = raw.acceptance_checks_json.map((c: any, idx: number) => ({
+      id: c.rule_id || `check-${idx}`,
+      ruleId: c.rule_id,
+      label: c.label || c.rule_id || `Check ${idx + 1}`,
+      description: c.description || '',
+      file: c.file || raw.suggested_file_path || '',
+      line: c.line,
+      satisfied: Boolean(c.passed),
+      statusLabel: c.passed ? 'PASSED' : 'PENDING',
+      reason: c.reason || ''
+    }));
+  } else if (Array.isArray(raw.acceptance_checks)) {
+    checklist = raw.acceptance_checks.map((desc: string, idx: number) => ({
+      id: `check-${idx}`,
+      label: `Rule Check ${idx + 1}`,
+      description: desc,
+      file: raw.suggested_file_path || '',
+      satisfied: false,
+      statusLabel: 'PENDING',
+      reason: desc
+    }));
+  } else if (Array.isArray(raw.checklist)) {
+    checklist = raw.checklist;
+  }
+
+  const effort = (raw.effort_class || 'small').toLowerCase() as 'small' | 'medium' | 'large';
+  const diffEstimate = effort === 'large' ? 'LARGE' : (effort === 'medium' ? 'MEDIUM' : 'SMALL');
+  const targetState = raw.predicted_target_state || raw.target_status || '';
+  const targetStatus: StampStatus = targetState.toLowerCase().includes('strong') ? 'proven' : 'basic';
+
+  const reqName = raw.requirement_name || raw.requirement_target || raw.requirementTarget || 'Missing Skill';
+  const title = `Challenge: Bridge ${reqName}`;
+  const description = raw.task_description || raw.description || `Implement verifiable code satisfying ${reqName}.`;
+
   return {
     id: raw.id || '',
-    title: raw.title || 'Commit Contract',
-    description: raw.description || '',
-    requirementTarget: raw.requirement_target || raw.requirementTarget || '',
-    pointsDelta: raw.points_delta ?? raw.pointsDelta ?? 0,
-    diffEstimate: raw.diff_estimate ?? raw.diffEstimate ?? 'SMALL',
-    timeEstimate: raw.time_estimate ?? raw.timeEstimate ?? '1 hour',
-    checklist: raw.checklist || [],
-    frozenScope: raw.frozen_scope ?? raw.frozenScope ?? '',
-    gitCommand: raw.git_command ?? raw.gitCommand ?? '',
-    status: raw.status || 'pending',
-    targetStatus: raw.target_status || raw.targetStatus || 'proven',
+    repoId: raw.repo_id || '',
+    jobId: raw.job_id || '',
+    requirementId: raw.requirement_id || '',
+    title,
+    description,
+    requirementTarget: reqName,
+    currentState: raw.current_state || 'Not demonstrated in this scope',
+    predictedTargetState: targetState || 'Demonstrated (basic)',
+    pointsDelta: raw.points_delta ?? 12,
+    diffEstimate,
+    timeEstimate: effort === 'small' ? '30 mins' : (effort === 'medium' ? '1-2 hours' : '3-4 hours'),
+    effortClass: effort,
+    checklist,
+    acceptanceChecks: raw.acceptance_checks || [],
+    mustNotMove: raw.must_not_move_json || raw.requirements_must_not_change || [],
+    frozenScope: (raw.must_not_move_json || []).join(', ') || 'Demonstrated Skills Locked',
+    gitCommand: `git commit -m "feat(${reqName.toLowerCase().replace(/\\s+/g, '-')}): satisfy contract"`,
+    status,
+    targetStatus,
+    ciStatus: raw.ci_status || 'not_run',
+    adjudication: raw.adjudication_json,
+    suggestedFilePath: raw.suggested_file_path,
+    recommendationSkeleton: raw.recommendation_skeleton,
+    gainArithmetic: raw.gain_arithmetic,
+    reason: raw.reason
   };
 }
 

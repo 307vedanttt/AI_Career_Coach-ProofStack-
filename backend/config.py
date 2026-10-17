@@ -1,4 +1,6 @@
 import os
+from dotenv import load_dotenv
+load_dotenv()
 from pydantic import BaseModel, Field
 from typing import Optional
 
@@ -31,11 +33,16 @@ class Settings(BaseModel):
     DEBOUNCE_SECONDS: int = int(os.getenv("DEBOUNCE_SECONDS", "5"))
     MAX_FILE_BYTES: int = int(os.getenv("MAX_FILE_BYTES", str(2 * 1024 * 1024))) # 2MB limit
     
+    # Commit History Analysis
+    HISTORY_THRESHOLDS_PATH: str = os.getenv("HISTORY_THRESHOLDS_PATH", os.path.join(os.path.dirname(__file__), "data", "history_thresholds.json"))
+    DEFAULT_COMMIT_CAP: int = int(os.getenv("DEFAULT_COMMIT_CAP", "500"))
+    
     # LLM Settings (optional provider-agnostic verifier)
     GEMINI_API_KEY: Optional[str] = os.getenv("GEMINI_API_KEY", None)
     OPENAI_API_KEY: Optional[str] = os.getenv("OPENAI_API_KEY", None)
     ANTHROPIC_API_KEY: Optional[str] = os.getenv("ANTHROPIC_API_KEY", None)
-    LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "none") # none, gemini, openai, anthropic, mock
+    OPENCODE_API_KEY: Optional[str] = os.getenv("OPENCODE_API_KEY", None)
+    LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "none") # none, gemini, openai, anthropic, opencode, mock
     LLM_API_KEY: Optional[str] = os.getenv("LLM_API_KEY", None)
     LLM_MODEL: str = os.getenv("LLM_MODEL", "gpt-4o-mini")
     FALLBACK_LLM_PROVIDER: Optional[str] = os.getenv("FALLBACK_LLM_PROVIDER", None)
@@ -46,7 +53,12 @@ settings = Settings()
 
 # Auto-detect API key if LLM_API_KEY is not set
 if not settings.LLM_API_KEY:
-    if settings.GEMINI_API_KEY:
+    if settings.OPENCODE_API_KEY:
+        settings.LLM_API_KEY = settings.OPENCODE_API_KEY
+        if settings.LLM_PROVIDER in ("none", ""):
+            settings.LLM_PROVIDER = "opencode"
+            settings.LLM_MODEL = "deepseek-v4.1-flash-free"
+    elif settings.GEMINI_API_KEY:
         settings.LLM_API_KEY = settings.GEMINI_API_KEY
         if settings.LLM_PROVIDER in ("none", ""):
             settings.LLM_PROVIDER = "gemini"
