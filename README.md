@@ -1,269 +1,223 @@
-# ProofStack — Evidence-Driven AI Career Coach
+# ProofStack
 
-ProofStack helps developers compare the skills requested in a real job description with evidence found in their GitHub repositories. Instead of ranking people or making hiring decisions, it makes the available code evidence inspectable and recommends concrete, verifiable next steps.
+**A coach that predicts what your next commit will prove, then checks.**
 
-> **Core principle:** ProofStack reports what its analysis can demonstrate from the connected repositories—not a verdict on a person's overall ability.
+ProofStack reads a real job posting, reads your real GitHub repositories, and tells you what your code actually shows for each requirement. It explains every answer with a file, a line range and a link you can click. When something isn't shown, it tells you what one small commit would change that, and then it checks whether that commit did.
 
----
+Built for the AI Career Coach problem (W-PS-2), Agentic AI track.
 
-## Table of Contents
-
-- [Why ProofStack?](#why-proofstack)
-- [How It Works](#how-it-works)
-- [Key Features](#key-features)
-- [Evidence and Status Labels](#evidence-and-status-labels)
-- [Commit Contracts](#commit-contracts)
-- [Product Principles](#product-principles)
-- [Architecture Overview](#architecture-overview)
-- [Tech Stack](#tech-stack)
-- [Getting Started & Local Setup](#getting-started--local-setup)
-- [Running Automated Tests](#running-automated-tests)
-- [Core API Endpoints](#core-api-endpoints)
-- [Docker Deployment](#docker-deployment)
-- [Security Architecture](#security-architecture)
-- [Limitations](#limitations)
-- [Roadmap Ideas](#roadmap-ideas)
-- [Contributing](#contributing)
+> Working name is ProofStack. If the name turns out to be taken, the fallback is EvidenceCoach.
 
 ---
 
-## Why ProofStack?
+## Why we built this
 
-A résumé can say that a developer knows React, Node.js, databases, or testing, but it is difficult to quickly inspect the project evidence behind those claims. ProofStack creates a transparent path from job requirements to repository evidence and actionable improvement work.
+Anyone can write "Skilled in SQL" on a resume. Most tools that check it count keywords, which a README full of buzzwords can fool in a minute.
 
-It is designed to help developers:
-
-- Understand which job requirements have supporting evidence in the repositories they selected.
-- Inspect the exact files, lines, and commits behind an evidence signal when available.
-- See where evidence is limited, unclear, or outside the current detector coverage.
-- Turn an evidence gap into a small, testable engineering task.
-- Reassess the project after making changes, where the configured backend supports reassessment.
+We wanted the opposite: a tool that is hard to fool, honest when it can't tell, and useful about what to do next. So ProofStack is strict about what counts as evidence, and plain about what it doesn't know.
 
 ---
 
-## How It Works
+## How it works
 
-1. **Add a job posting** — paste a job description or provide a supported job-posting URL.
-2. **Review extracted requirements** — inspect the requirements and their source text; edit the extraction if the interface supports it.
-3. **Connect GitHub repositories** — grant access only to the repositories you want analyzed.
-4. **Run the analysis** — the backend discovers relevant files, runs available deterministic detectors, applies evidence guards, and verifies candidate signals where supported.
-5. **Explore the Proof Map** — inspect the relationship between job requirements and repository evidence.
-6. **Review coverage and uncertainty** — distinguish supported evidence from limited, unclear, or out-of-scope results.
-7. **Review a Commit Contract** — get a suggested, bounded engineering task with acceptance checks and constraints.
-8. **Make the change in your normal workflow** — implement, test, and commit the work in your own development environment.
-9. **Reassess when supported** — run the analysis again to see whether the new repository state changes the available evidence or contract status.
-
----
-
-## Key Features
-
-### Job Requirement Extraction
-Extracts skill and requirement statements from a job description and keeps the source wording available for review. Verbatim supporting quotes are strictly validated against the retrieved text.
-
-### Proof Map
-A visual view connecting job requirements with evidence discovered in selected repositories. It helps users navigate from a requirement to the code signals supporting the current assessment.
-
-### Evidence Explorer
-Evidence details include:
-- Requirement and repository
-- Commit SHA
-- File path and line range
-- Code excerpt and GitHub permalink
-- Detector name and version
-- Signal type and verification outcome
-- Reachability status via AST call graphs
-- Verification reason or counter-evidence note
-
-### Evidence Coverage
-Summarizes the scope of evidence detected for the selected job and repositories using defined heuristic weights:
-$$\text{Evidence Coverage} = \frac{\sum (\text{weight} \times \text{credit})}{\sum \text{weight}}$$
-Coverage is about what was observed in the selected code—not a measurement of the developer's complete skill set.
-
-### Hollow-Evidence Guards
-Prevents weak signals—such as README keyword stuffing, unused dependencies, empty files, or trivial assertions (`assert True`)—from being counted as valid evidence.
-
-### Commit Contract Recommendations
-Turns a specific evidence gap into a bounded task with acceptance checks, constraints, base commit SHA, and negative invariant predictions.
+1. **You give it a job posting** (a link or pasted text). It pulls out the requirements and keeps the exact sentence each one came from.
+2. **You connect your GitHub** and ProofStack reads your repositories through the GitHub API. It never clones or runs your code.
+3. **Detectors look for real usage**, such as a query that a route actually calls, or a test that actually asserts something. Rules decide the status. The AI model is only allowed to confirm or reject a finding the rules already made.
+4. **Every requirement gets one of four statuses**, with a reason you can read:
+   - Demonstrated: Strong
+   - Demonstrated: Basic
+   - Not Demonstrated in This Scope
+   - Unclear
+5. **You get a Commit Contract.** For a gap, it says something like: "If your next commit adds one parameterized query reachable from a route plus a test that checks its result, SQL moves to Strong, and Testing will not change."
+6. **You push a commit.** ProofStack notices (webhook, polling or the "check now" button), re-checks, and grades the contract: Fulfilled, Partly, or Not fulfilled. Misses are shown, not hidden.
 
 ---
 
-## Evidence and Status Labels
+## What's inside
 
-Use explicit labels and explanatory text rather than relying on color alone:
+| Feature | What it does |
+|---|---|
+| **Evidence cards** | Every claim links to a file, line range and commit. No claim without a receipt. |
+| **Hollow-evidence guard** | Refuses empty tests, placeholder code, unused dependencies, unreachable code and README keyword lists. It counts what it refused. |
+| **Four honest statuses** | Strong, Basic, Not Demonstrated in This Scope, Unclear, each with a reason and what's missing for the next level. |
+| **Evidence coverage** | One headline number, always shown as "X of Y assessable requirements", with the arithmetic available. Requirements that can't be judged from code are listed separately and never scored. |
+| **Commit Contracts** | Predictions about what a specific commit will prove, including what it should not change, checked after the push. |
+| **Proof Map** | A treemap of your repo that shows which files evidence which requirements, with a time scrubber. |
+| **Repository provenance and history** | Repo age, forks and upstream, contributors, signed commits, and commit-history charts. These are signals for review, never verdicts. |
+| **Break-Me** | A scoreboard where you pick decoy commits from a fixed menu and watch ProofStack refuse them. |
+| **Proof-linked resume** | Your resume with each skill tagged by its status and footnoted with evidence links. |
+| **ATS readability check** | Checks whether a resume can be read cleanly by a parser, and which posting terms appear in the text. A heuristic, not a score from any real ATS. |
+| **Verify page** | A signed hash chain of every snapshot so you can see nothing was changed afterward. |
+| **Agent Trace** | What the agent noticed, decided, did and concluded on each push, with timings. |
+| **Notifications (optional)** | WhatsApp messages through Twilio, wired up with n8n, when a push changes a status. |
 
-- **Demonstrated (strong)** — two or more independent surviving signal types support the requirement within the analyzed scope.
-- **Demonstrated (basic)** — one surviving signal type or generic language detector fallback.
-- **Not demonstrated in this scope** — the configured analysis did not find sufficient evidence in the selected repositories.
-- **Unclear** — conflicting signals, unsupported ecosystems, or non-code-assessable requirements.
-
----
-
-## Commit Contracts
-
-A Commit Contract is a recommendation, not a guaranteed solution or an automatic judgment of ability:
-- Current and predicted evidence state
-- Acceptance checks that can be verified
-- Skills or behaviors that must not regress
-- Base commit SHA
-- Estimated effort class (`small`, `medium`, `large`)
-- Adjudication status: `Pending`, `Fulfilled`, `Partly fulfilled`, `Not fulfilled`
-
----
-
-## Product Principles
-
-1. **Evidence, not people-ranking:** ProofStack does not rank candidates or issue hiring/ability verdicts.
-2. **Scope transparency:** results describe selected repositories and supported detectors only.
-3. **Traceability:** evidence links to the relevant source code, commit SHA, and file line ranges.
-4. **Honest uncertainty:** distinguish missing evidence from evidence that a skill is absent.
-5. **No fabricated progress:** show only stages and metrics reported by the running system; label demo data clearly.
-6. **Accessible status design:** status meaning must be communicated with text and icons, not color alone.
+> **Status of each feature:** see the table in [Project status](#project-status) below. We would rather show what actually works today than list everything we planned.
 
 ---
 
-## Architecture Overview
+## What ProofStack will not do
 
-```text
-Job posting (URL / Pasted Text)
-    ↓
-Requirement extraction & Verbatim Quote Verification
-    ↓
-Repository selection & Bounded File Discovery (GitHub REST API)
-    ↓
-Deterministic Code Detectors (API, SQL, Testing, CI/CD)
-    ↓
-Evidence Guards & AST Reachability Analysis
-    ↓
-Pure Deterministic Assessment Engine & Coverage Sensitivity
-    ↓
-Proof Map + Evidence Explorer
-    ↓
-Commit Contract Generation & Real-Time SSE Stream
-    ↓
-Developer implements changes & Push triggers Reassessment
-```
+We think the limits matter as much as the features.
+
+- It shows **evidence of use**, not skill level and not who wrote the code. Commit authors and dates can be edited.
+- It only looks at the repositories you connect. "Not Demonstrated in This Scope" does not mean you can't do it.
+- It scores **requirements against evidence**, never people. There are no rankings and no hiring verdicts anywhere.
+- It does not run your code. All checks are static, or read results from your own CI.
+- Some things can't be judged from code (a degree, a city, communication skills). It lists them and leaves them unscored.
+- JavaScript and TypeScript reachability is a heuristic, and the screen says so.
+- Our benchmark is small. We show how many examples it uses.
 
 ---
 
-## Tech Stack
+## Quick start
 
-- **Runtime & API**: Python 3.11+, FastAPI, Uvicorn
-- **Validation**: Pydantic v2
-- **Persistence**: SQLAlchemy 2.0 with SQLite in WAL mode (`aiosqlite`)
-- **HTTP Client**: `httpx` (async outbound requests)
-- **Static Analysis**: Python standard `ast` module
-- **Testing**: `pytest`, `pytest-asyncio`
-- **Frontend**: Responsive modern dark-mode dashboard (served directly at `http://localhost:8000/`)
+> The commands below are our best description of the setup. If one of them doesn't match the repo, trust the repo and fix this file.
 
----
+**You'll need:** Python 3.11+, Node 18+, and a GitHub account.
 
-## Getting Started & Local Setup
-
-### 1. Prerequisites
-- Python 3.11 or higher
-- Git
-
-### 2. Installation
 ```bash
-# Clone the repository
-git clone https://github.com/Omb2121/AI-CarrerCoach.git
-cd AI-CarrerCoach
+# 1. Get the code
+git clone <your-repo-url>
+cd AI-CareerCoach
 
-# Create and activate virtual environment
+# 2. Backend
 python -m venv .venv
-
-# Windows
-.venv\Scripts\activate
-# Linux/macOS
-source .venv/bin/activate
-
-# Install dependencies
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
+
+# 3. Settings
+cp .env.example .env               # then fill in your own values (see below)
+
+# 4. Run the API
+uvicorn backend.main:app --reload
+
+# 5. Frontend (in a second terminal)
+cd frontend
+npm install
+npm run dev
 ```
 
-### 3. Configuration
-Copy `.env.example` to `.env`:
+Open the address Vite prints in the terminal. Then sign in with GitHub, add a job posting, and run your first scan.
+
+### Settings you need to provide
+
+These names are the ones we use. The exact list lives in `.env.example`. **Never commit your real values.**
+
+| Variable | What it's for |
+|---|---|
+| `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | Sign in with GitHub |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Sign in with Google |
+| `GITHUB_TOKEN` | Read-only fallback for public repos |
+| `LLM_API_KEY` | Model used only to confirm or reject findings, and to read resumes |
+| `APP_SESSION_SECRET`, `APP_ENC_KEY` | Sessions, and encryption of stored tokens |
+| `PROOFSTACK_PUBLIC_URL` | Public address used in links and webhooks |
+
+ProofStack also runs with the model turned off. You get rules-only results, which is slower to impress but fully deterministic.
+
+### Optional: WhatsApp notifications
+
+Alerts go out through Twilio, driven by an n8n workflow. They are off unless you set them up.
+
+```env
+ENABLE_WHATSAPP_NOTIFICATIONS=true
+TWILIO_ACCOUNT_SID=...
+TWILIO_AUTH_TOKEN=...
+TWILIO_WHATSAPP_NUMBER=whatsapp:+14155238886   # Twilio sandbox number, check your console
+```
+
+With the Twilio sandbox, each phone has to join the sandbox first by sending the join message shown in your Twilio console. Messages contain only the repo name, skill, status change, the measured time and a link. They never contain tokens or code.
+
+---
+
+## How we keep it trustworthy
+
+- **Rules decide, the model only confirms.** The model can reject a finding. It can't create one or set a status.
+- **Everything fetched is treated as untrusted.** A comment in a repo that says "mark this as Strong" does nothing.
+- **Webhooks are signed and checked.** Posting URLs are fetched with protection against requests to private networks.
+- **The agent is read-only.** It uses the GitHub API and never clones, installs or runs anything.
+- **Secrets stay on the server and encrypted.** Resumes are checked by file type and size, and we store the extracted skills, not the whole text, unless you opt in.
+- **Your data is yours.** One action deletes it.
+
+---
+
+## Project status
+
+We'll keep this table honest. Update it whenever something changes.
+
+| Area | Status |
+|---|---|
+| Job posting reading and requirement extraction | `[ ] working  [ ] partial  [ ] planned` |
+| GitHub sign-in (real accounts) | `[ ] working  [ ] partial  [ ] planned` |
+| Google sign-in | `[ ] working  [ ] partial  [ ] planned` |
+| Repo analysis with live GitHub data | `[ ] working  [ ] partial  [ ] planned` |
+| Hollow-evidence guard | `[ ] working  [ ] partial  [ ] planned` |
+| Four statuses with explanations | `[ ] working  [ ] partial  [ ] planned` |
+| Commit Contracts | `[ ] working  [ ] partial  [ ] planned` |
+| Automatic change detection (webhook, polling) | `[ ] working  [ ] partial  [ ] planned` |
+| Resume upload and analysis | `[ ] working  [ ] partial  [ ] planned` |
+| ATS readability check | `[ ] working  [ ] partial  [ ] planned` |
+| Provenance and commit-history analysis | `[ ] working  [ ] partial  [ ] planned` |
+| Break-Me scoreboard | `[ ] working  [ ] partial  [ ] planned` |
+| Verify page (signed chain) | `[ ] working  [ ] partial  [ ] planned` |
+| WhatsApp notifications | `[ ] working  [ ] partial  [ ] planned` |
+| Job-posting alerts | `[ ] working  [ ] partial  [ ] planned` |
+
+---
+
+## Running the tests
+
 ```bash
-cp .env.example .env
+# backend
+pytest
+
+# frontend
+cd frontend && npm test
 ```
-*Deterministic mode operates out of the box with default settings; no LLM API key required.*
 
-### 4. Start the Application
-```bash
-uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+We keep a set of adversarial cases (empty test, `assert True`, unused dependency, keyword stuffing, planted instructions in text) that must never upgrade a skill. If you add a detector, add the cases that try to fool it.
+
+---
+
+## Folder layout
+
+> Adjust this to match the repo.
+
 ```
-Open **[http://localhost:8000](http://localhost:8000)** in your browser for the dashboard, or **[http://localhost:8000/docs](http://localhost:8000/docs)** for interactive OpenAPI documentation.
-
----
-
-## Running Automated Tests
-
-Run the full pytest suite:
-```bash
-pytest -v
+AI-CareerCoach/
+├── backend/        FastAPI app, detectors, assessment engine, notifier
+├── frontend/       React + Vite app
+├── tests/          unit tests and adversarial cases
+├── docs/           blueprint and design notes
+└── .env.example    the settings the app expects (names only)
 ```
-All 26 automated unit and integration tests verify:
-- SSRF defense against private IPs, AWS/GCP metadata, and scheme abuse.
-- Webhook signature HMAC-SHA256 verification and replay delivery deduplication.
-- AST call-graph reachability and hollow-evidence rejection.
-- All deterministic assessment state transitions.
-- Coverage arithmetic and sensitivity bounds.
-- Commit Contract generation and adjudication.
-- REST API integration and SSE streaming.
 
 ---
 
-## Core API Endpoints
+## Roadmap
 
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/health` | Service status, database WAL check, and engine mode |
-| `POST` | `/api/jobs` | Submit job posting URL or pasted description |
-| `PATCH` | `/api/requirements/{id}` | Edit, reinterpret, or adjust importance |
-| `POST` | `/api/repos` | Connect GitHub repository URL |
-| `POST` | `/api/analyze` | Start baseline evidence assessment pipeline |
-| `POST` | `/api/check-now` | Manually trigger assessment pipeline |
-| `GET` | `/api/assessments` | Retrieve status, surviving evidence, and rejections |
-| `GET` | `/api/coverage/{job_id}` | Retrieve Evidence Coverage and sensitivity bounds |
-| `GET` | `/api/proofmap/{job_id}` | Retrieve file map, entry points, and skill signals |
-| `POST` | `/webhooks/github` | Authenticated GitHub push event listener |
-| `GET` | `/api/events/stream` | Real-time Server-Sent Events (SSE) progress stream |
-| `GET` | `/api/trace/{run_id}` | Detailed execution steps, tools, and timings |
-| `GET` | `/api/contracts` | List Commit Contracts |
-| `POST` | `/api/contracts` | Propose next commit contract |
-| `POST` | `/api/dry-run` | Test hypothetical changes without mutating repo |
-| `POST` | `/api/corrections` | Submit candidate evidence correction |
+Things we'd like to do next, with the honest reason each isn't done yet:
+
+- **More languages and ecosystems.** Right now we cover a few detector families and two ecosystems deeply rather than many shallowly.
+- **A safe sandbox for running tests.** We read results from your own CI instead of running code ourselves.
+- **Job alerts from sources that allow it**, with a form-filling helper where the person clicks Submit themselves.
+- **A larger held-out benchmark.** The current one is small, and we say so wherever we show it.
 
 ---
 
-## Docker Deployment
+## The team
 
-To build and run with Docker Compose:
-```bash
-docker-compose up --build -d
-```
-The service will be live on `http://localhost:8000` with active container healthchecks.
-
----
-
-## Security Architecture
-
-- **SSRF Defense**: Strict validation of DNS-resolved IP addresses; blocks loopback (`127.0.0.0/8`, `::1`), private CIDRs (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `fc00::/7`), link-local, multicast, and cloud metadata services (`169.254.169.254`, `metadata.google.internal`). Re-validates every redirect hop.
-- **Webhook Integrity**: Verifies `X-Hub-Signature-256` using constant-time HMAC-SHA256 comparison. Deduplicates delivery IDs.
-- **Read-Only Scope**: Analyzes repositories via read-only GitHub REST API; never clones, installs, executes, or mutates client repositories.
-- **Secret Redaction**: Redacts GitHub tokens (`ghp_*`) and API keys (`sk-*`) from application logs.
+| Name | What they worked on |
+|---|---|
+| `<name>` | `<area>` |
+| `<name>` | `<area>` |
+| `<name>` | `<area>` |
 
 ---
 
-## Limitations
+## Acknowledgements
 
-- Repository analysis cannot establish a person's complete skill set or professional ability.
-- A lack of detected evidence is not proof that a skill is absent.
-- Full AST intra-package call-graph analysis is implemented for Python. JavaScript/TypeScript uses an import-graph heuristic; other languages report reachability as `unclear`.
-- Files exceeding 2 MB are skipped from deep static inspection to protect server resources.
+Built with FastAPI, React, Vite, SQLite and Twilio, with Stitch for design and Antigravity for coding help. Thanks to the organizers for a problem statement worth taking seriously.
 
----
+## License
 
-## Contributing
-
-Contributions are welcome. Please ensure new evidence claims are traceable and all automated tests pass before submitting pull requests.
+`<choose a license, e.g. MIT, and add a LICENSE file>`
