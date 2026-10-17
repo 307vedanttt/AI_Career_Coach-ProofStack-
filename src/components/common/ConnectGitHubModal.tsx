@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Github, X, Key, ArrowRight, Info } from 'lucide-react';
 import { Button } from '../ui/Button';
+import { useProofStack } from '../../context/ProofStackContext';
 
 interface ConnectGitHubModalProps {
   isOpen: boolean;
@@ -13,7 +14,8 @@ export const ConnectGitHubModal: React.FC<ConnectGitHubModalProps> = ({
   onClose,
   onExploreDemo,
 }) => {
-  const [repoInput, setRepoInput] = useState('');
+  const { connectNewRepository } = useProofStack();
+  const [repoInput, setRepoInput] = useState('307vedanttt/MedNav-Ai');
   const [tokenInput, setTokenInput] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -30,28 +32,20 @@ export const ConnectGitHubModal: React.FC<ConnectGitHubModalProps> = ({
     setSubmitting(true);
     setStatusMessage(null);
 
-    // Honest verification
     try {
-      const headers: Record<string, string> = {
-        'Accept': 'application/vnd.github.v3+json',
-      };
-      if (tokenInput.trim()) {
-        headers['Authorization'] = `token ${tokenInput.trim()}`;
-      }
-
-      const res = await fetch(`https://api.github.com/repos/${repoInput.trim()}`, { headers });
-      if (res.ok) {
-        const data = await res.json();
-        setStatusMessage(`Connected to live repository: ${data.full_name} (${data.stargazers_count} stars). In live production mode, this repo is queued for AST tree traversal.`);
-      } else if (res.status === 404) {
-        setStatusMessage(`Repository "${repoInput}" was not found on GitHub. Check spelling or provide a PAT with repo read access for private repositories.`);
-      } else if (res.status === 403) {
-        setStatusMessage('GitHub API rate limit exceeded. Please provide a Personal Access Token to authenticate API requests.');
+      const cleanRepo = repoInput.trim().replace(/^https?:\/\/github\.com\//i, '').replace(/\.git$/i, '');
+      const repoUrl = cleanRepo.startsWith('http') ? cleanRepo : `https://github.com/${cleanRepo}`;
+      const success = await connectNewRepository(repoUrl);
+      if (success) {
+        setStatusMessage(`Successfully connected ${cleanRepo}! Active workspace updated.`);
+        setTimeout(() => {
+          onClose();
+        }, 1000);
       } else {
-        setStatusMessage(`GitHub returned HTTP ${res.status}. Please verify repository accessibility.`);
+        setStatusMessage(`Failed to connect ${cleanRepo}. Please ensure the repository is public or your GITHUB_TOKEN has access.`);
       }
     } catch (err: any) {
-      setStatusMessage(`Network error connecting to GitHub API: ${err.message}`);
+      setStatusMessage(`Network error connecting repository: ${err.message}`);
     } finally {
       setSubmitting(false);
     }

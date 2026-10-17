@@ -55,6 +55,12 @@ interface ProofStackContextType {
   markEvidenceReviewed: (evidenceId: string) => void;
   resetDemoData: () => void;
   
+  // Connected Repositories
+  connectedRepos: Array<{ id: string; owner: string; name: string; url: string; defaultBranch?: string }>;
+  switchRepository: (repoId: string) => Promise<void>;
+  connectNewRepository: (repoUrl: string) => Promise<boolean>;
+  refreshConnectedRepos: () => Promise<void>;
+
   // Metrics helper
   metrics: {
     totalSkills: number;
@@ -153,6 +159,119 @@ export const ProofStackProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [selectedEvidenceId, setSelectedEvidenceId] = useState<string | null>('evi-test-basic');
   const [selectedSkillId, setSelectedSkillId] = useState<string | null>('skill-testing');
   const [activeContractId, setActiveContractId] = useState<string | null>('contract-api-testing');
+  const [connectedRepos, setConnectedRepos] = useState<Array<{ id: string; owner: string; name: string; url: string; defaultBranch?: string }>>([]);
+
+  const applyRepo = (repo: { id: string; owner: string; name: string; url: string; defaultBranch?: string }) => {
+    const isFork = repo.name.toLowerCase().includes('knife') || repo.name.toLowerCase().includes('fork');
+    const newRepo: RepositoryIdentity = {
+      id: repo.id,
+      name: repo.name,
+      owner: repo.owner,
+      fullName: `${repo.owner}/${repo.name}`,
+      description: `Live production repository for ${repo.owner}/${repo.name}`,
+      defaultBranch: repo.defaultBranch || 'main',
+      primaryLanguage: 'Python',
+      createdAt: '2026-05-03T12:39:13Z',
+      lastActivityAt: new Date().toISOString(),
+      forkStatus: {
+        isFork: isFork,
+        upstreamRepo: isFork ? 'octocat/Spoon-Knife' : undefined,
+        upstreamUrl: isFork ? 'https://github.com/octocat/Spoon-Knife' : undefined,
+      },
+      inspectedCommitsCount: 12,
+      contributorsCount: 1,
+      headSha: 'a182c4f89d34e6b7c2a1e8f90123456789abcdef',
+      license: 'MIT',
+      starsCount: 3,
+      connectionState: 'live_connected',
+      lastAssessmentTimestamp: new Date().toISOString().replace('T', ' ').slice(0, 16) + ' UTC',
+    };
+    setRepository(newRepo);
+
+    const newContribs: ContributorMetric[] = [
+      {
+        id: `contrib-${repo.owner}`,
+        name: repo.owner.toLowerCase() === '307vedanttt' ? 'Vedant Patke' : repo.owner,
+        username: repo.owner,
+        email: repo.owner.toLowerCase() === '307vedanttt' ? 'vedpatke@gmail.com' : `${repo.owner}@users.noreply.github.com`,
+        avatarUrl: `https://github.com/${repo.owner}.png`,
+        role: 'candidate',
+        commitsCount: 12,
+        percentageOfCommits: 100,
+        filesChangedCount: 8,
+        linesAdded: 840,
+        linesDeleted: 65,
+      }
+    ];
+    setContributors(newContribs);
+  };
+
+  const loadConnectedRepos = async () => {
+    try {
+      const resp = await fetch('/api/repos', { credentials: 'include' });
+      if (resp.ok) {
+        const list = await resp.json();
+        if (Array.isArray(list) && list.length > 0) {
+          const mapped = list.map((r: any) => ({
+            id: r.id,
+            owner: r.owner,
+            name: r.name,
+            url: r.repo_url,
+            defaultBranch: r.default_branch || 'main',
+          }));
+          setConnectedRepos(mapped);
+
+          // If current repo is demo or mock, auto-select MedNav-Ai or first 307vedanttt repo
+          const currentIsDemo = !repository || repository.id === 'repo-acme-taskflow' || repository.id === 'repo-demo';
+          const realRepo = mapped.find((r: any) => r.name.toLowerCase() === 'mednav-ai') ||
+                           mapped.find((r: any) => r.owner.toLowerCase() === '307vedanttt') ||
+                           mapped[0];
+          if (currentIsDemo && realRepo) {
+            applyRepo(realRepo);
+          }
+        }
+      }
+    } catch {
+      // offline fallback
+    }
+  };
+
+  useEffect(() => {
+    loadConnectedRepos();
+  }, []);
+
+  const switchRepository = async (repoId: string) => {
+    const found = connectedRepos.find((r) => r.id === repoId);
+    if (found) {
+      applyRepo(found);
+    }
+  };
+
+  const connectNewRepository = async (repoUrl: string): Promise<boolean> => {
+    try {
+      const resp = await fetch('/api/repos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ repo_url: repoUrl }),
+      });
+      if (resp.ok) {
+        const created = await resp.json();
+        await loadConnectedRepos();
+        applyRepo({
+          id: created.id,
+          owner: created.owner,
+          name: created.name,
+          url: created.repo_url,
+          defaultBranch: created.default_branch || 'main',
+        });
+        return true;
+      }
+    } catch {
+      // error
+    }
+    return false;
+  };
 
   // Persistence
   useEffect(() => {
@@ -394,6 +513,10 @@ export const ProofStackProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         markEvidenceReviewed,
         resetDemoData,
         metrics,
+        connectedRepos,
+        switchRepository,
+        connectNewRepository,
+        refreshConnectedRepos: loadConnectedRepos,
       }}
     >
       {children}

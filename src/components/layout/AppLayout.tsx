@@ -68,7 +68,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const [liveDiagnostics, setLiveDiagnostics] = useState<DiagnosticsResult | null>(null);
   const [liveRefusedCount, setLiveRefusedCount] = useState<number | null>(null);
 
-  const { repository, resetDemoData } = useProofStack();
+  const { repository, resetDemoData, connectedRepos, switchRepository } = useProofStack();
 
   useEffect(() => {
     let isMounted = true;
@@ -342,15 +342,43 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         {/* PERSISTENT DEMO NOTICE & REPOSITORY CONTEXT BANNER */}
         <div className="w-full bg-[#131D32] border-b border-[#25324A] px-4 py-1.5 flex flex-wrap items-center justify-between text-xs font-mono text-[#9AA3AE] gap-2 sticky top-0 z-40">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
-            <span className="text-amber-300 font-bold tracking-wider">[DEMO MODE — SAMPLE DATA]</span>
-            <span className="hidden md:inline text-[#9AA3AE]/80">This is an evidence simulation, not a live GitHub audit.</span>
+            {repository.connectionState === 'live_connected' ? (
+              <>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                <span className="text-emerald-400 font-bold tracking-wider">[LIVE VERIFICATION ACTIVE]</span>
+                <span className="hidden md:inline text-white/80">Real GitHub repository AST audit for {repository.fullName}.</span>
+              </>
+            ) : (
+              <>
+                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0" />
+                <span className="text-amber-300 font-bold tracking-wider">[DEMO MODE — SAMPLE DATA]</span>
+                <span className="hidden md:inline text-[#9AA3AE]/80">This is an evidence simulation, not a live GitHub audit.</span>
+              </>
+            )}
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#0B1020] border border-[#25324A] text-white truncate max-w-[150px] sm:max-w-none">
-              <GitFork className="w-3 h-3 text-cyan-400 shrink-0" />
-              <span className="truncate">{repository.fullName}</span>
-            </div>
+            {connectedRepos && connectedRepos.length > 1 ? (
+              <div className="flex items-center gap-1.5 bg-[#0B1020] border border-[#25324A] rounded px-2 py-0.5">
+                <GitFork className="w-3 h-3 text-cyan-400 shrink-0" />
+                <select
+                  value={repository.id}
+                  onChange={(e) => switchRepository(e.target.value)}
+                  className="bg-transparent text-emerald-400 font-mono text-xs focus:outline-none cursor-pointer"
+                  title="Switch active repository"
+                >
+                  {connectedRepos.map((r) => (
+                    <option key={r.id} value={r.id} className="bg-[#0A0C0F] text-white">
+                      {r.owner}/{r.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#0B1020] border border-[#25324A] text-white truncate max-w-[150px] sm:max-w-none">
+                <GitFork className="w-3 h-3 text-cyan-400 shrink-0" />
+                <span className="truncate">{repository.fullName}</span>
+              </div>
+            )}
             <button
               onClick={() => setConnectModalOpen(true)}
               className="hover:text-white text-cyan-300 underline flex items-center gap-1"

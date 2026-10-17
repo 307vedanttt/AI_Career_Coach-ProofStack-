@@ -89,6 +89,19 @@ router = APIRouter()
 DEFAULT_USER_ID = "usr-lead-engineer"
 
 async def get_or_create_default_user(db: AsyncSession) -> User:
+    # If GITHUB_TOKEN is configured, prioritize the real GitHub user
+    if settings.GITHUB_TOKEN:
+        stmt = select(User).where(User.username == "307vedanttt")
+        result = await db.execute(stmt)
+        user = result.scalar_one_or_none()
+        if user:
+            return user
+        stmt = select(User).where(User.id == "live-user-vedant")
+        result = await db.execute(stmt)
+        user = result.scalar_one_or_none()
+        if user:
+            return user
+
     stmt = select(User).where(User.id == DEFAULT_USER_ID)
     result = await db.execute(stmt)
     user = result.scalar_one_or_none()
@@ -385,7 +398,7 @@ async def get_repository_provenance(
     if not repo:
         raise HTTPException(status_code=404, detail="Repository not found.")
 
-    if repo.user_id != user.id:
+    if repo.user_id != user.id and repo.owner.lower() != user.username.lower():
         raise HTTPException(status_code=403, detail="Forbidden: You are not the owner of this repository.")
 
     prov = await provenance_service.get_latest_provenance(db, repo.id)
@@ -418,7 +431,7 @@ async def analyze_repository_provenance_endpoint(
     if not repo:
         raise HTTPException(status_code=404, detail="Repository not found.")
 
-    if repo.user_id != user.id:
+    if repo.user_id != user.id and repo.owner.lower() != user.username.lower():
         raise HTTPException(status_code=403, detail="Forbidden: You are not the owner of this repository.")
 
     prov = await provenance_service.analyze_repository_provenance(
@@ -450,7 +463,7 @@ async def get_repository_history(
     if not repo:
         raise HTTPException(status_code=404, detail="Repository not found.")
 
-    if repo.user_id != user.id:
+    if repo.user_id != user.id and repo.owner.lower() != user.username.lower():
         raise HTTPException(status_code=403, detail="Forbidden: You are not the owner of this repository.")
 
     history_data = await commit_history_service.sync_repository_history(
@@ -482,7 +495,7 @@ async def get_repository_history_flags(
     if not repo:
         raise HTTPException(status_code=404, detail="Repository not found.")
 
-    if repo.user_id != user.id:
+    if repo.user_id != user.id and repo.owner.lower() != user.username.lower():
         raise HTTPException(status_code=403, detail="Forbidden: You are not the owner of this repository.")
 
     flag_stmt = select(HistoryFlag).where(HistoryFlag.repo_id == repo.id)
