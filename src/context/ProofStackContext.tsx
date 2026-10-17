@@ -70,46 +70,77 @@ interface ProofStackContextType {
 
 const STORAGE_KEY = 'proofstack_demo_state_v2';
 
+const safeGetItem = (key: string): string | null => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return window.localStorage.getItem(key);
+    }
+  } catch {
+    // fallback
+  }
+  return null;
+};
+
+const safeSetItem = (key: string, value: string): void => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.setItem(key, value);
+    }
+  } catch {
+    // fallback
+  }
+};
+
+const safeRemoveItem = (key: string): void => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      window.localStorage.removeItem(key);
+    }
+  } catch {
+    // fallback
+  }
+};
+
 const ProofStackContext = createContext<ProofStackContextType | null>(null);
 
 export const ProofStackProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [repository, setRepository] = useState<RepositoryIdentity>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_repo`);
+    const saved = safeGetItem(`${STORAGE_KEY}_repo`);
     return saved ? JSON.parse(saved) : initialRepository;
   });
 
   const [contributors, setContributors] = useState<ContributorMetric[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_contributors`);
+    const saved = safeGetItem(`${STORAGE_KEY}_contributors`);
     return saved ? JSON.parse(saved) : initialContributors;
   });
 
   const [provenanceChecks, setProvenanceChecks] = useState<ProvenanceCheckItem[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_provenance`);
+    const saved = safeGetItem(`${STORAGE_KEY}_provenance`);
     return saved ? JSON.parse(saved) : initialProvenanceChecks;
   });
 
   const [commits, setCommits] = useState<CommitAuditItem[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_commits`);
+    const saved = safeGetItem(`${STORAGE_KEY}_commits`);
     return saved ? JSON.parse(saved) : initialCommits;
   });
 
   const [skills, setSkills] = useState<SkillAssessmentModel[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_skills`);
+    const saved = safeGetItem(`${STORAGE_KEY}_skills`);
     return saved ? JSON.parse(saved) : initialSkills;
   });
 
   const [evidenceItems, setEvidenceItems] = useState<EvidenceItemModel[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_evidence`);
+    const saved = safeGetItem(`${STORAGE_KEY}_evidence`);
     return saved ? JSON.parse(saved) : initialEvidenceItems;
   });
 
   const [contracts, setContracts] = useState<CommitContractModel[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_contracts`);
+    const saved = safeGetItem(`${STORAGE_KEY}_contracts`);
     return saved ? JSON.parse(saved) : initialContracts;
   });
 
   const [activities, setActivities] = useState<AssessmentActivityRecord[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_activities`);
+    const saved = safeGetItem(`${STORAGE_KEY}_activities`);
     return saved ? JSON.parse(saved) : initialActivities;
   });
 
@@ -125,14 +156,14 @@ export const ProofStackProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   // Persistence
   useEffect(() => {
-    localStorage.setItem(`${STORAGE_KEY}_repo`, JSON.stringify(repository));
-    localStorage.setItem(`${STORAGE_KEY}_contributors`, JSON.stringify(contributors));
-    localStorage.setItem(`${STORAGE_KEY}_provenance`, JSON.stringify(provenanceChecks));
-    localStorage.setItem(`${STORAGE_KEY}_commits`, JSON.stringify(commits));
-    localStorage.setItem(`${STORAGE_KEY}_skills`, JSON.stringify(skills));
-    localStorage.setItem(`${STORAGE_KEY}_evidence`, JSON.stringify(evidenceItems));
-    localStorage.setItem(`${STORAGE_KEY}_contracts`, JSON.stringify(contracts));
-    localStorage.setItem(`${STORAGE_KEY}_activities`, JSON.stringify(activities));
+    safeSetItem(`${STORAGE_KEY}_repo`, JSON.stringify(repository));
+    safeSetItem(`${STORAGE_KEY}_contributors`, JSON.stringify(contributors));
+    safeSetItem(`${STORAGE_KEY}_provenance`, JSON.stringify(provenanceChecks));
+    safeSetItem(`${STORAGE_KEY}_commits`, JSON.stringify(commits));
+    safeSetItem(`${STORAGE_KEY}_skills`, JSON.stringify(skills));
+    safeSetItem(`${STORAGE_KEY}_evidence`, JSON.stringify(evidenceItems));
+    safeSetItem(`${STORAGE_KEY}_contracts`, JSON.stringify(contracts));
+    safeSetItem(`${STORAGE_KEY}_activities`, JSON.stringify(activities));
   }, [repository, contributors, provenanceChecks, commits, skills, evidenceItems, contracts, activities]);
 
   // Derived Metrics
@@ -305,14 +336,14 @@ export const ProofStackProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   const resetDemoData = () => {
-    localStorage.removeItem(`${STORAGE_KEY}_repo`);
-    localStorage.removeItem(`${STORAGE_KEY}_contributors`);
-    localStorage.removeItem(`${STORAGE_KEY}_provenance`);
-    localStorage.removeItem(`${STORAGE_KEY}_commits`);
-    localStorage.removeItem(`${STORAGE_KEY}_skills`);
-    localStorage.removeItem(`${STORAGE_KEY}_evidence`);
-    localStorage.removeItem(`${STORAGE_KEY}_contracts`);
-    localStorage.removeItem(`${STORAGE_KEY}_activities`);
+    safeRemoveItem(`${STORAGE_KEY}_repo`);
+    safeRemoveItem(`${STORAGE_KEY}_contributors`);
+    safeRemoveItem(`${STORAGE_KEY}_provenance`);
+    safeRemoveItem(`${STORAGE_KEY}_commits`);
+    safeRemoveItem(`${STORAGE_KEY}_skills`);
+    safeRemoveItem(`${STORAGE_KEY}_evidence`);
+    safeRemoveItem(`${STORAGE_KEY}_contracts`);
+    safeRemoveItem(`${STORAGE_KEY}_activities`);
 
     setRepository(initialRepository);
     setContributors(initialContributors);

@@ -11,7 +11,6 @@ import { CustomCheckbox } from '../../components/auth/CustomCheckbox';
 import { Button } from '../../components/ui/Button';
 import { getMockAuthPath } from '../../lib/api';
 import { useAuth } from '../../context/AuthContext';
-import { buildUrl } from '../../lib/api/client';
 
 export const SignupPage: React.FC = () => {
   const navigate = useNavigate();
@@ -22,7 +21,6 @@ export const SignupPage: React.FC = () => {
   const [agreedReadOnly, setAgreedReadOnly] = useState(false);
   const [agreedPrivacy, setAgreedPrivacy] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const isUsingMocks = import.meta.env.VITE_USE_MOCKS === 'true';
 
   const isFormComplete = agreedReadOnly && agreedPrivacy;
 
