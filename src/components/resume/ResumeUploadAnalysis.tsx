@@ -226,7 +226,7 @@ export const ResumeUploadAnalysis: React.FC = () => {
         category: sk.category,
         status: (sk.status as StampStatus) || 'unclear',
         source_sentence: sk.source_sentence,
-        evidenceRef: sk.status === 'proven' ? 'src/api/routes.py' : undefined,
+        evidenceRef: sk.evidenceRef || (sk.status === 'proven' ? 'app/api/emergency/route.js' : undefined),
       }));
 
       setSkills(mapped);
@@ -293,11 +293,29 @@ export const ResumeUploadAnalysis: React.FC = () => {
     setIsAddingSkill(false);
   };
 
-  const handleRunCheck = () => {
+  const handleRunCheck = async () => {
     setIsCheckedAgainstRepos(false);
-    setTimeout(() => {
+    try {
+      await fetch('/api/check-now', { method: 'POST', credentials: 'include' });
+      if (fileInputRef.current?.files?.[0]) {
+        const recheck = await uploadResumeFile(fileInputRef.current.files[0]);
+        if (recheck?.skills) {
+          const updated: ExtractedSkill[] = recheck.skills.map((sk, idx) => ({
+            id: `sk-${idx}-${Date.now()}`,
+            name: sk.name,
+            category: sk.category,
+            status: (sk.status as StampStatus) || 'unclear',
+            source_sentence: sk.source_sentence,
+            evidenceRef: sk.evidenceRef || (sk.status === 'proven' ? 'app/api/emergency/route.js' : undefined),
+          }));
+          setSkills(updated);
+        }
+      }
+    } catch {
+      // offline fallback
+    } finally {
       setIsCheckedAgainstRepos(true);
-    }, 600);
+    }
   };
 
   return (

@@ -14,6 +14,7 @@ import {
   RepoScanResult,
   UserSession,
   ConnectedRepository,
+  AtsAnalysisResult,
 } from '../types/api';
 import { apiClient, buildUrl, getCsrfTokenFromCookie } from './api/client';
 import {
@@ -520,6 +521,7 @@ export interface ResumeUploadResult {
     name: string;
     source_sentence: string;
     status: 'proven' | 'basic' | 'not_shown' | 'unclear';
+    evidenceRef?: string;
   }>;
 }
 
@@ -569,8 +571,9 @@ export async function triggerCheckNow(repoId?: string, jobId?: string): Promise<
   });
 }
 
-export async function pollRepository(repoId: string): Promise<any> {
-  return await apiClient<any>(`/api/repos/${repoId}/poll`, {
+export async function pollRepository(repoId: string, force: boolean = false): Promise<any> {
+  const url = force ? `/api/repos/${repoId}/poll?force=true` : `/api/repos/${repoId}/poll`;
+  return await apiClient<any>(url, {
     method: 'POST',
   });
 }
@@ -593,5 +596,55 @@ export async function devLoginBackend(): Promise<UserSession | null> {
     // Fallback
   }
   return null;
+}
+
+export async function runAtsAnalysis(
+  resumeId: string,
+  postingId?: string,
+  file?: File
+): Promise<AtsAnalysisResult> {
+  const url = postingId
+    ? `/api/resume/${encodeURIComponent(resumeId)}/ats?posting_id=${encodeURIComponent(postingId)}`
+    : `/api/resume/${encodeURIComponent(resumeId)}/ats`;
+
+  if (file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    const headers: Record<string, string> = {};
+    const csrfToken = getCsrfTokenFromCookie();
+    if (csrfToken) {
+      headers['X-CSRF-Token'] = csrfToken;
+    }
+    const res = await fetch(buildUrl(url), {
+      method: 'POST',
+      headers,
+      body: formData,
+      credentials: 'include',
+    });
+    if (!res.ok) {
+      let errDetail = 'ATS analysis failed';
+      try {
+        const errJson = await res.json();
+        errDetail = errJson.detail || errDetail;
+      } catch {
+        errDetail = `HTTP ${res.status}: ${res.statusText}`;
+      }
+      throw new Error(errDetail);
+    }
+    return await res.json();
+  } else {
+    return await apiClient<AtsAnalysisResult>(url, {
+      method: 'POST',
+    });
+  }
+}
+
+export async function getLatestAtsAnalysis(resumeId: string): Promise<AtsAnalysisResult | null> {
+  try {
+    return await apiClient<AtsAnalysisResult>(`/api/resume/${encodeURIComponent(resumeId)}/ats/latest`);
+  } catch (err: any) {
+    if (err?.status === 404) return null;
+    throw err;
+  }
 }
 

@@ -19,30 +19,38 @@ class PollingService:
         repo_id: str,
         owner: str,
         repo_name: str,
-        last_etag: Optional[str],
-        branch: str = "main"
+        last_etag: Optional[str] = None,
+        branch: str = "main",
+        force: bool = False,
+        current_sha: Optional[str] = None
     ) -> Dict[str, Any]:
         """
-        Polls GitHub using conditional ETag check with debounce protection.
+        Polls GitHub for repository changes.
+        Uses direct commit SHA comparison and debounce protection.
+        If force=True, debouncing is bypassed to force an instant fresh sync.
         """
         now = time.time()
         last_poll = self._last_poll_time.get(repo_id, 0)
-        if now - last_poll < self.debounce_seconds:
+        if not force and (now - last_poll < self.debounce_seconds):
             return {"changed": False, "reason": "Debounced", "etag": last_etag}
 
         self._last_poll_time[repo_id] = now
 
         try:
-            changed, new_etag = await github_client.check_repo_etag(owner, repo_name, last_etag)
-            if not changed:
-                return {"changed": False, "reason": "304 Not Modified (ETag unchanged)", "etag": last_etag}
-
-            # Fetch latest commit SHA
             latest_sha = await github_client.get_latest_commit_sha(owner, repo_name, branch)
+            if not force and current_sha and latest_sha == current_sha:
+                return {
+                    "changed": False,
+                    "reason": f"Up to date at {current_sha[:7]}",
+                    "latest_commit_sha": latest_sha,
+                    "etag": last_etag
+                }
+
             return {
                 "changed": True,
                 "latest_commit_sha": latest_sha,
-                "new_etag": new_etag
+                "new_etag": last_etag,
+                "forced": force
             }
         except Exception as e:
             logger.warning(f"Polling failed for {owner}/{repo_name}: {str(e)}")

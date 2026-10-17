@@ -276,3 +276,117 @@ export interface ConnectedRepository {
   created_at: string;
 }
 
+export interface AtsReadabilityCheck {
+  code: string;
+  category: string;
+  title: string;
+  status: 'pass' | 'needs_attention' | 'cannot_assess';
+  reason: string;
+  evidence: string;
+  concrete_fix: string;
+  weight: number;
+}
+
+export interface AtsKeywordTerm {
+  requirement_id?: string;
+  canonical_id?: string;
+  label: string;
+  matched_alias?: string | null;
+  status: 'found' | 'not_found';
+  resume_sentence?: string | null;
+  job_sentence?: string | null;
+  code_status: string;
+  evidence_file?: string | null;
+  wording: string;
+  note?: string;
+}
+
+export interface AtsKeywordCoverage {
+  posting_id: string;
+  role_title: string;
+  company_name: string;
+  total_requirements: number;
+  found_count: number;
+  coverage_pct: number;
+  summary: string;
+  terms: AtsKeywordTerm[];
+  disclaimer: string;
+}
+
+export interface AtsScoreData {
+  score: number | null;
+  score_label: string;
+  counts_label: string;
+  cannot_assess: boolean;
+  cannot_assess_reason?: string | null;
+  formula: string;
+  readability_score: number | null;
+  keyword_score: number | null;
+  assessable_count: number;
+  passed_count: number;
+  excluded_count: number;
+  sensitivity_ranges: {
+    standard_70_30: number | null;
+    structure_80_20: number | null;
+    content_60_40: number | null;
+  };
+}
+
+export interface AtsLayoutMetadata {
+  file_type: string;
+  file_size_bytes: number;
+  page_count: number;
+  columns_detected: number;
+  tables_count: number;
+  text_boxes_count: number;
+  headers_footers_content: string[];
+  images_count: number;
+  images_with_text: number;
+  embedded_fonts: string[];
+  hidden_or_white_text: string[];
+  links_found: string[];
+  metadata: Record<string, any>;
+  is_scanned_or_empty: boolean;
+}
+
+export interface AtsExtractionPreview {
+  plain_text: string;
+  reading_order_blocks: string[];
+  detected_sections: Array<{
+    heading: string;
+    standard_name: string;
+    content_snippet: string;
+  }>;
+}
+
+export interface AtsSuggestion {
+  id: string;
+  type: 'structural_fix' | 'proven_skill_addition';
+  category: string;
+  title: string;
+  reason: string;
+  concrete_fix: string;
+  before: string;
+  after: string;
+  proven_evidence_ref?: string | null;
+}
+
+export interface AtsAnalysisResult {
+  id: string;
+  resume_id: string;
+  resume_hash: string;
+  file_name: string;
+  posting_id: string;
+  ruleset_version: string;
+  score_data: AtsScoreData;
+  readability_checks: AtsReadabilityCheck[];
+  keyword_coverage: AtsKeywordCoverage;
+  excluded_checks: AtsReadabilityCheck[];
+  layout_metadata: AtsLayoutMetadata;
+  extraction_preview: AtsExtractionPreview;
+  suggestions: AtsSuggestion[];
+  plain_text_export: string;
+  cached: boolean;
+  created_at: string;
+}
+

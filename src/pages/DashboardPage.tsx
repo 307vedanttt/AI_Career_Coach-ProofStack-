@@ -252,10 +252,8 @@ export const DashboardPage: React.FC = () => {
   const handleManualPoll = async (repoId: string) => {
     setPollingRepoId(repoId);
     try {
-      const res = await pollRepository(repoId);
-      if (res.changed) {
-        await loadDashboardData();
-      }
+      await pollRepository(repoId, true);
+      await loadDashboardData();
     } catch (err: any) {
       alert(`Polling failed: ${err.message}`);
     } finally {

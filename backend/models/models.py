@@ -1,6 +1,6 @@
 import datetime
 from sqlalchemy import (
-    Column, String, Integer, Float, Text, Boolean, DateTime, ForeignKey, Index
+    Column, String, Integer, Float, Text, Boolean, DateTime, ForeignKey, Index, LargeBinary
 )
 from sqlalchemy.orm import declarative_base, relationship
 
@@ -275,6 +275,7 @@ class ResumeExtraction(Base):
     char_count = Column(Integer, nullable=False)
     skills_json = Column(Text, nullable=False)
     extracted_text_preview = Column(Text, nullable=True)
+    raw_bytes = Column(LargeBinary, nullable=True)
     created_at = Column(DateTime(timezone=True), default=utcnow)
     
     __table_args__ = (
@@ -341,5 +342,31 @@ class HistoryFlag(Base):
     created_at = Column(DateTime(timezone=True), default=utcnow)
     
     repository = relationship("Repository", back_populates="history_flags")
+
+
+class AtsRun(Base):
+    __tablename__ = "ats_runs"
+
+    id = Column(String(36), primary_key=True)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    resume_id = Column(String(36), nullable=True, index=True)
+    resume_hash = Column(String(64), nullable=False, index=True)
+    posting_id = Column(String(36), nullable=False, index=True)
+    ruleset_version = Column(String(32), nullable=False, default="1.0.0")
+    score = Column(Float, nullable=True) # None when cannot assess (e.g. scanned image)
+    readability_json = Column(Text, nullable=False, default="{}")
+    keyword_json = Column(Text, nullable=False, default="{}")
+    excluded_json = Column(Text, nullable=False, default="[]")
+    layout_metadata_json = Column(Text, nullable=False, default="{}")
+    suggestions_json = Column(Text, nullable=False, default="[]")
+    extracted_text = Column(Text, nullable=True) # Stored strictly on user opt-in
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+
+    user = relationship("User", backref="ats_runs")
+
+    __table_args__ = (
+        Index("idx_ats_runs_user_resume_posting_ver", "user_id", "resume_hash", "posting_id", "ruleset_version", unique=False),
+    )
+
 
 

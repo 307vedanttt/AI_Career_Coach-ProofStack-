@@ -10,14 +10,16 @@ import {
   Share2,
   FileUp,
   FileText,
+  FileCheck2,
 } from 'lucide-react';
 import { ResumeUploadAnalysis } from '../components/resume/ResumeUploadAnalysis';
+import { AtsReadabilityPanel } from '../components/resume/AtsReadabilityPanel';
 
 export const ResumePage: React.FC = () => {
   const [data, setData] = useState<ResumeAttestationData | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
   const [activeFootnote, setActiveFootnote] = useState<number | null>(null);
-  const [activeView, setActiveView] = useState<'all' | 'upload' | 'dossier'>('all');
+  const [activeView, setActiveView] = useState<'all' | 'upload' | 'ats' | 'dossier'>('all');
 
   useEffect(() => {
     getResumeAttestation()
@@ -61,6 +63,18 @@ export const ResumePage: React.FC = () => {
           </button>
           <button
             type="button"
+            onClick={() => setActiveView('ats')}
+            className={`px-3 py-1.5 rounded-lg flex items-center gap-2 font-semibold transition-all ${
+              activeView === 'ats'
+                ? 'bg-emerald-500 text-[#0A0C0F] shadow-[0_0_12px_rgba(52,211,153,0.3)]'
+                : 'text-[#9AA3AE] hover:text-white bg-white/5'
+            }`}
+          >
+            <FileCheck2 className="w-3.5 h-3.5" />
+            <span>ATS Readability</span>
+          </button>
+          <button
+            type="button"
             onClick={() => setActiveView('upload')}
             className={`px-3 py-1.5 rounded-lg flex items-center gap-2 font-semibold transition-all ${
               activeView === 'upload'
@@ -89,6 +103,13 @@ export const ResumePage: React.FC = () => {
           Deterministic Claim Verification
         </span>
       </div>
+
+      {/* ATS Readability Panel Section */}
+      {(activeView === 'all' || activeView === 'ats') && (
+        <div className="max-w-[1360px] w-full mx-auto px-4 mb-12">
+          <AtsReadabilityPanel onUploadNewVersion={() => setActiveView('upload')} />
+        </div>
+      )}
 
       {/* Upload and Analysis Engine Section */}
       {(activeView === 'all' || activeView === 'upload') && (

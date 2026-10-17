@@ -52,6 +52,7 @@ async def init_db():
                 ("rejected_candidates", "detector", "VARCHAR(100)"),
                 ("rejected_candidates", "detector_version", "VARCHAR(50)"),
                 ("rejected_candidates", "guard_reason", "TEXT"),
+                ("resume_extractions", "raw_bytes", "BLOB"),
             ]
             for tbl, col, col_type in cols:
                 try:

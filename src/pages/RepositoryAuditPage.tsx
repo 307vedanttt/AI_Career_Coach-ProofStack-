@@ -12,6 +12,7 @@ import {
   Lock,
   Unlock,
   X,
+  RefreshCw,
 } from 'lucide-react';
 import { useProofStack } from '../context/ProofStackContext';
 import { AppLayout } from '../components/layout/AppLayout';
@@ -23,7 +24,7 @@ import { CommitHistoryAnalysis } from '../components/history/CommitHistoryAnalys
 import { RepoProvenanceRecord, CommitHistoryData } from '../types/proofstack';
 
 export const RepositoryAuditPage: React.FC = () => {
-  const { repository, contributors, provenanceChecks, commits } = useProofStack();
+  const { repository, contributors, provenanceChecks, commits, runAudit } = useProofStack();
 
   const [expandedCheckId, setExpandedCheckId] = useState<string | null>('prov-origin');
   const [selectedCommit, setSelectedCommit] = useState<CommitAuditItem | null>(null);
@@ -32,6 +33,7 @@ export const RepositoryAuditPage: React.FC = () => {
   const [isProvLoading, setIsProvLoading] = useState<boolean>(false);
   const [historyData, setHistoryData] = useState<CommitHistoryData | null>(null);
   const [isHistoryLoading, setIsHistoryLoading] = useState<boolean>(false);
+  const [isSyncing, setIsSyncing] = useState<boolean>(false);
 
   const candidate = contributors.find((c) => c.role === 'candidate') || contributors[0];
 
@@ -265,6 +267,25 @@ export const RepositoryAuditPage: React.FC = () => {
     }
   };
 
+  const handleSyncLive = async () => {
+    setIsSyncing(true);
+    try {
+      await fetch(`/api/repos/${repository.id}/poll?force=true`, {
+        method: 'POST',
+        credentials: 'include'
+      });
+      await loadProvenance();
+      await loadCommitHistory();
+      if (runAudit) {
+        await runAudit();
+      }
+    } catch {
+      // offline fallback
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   React.useEffect(() => {
     loadProvenance();
     loadCommitHistory();
@@ -288,14 +309,26 @@ export const RepositoryAuditPage: React.FC = () => {
               Cryptographic integrity, contribution provenance, upstream lineage, and historical signal analysis
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-mono text-[#9AA3AE]">
-              Inspected Commits: <strong className="text-white">{repository.inspectedCommitsCount}</strong>
-            </span>
-            <span className="text-[#25324A]">·</span>
-            <span className="text-xs font-mono text-[#9AA3AE]">
-              Contributors: <strong className="text-white">{repository.contributorsCount}</strong>
-            </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSyncLive}
+              isLoading={isSyncing}
+              className="text-xs font-mono text-cyan-300 border-cyan-500/30 hover:bg-cyan-500/10 flex items-center gap-1.5"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+              <span>Sync Live GitHub</span>
+            </Button>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono text-[#9AA3AE]">
+                Inspected Commits: <strong className="text-white">{repository.inspectedCommitsCount}</strong>
+              </span>
+              <span className="text-[#25324A]">·</span>
+              <span className="text-xs font-mono text-[#9AA3AE]">
+                Contributors: <strong className="text-white">{repository.contributorsCount}</strong>
+              </span>
+            </div>
           </div>
         </div>
 

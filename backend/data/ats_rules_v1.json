@@ -1,0 +1,237 @@
+{
+  "ruleset_version": "1.0.0",
+  "label": "ProofStack ATS Readability Heuristics v1.0",
+  "weights": {
+    "readability_weight": 0.70,
+    "keyword_weight": 0.30
+  },
+  "sensitivity_presets": [
+    { "name": "Standard (70/30)", "readability": 0.70, "keyword": 0.30 },
+    { "name": "Structure Priority (80/20)", "readability": 0.80, "keyword": 0.20 },
+    { "name": "Content Focus (60/40)", "readability": 0.60, "keyword": 0.40 }
+  ],
+  "disclaimers": {
+    "score_label": "ATS readability score (heuristic). Not a score from any real ATS; systems differ.",
+    "footer": "Heuristic checks, not a score from any real ATS. Evidence of use, not proficiency or authorship.",
+    "keyword_gap_note": "This does not mean you lack the skill."
+  },
+  "rules": {
+    "file_type": {
+      "category": "File",
+      "title": "File Format Specification",
+      "weight": 1.0,
+      "description": "Checks that the uploaded document is either a valid PDF or Microsoft Word (.docx) file.",
+      "fix": "Export your document strictly as a standard PDF or .docx file."
+    },
+    "text_extractable": {
+      "category": "File",
+      "title": "Text Extractability",
+      "weight": 1.5,
+      "min_characters": 100,
+      "description": "Verifies that the document contains selectable, machine-readable text above the threshold.",
+      "fix": "Avoid saving resumes as scanned flattened images. Export directly from your word processor."
+    },
+    "scanned_image_only": {
+      "category": "File",
+      "title": "Scanned Document / Raster Check",
+      "weight": 2.0,
+      "description": "Detects if the file is an image-only scan with no parsable text stream.",
+      "fix": "Re-export your resume as a text-based PDF or DOCX file."
+    },
+    "file_size": {
+      "category": "File",
+      "title": "File Size Efficiency",
+      "weight": 0.5,
+      "max_bytes": 2097152,
+      "description": "Ensures document size is below 2MB for fast parsing without gateway timeouts.",
+      "fix": "Compress high-resolution background assets or remove unneeded graphics."
+    },
+    "page_count": {
+      "category": "File",
+      "title": "Document Length / Page Count",
+      "weight": 0.8,
+      "min_pages": 1,
+      "max_pages": 2,
+      "description": "Standard software engineering resumes are typically 1 to 2 pages.",
+      "fix": "Trim non-essential details to keep your resume concise within 1 to 2 pages."
+    },
+    "password_protection": {
+      "category": "File",
+      "title": "Document Encryption & Access",
+      "weight": 1.0,
+      "description": "Ensures the document has no encryption, passwords, or permission locks.",
+      "fix": "Save an unprotected copy without passwords or permission locks."
+    },
+    "single_column_order": {
+      "category": "Structure",
+      "title": "Single-Column Reading Order",
+      "weight": 1.5,
+      "description": "Multi-column layouts risk reading-order scrambling when parsers read horizontally across columns.",
+      "fix": "Switch to a clean single-column layout so ATS parsers read your career timeline in sequential order."
+    },
+    "tables_for_layout": {
+      "category": "Structure",
+      "title": "Table-Based Layout Detection",
+      "weight": 1.2,
+      "description": "Tables used for structural layout confuse sequential parsers and cause text fragments to merge.",
+      "fix": "Replace tables with standard linear margins and bulleted lists."
+    },
+    "header_footer_containment": {
+      "category": "Structure",
+      "title": "Header & Footer Trapping",
+      "weight": 1.5,
+      "description": "Key contact info (email, phone, links) placed only in header/footer zones is ignored by many parsers.",
+      "fix": "Move contact details (email, phone, LinkedIn, GitHub) into the top body of the document."
+    },
+    "text_in_images": {
+      "category": "Structure",
+      "title": "Text Inside Images or Icons",
+      "weight": 1.0,
+      "description": "Contact details, skills, or titles rendered as embedded bitmap images cannot be indexed by text parsers.",
+      "fix": "Use real text characters instead of icons or graphic images for skills and contact information."
+    },
+    "corrupt_glyphs": {
+      "category": "Structure",
+      "title": "Unusual Bullets & Special Glyphs",
+      "weight": 0.8,
+      "description": "Non-standard bullet characters or custom fonts can extract as replacement characters (e.g., \\ufffd).",
+      "fix": "Use standard circular bullets (•) or hyphens (-) and standard system fonts."
+    },
+    "hidden_or_white_text": {
+      "category": "Structure",
+      "title": "Hidden or Micro-Font Text",
+      "weight": 1.0,
+      "description": "Detects white-on-white text, font sizes below 2pt, or text off-canvas flagged for heuristic review.",
+      "fix": "Remove hidden or off-canvas text. Rely on legitimate code-proven evidence instead of stuffing."
+    },
+    "standard_headings": {
+      "category": "Sections",
+      "title": "Standard Section Headings",
+      "weight": 1.5,
+      "required_sections": ["Experience", "Skills", "Education"],
+      "optional_sections": ["Summary", "Certifications"],
+      "description": "Identifies canonical section headers (Experience, Skills, Education) using standard alias recognition.",
+      "fix": "Ensure distinct headers: 'Experience' (or 'Work History'), 'Skills', and 'Education'."
+    },
+    "contact_email": {
+      "category": "Contact Parse",
+      "title": "Email Address Detection",
+      "weight": 1.0,
+      "description": "Detects a valid email address parsed as selectable text in the document body.",
+      "fix": "Include a standard selectable email address (e.g. name@domain.com) in the document body."
+    },
+    "contact_phone": {
+      "category": "Contact Parse",
+      "title": "Phone Number Detection",
+      "weight": 0.8,
+      "description": "Detects a standard telephone number in the document body.",
+      "fix": "Add a standard telephone format in the contact section."
+    },
+    "contact_links": {
+      "category": "Contact Parse",
+      "title": "Professional Links & URLs",
+      "weight": 0.7,
+      "description": "Checks for clickable or selectable URLs linking to GitHub, LinkedIn, or personal portfolio.",
+      "fix": "Include explicit text URLs for your GitHub and LinkedIn profiles."
+    },
+    "date_format_consistency": {
+      "category": "Dates & Consistency",
+      "title": "Date Format Consistency",
+      "weight": 0.8,
+      "description": "Checks whether dates follow a consistent convention (e.g., MMM YYYY or YYYY).",
+      "fix": "Standardize all employment dates to a uniform format such as 'Jan 2023 - Present'."
+    },
+    "roles_have_dates": {
+      "category": "Dates & Consistency",
+      "title": "Role Date Attribution",
+      "weight": 0.8,
+      "description": "Ensures detected professional experience entries have associated start and end dates.",
+      "fix": "Specify clear start and end dates next to every job title or project."
+    },
+    "parse_breaks": {
+      "category": "Dates & Consistency",
+      "title": "Parse Boundary Breaks",
+      "weight": 0.7,
+      "description": "Detects dates accidentally concatenated directly into titles or companies without whitespace.",
+      "fix": "Separate dates and company/title strings with clear whitespace, pipes (|), or newlines."
+    },
+    "action_verb_bullets": {
+      "category": "Content Hygiene",
+      "title": "Action-Verb Bullet Openings",
+      "weight": 0.5,
+      "description": "Informational check: experience bullets starting with strong action verbs improve scannability.",
+      "fix": "Begin bullet points with active verbs like 'Architected', 'Built', 'Engineered', 'Optimized'."
+    },
+    "paragraph_length": {
+      "category": "Content Hygiene",
+      "title": "Dense Paragraph Check",
+      "weight": 0.6,
+      "max_words": 150,
+      "description": "Flags dense text blocks exceeding 150 words without bullet points or paragraph breaks.",
+      "fix": "Break dense blocks of text into 2-3 concise bullet points."
+    },
+    "keyword_stuffing": {
+      "category": "Content Hygiene",
+      "title": "Repetitive Keyword Stuffing",
+      "weight": 1.0,
+      "max_repetition_in_cluster": 4,
+      "description": "Flags repetitive identical keyword stuffing clusters that trigger spam filters.",
+      "fix": "Distribute skill mentions naturally in realistic project contexts instead of repeated keyword lists."
+    },
+    "skill_spelling": {
+      "category": "Content Hygiene",
+      "title": "Canonical Skill Nomenclature",
+      "weight": 0.5,
+      "description": "Flags non-standard spellings of common technologies where canonical naming is preferred.",
+      "fix": "Use canonical technology names (e.g. 'PostgreSQL' instead of informal abbreviations)."
+    }
+  },
+  "section_aliases": {
+    "Experience": [
+      "experience",
+      "work experience",
+      "professional experience",
+      "work history",
+      "employment history",
+      "employment",
+      "career history",
+      "projects",
+      "technical projects",
+      "engineering experience"
+    ],
+    "Skills": [
+      "skills",
+      "technical skills",
+      "core competencies",
+      "technologies",
+      "technical proficiencies",
+      "tech stack",
+      "tools & technologies",
+      "skills & tools"
+    ],
+    "Education": [
+      "education",
+      "academic background",
+      "academic history",
+      "qualifications",
+      "degrees",
+      "education & credentials"
+    ],
+    "Summary": [
+      "summary",
+      "professional summary",
+      "profile",
+      "about me",
+      "about",
+      "executive summary",
+      "career summary",
+      "objective"
+    ],
+    "Certifications": [
+      "certifications",
+      "certificates",
+      "licenses",
+      "accreditations"
+    ]
+  }
+}

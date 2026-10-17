@@ -125,10 +125,10 @@ describe('App Screens & Data Layer Tests', () => {
       renderWithProviders(<ContractsPage />);
 
       await waitFor(() => {
-        expect(screen.getByText(/Predictive Invariant Acceptance/i)).toBeInTheDocument();
+        expect(screen.getByText(/Targeted Skill Challenges/i)).toBeInTheDocument();
       });
 
-      expect(screen.getByText(/Acceptance Criteria Checklist/i)).toBeInTheDocument();
+      expect(screen.getByText(/Allow-Listed Acceptance Checks/i)).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /Run Contract Dry-Run/i })).toBeInTheDocument();
     });
 

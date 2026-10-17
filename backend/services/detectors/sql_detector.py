@@ -20,13 +20,15 @@ class SQLDetector(BaseDetector):
         migration_pattern = re.compile(r"def\s+(?:upgrade|downgrade)\s*\(\s*\):|op\.create_table\(", re.IGNORECASE)
         session_query_pattern = re.compile(r"\b(?:session|db)\.(?:execute|query|add|commit|scalars?)\s*\(", re.IGNORECASE)
 
+        prisma_pattern = re.compile(r"\b(?:prisma|db)\.[a-zA-Z0-9_]+\.(?:create|findMany|findUnique|findFirst|update|delete|upsert|executeRaw)\s*\(", re.IGNORECASE)
+
         for path, content in files.items():
             lines = content.splitlines()
 
             # Migrations check
-            if "migration" in path.lower() or "alembic" in path.lower() or path.endswith(".sql"):
+            if "migration" in path.lower() or "alembic" in path.lower() or "prisma" in path.lower() or path.endswith((".sql", ".prisma")):
                 for idx, line in enumerate(lines):
-                    if migration_pattern.search(line) or "CREATE TABLE" in line.upper():
+                    if migration_pattern.search(line) or "CREATE TABLE" in line.upper() or "model " in line:
                         snippet = "\n".join(lines[idx: min(len(lines), idx + 6)])
                         valid_candidates.append({
                             "detector_name": self.name,
@@ -35,7 +37,7 @@ class SQLDetector(BaseDetector):
                             "start_line": idx + 1,
                             "end_line": min(len(lines), idx + 6),
                             "code_snippet": snippet,
-                            "explanation": f"Database schema migration or DDL detected at line {idx + 1}."
+                            "explanation": f"Database schema migration, DDL, or Prisma model detected at line {idx + 1}."
                         })
                         break # One migration signal per file is sufficient
 
@@ -76,6 +78,32 @@ class SQLDetector(BaseDetector):
                             "end_line": min(len(lines), idx + 4),
                             "code_snippet": snippet,
                             "explanation": f"Raw SQL statement found at line {idx + 1}."
+                        })
+
+            # JS / TS ORM and query checks
+            elif path.endswith((".js", ".ts", ".jsx", ".tsx")):
+                for idx, line in enumerate(lines):
+                    if prisma_pattern.search(line):
+                        snippet = "\n".join(lines[max(0, idx - 1): min(len(lines), idx + 5)])
+                        valid_candidates.append({
+                            "detector_name": self.name,
+                            "signal_type": "orm_operation",
+                            "file_path": path,
+                            "start_line": idx + 1,
+                            "end_line": min(len(lines), idx + 5),
+                            "code_snippet": snippet,
+                            "explanation": f"Prisma ORM database operation detected at line {idx + 1}."
+                        })
+                    elif sql_keywords.search(line) and not path.endswith(".json"):
+                        snippet = "\n".join(lines[max(0, idx - 1): min(len(lines), idx + 4)])
+                        valid_candidates.append({
+                            "detector_name": self.name,
+                            "signal_type": "sql_query",
+                            "file_path": path,
+                            "start_line": idx + 1,
+                            "end_line": min(len(lines), idx + 4),
+                            "code_snippet": snippet,
+                            "explanation": f"SQL query statement found at line {idx + 1}."
                         })
 
         return valid_candidates, rejected_candidates

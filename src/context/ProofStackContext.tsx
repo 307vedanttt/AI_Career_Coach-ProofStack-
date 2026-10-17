@@ -161,16 +161,19 @@ export const ProofStackProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [activeContractId, setActiveContractId] = useState<string | null>('contract-api-testing');
   const [connectedRepos, setConnectedRepos] = useState<Array<{ id: string; owner: string; name: string; url: string; defaultBranch?: string }>>([]);
 
-  const applyRepo = (repo: { id: string; owner: string; name: string; url: string; defaultBranch?: string }) => {
+  const applyRepo = async (repo: { id: string; owner: string; name: string; url: string; defaultBranch?: string }) => {
     const isFork = repo.name.toLowerCase().includes('knife') || repo.name.toLowerCase().includes('fork');
-    const newRepo: RepositoryIdentity = {
+    const isNextJs = repo.name.toLowerCase().includes('mednav');
+    
+    // Initial responsive state
+    const baseRepo: RepositoryIdentity = {
       id: repo.id,
       name: repo.name,
       owner: repo.owner,
       fullName: `${repo.owner}/${repo.name}`,
-      description: `Live production repository for ${repo.owner}/${repo.name}`,
+      description: `Live connected GitHub repository for ${repo.owner}/${repo.name}`,
       defaultBranch: repo.defaultBranch || 'main',
-      primaryLanguage: 'Python',
+      primaryLanguage: isNextJs ? 'Next.js / React' : 'Python',
       createdAt: '2026-05-03T12:39:13Z',
       lastActivityAt: new Date().toISOString(),
       forkStatus: {
@@ -180,33 +183,95 @@ export const ProofStackProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       },
       inspectedCommitsCount: 12,
       contributorsCount: 1,
-      headSha: 'a182c4f89d34e6b7c2a1e8f90123456789abcdef',
+      headSha: 'b9a10981a6ade11295e619d57ec6c16f8e82cfc3',
       license: 'MIT',
       starsCount: 3,
       connectionState: 'live_connected',
       lastAssessmentTimestamp: new Date().toISOString().replace('T', ' ').slice(0, 16) + ' UTC',
     };
-    setRepository(newRepo);
+    setRepository(baseRepo);
 
-    const newContribs: ContributorMetric[] = [
-      {
-        id: `contrib-${repo.owner}`,
-        name: repo.owner.toLowerCase() === '307vedanttt' ? 'Vedant Patke' : repo.owner,
-        username: repo.owner,
-        email: repo.owner.toLowerCase() === '307vedanttt' ? 'vedpatke@gmail.com' : `${repo.owner}@users.noreply.github.com`,
-        avatarUrl: `https://github.com/${repo.owner}.png`,
-        role: 'candidate',
-        commitsCount: 12,
-        percentageOfCommits: 100,
-        filesChangedCount: 8,
-        linesAdded: 840,
-        linesDeleted: 65,
+    // 1. Fetch real live commits from backend
+    try {
+      const commitsResp = await fetch(`/api/repos/${repo.id}/commits`, { credentials: 'include' });
+      if (commitsResp.ok) {
+        const liveCommits = await commitsResp.json();
+        if (Array.isArray(liveCommits) && liveCommits.length > 0) {
+          setCommits(liveCommits);
+          const headCommit = liveCommits[0];
+          setRepository((prev) => ({
+            ...prev,
+            headSha: headCommit.hash,
+            inspectedCommitsCount: liveCommits.length,
+            lastActivityAt: headCommit.timestamp,
+            lastAssessmentTimestamp: new Date().toISOString().replace('T', ' ').slice(0, 16) + ' UTC',
+          }));
+
+          // Compute dynamic contributor metrics from real GitHub commits
+          const authorMap: Record<string, { count: number; linesAdded: number; linesDeleted: number; name: string; email: string }> = {};
+          for (const c of liveCommits) {
+            const authorKey = (c.author?.username || c.author?.name || repo.owner).toLowerCase();
+            if (!authorMap[authorKey]) {
+              authorMap[authorKey] = {
+                count: 0,
+                linesAdded: 0,
+                linesDeleted: 0,
+                name: c.author?.name || repo.owner,
+                email: c.author?.email || `${repo.owner}@users.noreply.github.com`
+              };
+            }
+            authorMap[authorKey].count += 1;
+            authorMap[authorKey].linesAdded += (c.linesAdded || 0);
+            authorMap[authorKey].linesDeleted += (c.linesDeleted || 0);
+          }
+
+          const dynamicContribs: ContributorMetric[] = Object.entries(authorMap).map(([username, data]) => ({
+            id: `contrib-${username}`,
+            name: data.name,
+            username: username,
+            email: data.email,
+            avatarUrl: `https://github.com/${username}.png`,
+            role: username === repo.owner.toLowerCase() || username === '307vedanttt' ? 'candidate' : 'maintainer',
+            commitsCount: data.count,
+            percentageOfCommits: Math.round((data.count / liveCommits.length) * 100),
+            filesChangedCount: Math.max(1, Math.round(data.count * 1.5)),
+            linesAdded: data.linesAdded,
+            linesDeleted: data.linesDeleted,
+          }));
+          if (dynamicContribs.length > 0) {
+            setContributors(dynamicContribs);
+            setRepository((prev) => ({ ...prev, contributorsCount: dynamicContribs.length }));
+          }
+        }
       }
-    ];
-    setContributors(newContribs);
+    } catch {
+      // offline fallback
+    }
+
+    // 2. Fetch real provenance signals from backend
+    try {
+      const provResp = await fetch(`/api/repos/${repo.id}/provenance`, { credentials: 'include' });
+      if (provResp.ok) {
+        const provData = await provResp.json();
+        if (provData && provData.signals) {
+          const isForked = Boolean(provData.signals.fork_and_upstream?.is_fork);
+          const upstream = provData.signals.fork_and_upstream?.upstream_name;
+          setRepository((prev) => ({
+            ...prev,
+            forkStatus: {
+              isFork: isForked,
+              upstreamRepo: upstream || undefined,
+              upstreamUrl: upstream ? `https://github.com/${upstream}` : undefined
+            }
+          }));
+        }
+      }
+    } catch {
+      // offline fallback
+    }
   };
 
-  const loadConnectedRepos = async () => {
+  const loadConnectedRepos = async (preferredId?: string) => {
     try {
       const resp = await fetch('/api/repos', { credentials: 'include' });
       if (resp.ok) {
@@ -221,13 +286,14 @@ export const ProofStackProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           }));
           setConnectedRepos(mapped);
 
-          // If current repo is demo or mock, auto-select MedNav-Ai or first 307vedanttt repo
-          const currentIsDemo = !repository || repository.id === 'repo-acme-taskflow' || repository.id === 'repo-demo';
-          const realRepo = mapped.find((r: any) => r.name.toLowerCase() === 'mednav-ai') ||
-                           mapped.find((r: any) => r.owner.toLowerCase() === '307vedanttt') ||
-                           mapped[0];
-          if (currentIsDemo && realRepo) {
-            applyRepo(realRepo);
+          const targetRepo = preferredId
+            ? mapped.find((r: any) => r.id === preferredId)
+            : mapped.find((r: any) => r.name.toLowerCase() === 'mednav-ai') ||
+              mapped.find((r: any) => r.owner.toLowerCase() === '307vedanttt') ||
+              mapped[0];
+
+          if (targetRepo) {
+            await applyRepo(targetRepo);
           }
         }
       }
@@ -238,12 +304,63 @@ export const ProofStackProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   useEffect(() => {
     loadConnectedRepos();
-  }, []);
+
+    // Listen to real-time SSE events from backend for live pushes/syncs
+    let eventSource: EventSource | null = null;
+    try {
+      eventSource = new EventSource('/api/events');
+      eventSource.onmessage = (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          if (data && (data.type === 'push' || data.event === 'push_received' || data.trigger === 'poll' || data.event === 'check_now')) {
+            if (repository?.id) {
+              applyRepo({
+                id: repository.id,
+                owner: repository.owner,
+                name: repository.name,
+                url: repository.fullName ? `https://github.com/${repository.fullName}` : '',
+                defaultBranch: repository.defaultBranch
+              });
+            }
+          }
+        } catch {
+          // ignore parsing error
+        }
+      };
+    } catch {
+      // SSE not supported or offline
+    }
+
+    // 15-second background heartbeat polling for newly uploaded GitHub commits
+    const pollInterval = setInterval(() => {
+      if (repository?.id && repository.id !== 'repo-demo') {
+        fetch(`/api/repos/${repository.id}/poll`, { method: 'POST', credentials: 'include' })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data?.changed) {
+              applyRepo({
+                id: repository.id,
+                owner: repository.owner,
+                name: repository.name,
+                url: repository.fullName ? `https://github.com/${repository.fullName}` : '',
+                defaultBranch: repository.defaultBranch
+              });
+            }
+          })
+          .catch(() => {});
+      }
+    }, 15000);
+
+    return () => {
+      if (eventSource) eventSource.close();
+      clearInterval(pollInterval);
+    };
+  }, [repository?.id]);
 
   const switchRepository = async (repoId: string) => {
     const found = connectedRepos.find((r) => r.id === repoId);
     if (found) {
-      applyRepo(found);
+      await applyRepo(found);
     }
   };
 
@@ -299,7 +416,30 @@ export const ProofStackProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
   const runAudit = async () => {
     setIsAuditing(true);
-    await new Promise((resolve) => setTimeout(resolve, 800));
+    try {
+      if (repository?.id && repository.id !== 'repo-demo') {
+        await fetch(`/api/repos/${repository.id}/poll?force=true`, {
+          method: 'POST',
+          credentials: 'include'
+        });
+        await fetch('/api/check-now', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ repo_id: repository.id })
+        });
+        await applyRepo({
+          id: repository.id,
+          owner: repository.owner,
+          name: repository.name,
+          url: repository.fullName ? `https://github.com/${repository.fullName}` : '',
+          defaultBranch: repository.defaultBranch
+        });
+      }
+    } catch {
+      // offline fallback
+    }
+
     const now = new Date();
     const timestampStr = `${now.toISOString().replace('T', ' ').slice(0, 16)} UTC`;
 

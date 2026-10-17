@@ -1,0 +1,177 @@
+=== SLIDE 1: ppt/slides/slide1.xml ===
+THE BATTLE WITH INFINITE POSSIBILITIES
+PROOFSTACK
+A COACH THAT PREDICTS WHAT YOUR NEXT COMMIT WILL PROVE
+TEAM NAME
+Paradox
+TEAM MEMBERS
+Om Bhosale
+Vedant Patake
+Sameeksha Tarale
+Ketaki Sarode
+INSTITUTION
+NMIET
+AI CAREER COACH  ·  AGENTIC AI TRACK
+
+
+=== SLIDE 2: ppt/slides/slide2.xml ===
+IDEA / SOLUTION / PROTOTYPE
+PROOFSTACK
+01
+A coach that predicts your next commit, then checks it
+Your resume says what you claim. Your repo proves what you did.
+RESUME CLAIMS
+WHAT THE CODE PROVES
+illustrative
+SQL
+?
+NOT SHOWN IN SCOPE
+No SQL in 41 files · not proof of absence
+APIs
+?
+DEMONSTRATED (STRONG)
+api/routes.py · L12–30 · handler + test
+Testing
+?
+DEMONSTRATED (BASIC)
+tests/test_api.py · 1 signal type
+Docker
+?
+UNCLEAR
+Private repo skipped · limited analysis
+RECOMMENDATION
+If your next commit adds a tested query on a route…
+NOT SHOWN IN SCOPE
+DEMONSTRATED (STRONG)
+Must NOT change: Testing
+Stays a Recommendation until it lands
+THE LOOP · RE-RUNS ON EVERY PUSH (WEBHOOK + POLLING FALLBACK)
+Job requirements
+Repo evidence
+Gap assessment
+Commit Contract
+Actual commit
+Auto-reassess
+
+
+=== SLIDE 3: ppt/slides/slide3.xml ===
+TECHNICAL APPROACH
+PROOFSTACK
+02
+Rules decide. The LLM only confirms.
+Every status is computed by rules. The LLM can only confirm or reject a candidate.
+Job posting
+GitHub push / poll
+SECURE BY DESIGN
+Read-only agent
+Signed webhooks
+SSRF-safe fetch
+1
+Extractor
+Verbatim source quotes. SSRF-safe fetch
+2
+Evidence Engine
+Detectors + guard + provenance audit
+3
+LLM Verifier
+Confirms or rejects only. Temp 0, cached
+4
+Assessment
+Rule-based. Only writer of status
+5
+Signed Snapshot
+SHA-256 chain, Ed25519-signed head
+6
+Live Outputs
+Repo audit, proof map, Agent Trace
+only LLM step
+HOLLOW EVIDENCE → REFUSED
+Empty test, assert True
+Dependency never imported
+SQL only in a README fence
+GUARD
+REAL USE → COUNTED
+Assertions that call project code
+Query reachable from a route
+Dockerfile with real build steps
+1 signal type
+BASIC
+2 signal types
+STRONG
+LLM alone
+BASIC MAX
+
+
+=== SLIDE 4: ppt/slides/slide4.xml ===
+IMPACT AND BENEFITS
+PROOFSTACK
+03
+Who benefits, and how we'll know
+One commit turns a gap into proof — and we measure how fast.
+ONE COMMIT, VERIFIABLY CLOSED
+example
+1 · GAP SHOWN
+Files scanned are listed
+SQL
+NOT SHOWN IN SCOPE
+Evidence coverage 42%
+2 · COMMIT PUSHED
+Webhook or polling detects it
+Push to GitHub
+3 · VERIFIABLY CLOSED
+Evidence cites the changed files
+SQL
+DEMONSTRATED (STRONG)
+Evidence coverage 58%
+TIME BETWEEN = OUR SUCCESS METRIC
+Students
+See exactly what to commit next
+Before/after diff shows each gap closing
+Placement cells
+Verified skills, not keyword resumes
+Provenance signals, tamper-evident receipts
+Mentors
+Coach the gaps that are proven real
+Absence receipts list files and rules checked
+DESIGNED TO MEET EVERY PROBLEM-STATEMENT RULE
+Real posting, source link kept
+Real GitHub integration
+Auto-detect: webhook + polling
+Every claim traceable to code
+Missing signal is never a guess
+Recommendations kept separate
+
+
+=== SLIDE 5: ppt/slides/slide5.xml ===
+FUTURE SCOPE & CHALLENGES
+04
+Limits said first. Roadmap next.
+CHALLENGES · said first
+4 detector families, 2 ecosystems
+No detector in this version → Unclear. Python and JS/TS only
+Evidence of use, not proficiency
+Static analysis can’t show skill level or authorship
+Heuristics can miss unusual code
+Thin signals → Unclear; “this evidence is wrong” button
+Rate limits & private repos
+Marked Unclear; banner names what was skipped
+Small benchmark
+Shown with n and 95% Wilson interval
+Provenance is a signal, not proof
+Large uploads flag review, never accusation
+ROADMAP · beyond the core build
+Multi-job comparison
+Cut from this build; roadmap only
+Resume bullets from verified proof
+Cut from this build; roadmap only
+PR impact preview
+Cut from this build; roadmap only
+MCP server (agents read-only)
+Tools: get_gaps, get_evidence, verify_receipt
+Public ledger + offline verify CLI
+Receipts show integrity, not authorship
+More languages and detectors
+Today: Python, JS/TS and 4 skill families
+We never claim more than the code proves — and we tell you what to commit next.
+
+

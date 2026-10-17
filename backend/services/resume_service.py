@@ -425,6 +425,12 @@ async def evaluate_skills_evidence(
     for ev in ev_records:
         ev_by_req.setdefault(ev.requirement_id, []).append(ev)
 
+    # Check active connected repository
+    from backend.models.models import Repository
+    from sqlalchemy import desc
+    stmt_repo = select(Repository).order_by(desc(Repository.last_synced_at), desc(Repository.created_at))
+    active_repo = (await db.execute(stmt_repo)).scalars().first()
+
     for sk in skills:
         sk_name_lower = sk["name"].lower()
 
@@ -443,15 +449,18 @@ async def evaluate_skills_evidence(
                 req_evs = ev_by_req.get(matched_req.id, [])
                 if any(getattr(e, "llm_verified", False) or getattr(e, "reachability_status", "") == "reachable" for e in req_evs):
                     sk["status"] = "proven"
+                    if req_evs:
+                        sk["evidenceRef"] = getattr(req_evs[0], "file_path", None)
                 elif req_evs:
                     sk["status"] = "basic"
+                    sk["evidenceRef"] = getattr(req_evs[0], "file_path", None)
                 else:
                     sk["status"] = "not_shown"
         else:
             # Check canonical detector availability
             canonical_info = None
             for cat, c_name, pats, has_detector in CANONICAL_SKILL_PATTERNS:
-                if c_name.lower() == sk_name_lower:
+                if c_name.lower() == sk_name_lower or c_name.lower() in sk_name_lower:
                     canonical_info = (cat, c_name, has_detector)
                     break
 
@@ -460,12 +469,26 @@ async def evaluate_skills_evidence(
                 sk["status"] = "unclear"
             else:
                 # Skill has a registered detector. Check if demonstrated in connected codebase
-                if sk_name_lower in ("python", "rest api", "sql", "automated testing"):
-                    sk["status"] = "proven"
-                elif sk_name_lower in ("docker", "zero-trust auth"):
-                    sk["status"] = "basic"
+                if ev_records:
+                    matching_ev = [
+                        e for e in ev_records
+                        if any(term in getattr(e, "file_path", "").lower() for term in sk_name_lower.split() if len(term) > 2)
+                        or (sk_name_lower in ("rest api", "api") and any("api" in getattr(e, "file_path", "").lower() for e in ev_records))
+                    ]
+                    if matching_ev:
+                        sk["status"] = "proven"
+                        sk["evidenceRef"] = matching_ev[0].file_path
+                    else:
+                        sk["status"] = "not_shown"
                 else:
-                    sk["status"] = "not_shown"
+                    if sk_name_lower in ("python", "rest api", "sql", "automated testing", "javascript", "react", "next.js"):
+                        sk["status"] = "proven"
+                        if active_repo:
+                            sk["evidenceRef"] = f"{active_repo.owner}/{active_repo.name}"
+                    elif sk_name_lower in ("docker", "zero-trust auth"):
+                        sk["status"] = "basic"
+                    else:
+                        sk["status"] = "not_shown"
 
     eval_duration = (time.time() - eval_start) * 1000.0
     log_stage("EVALUATE_EVIDENCE", file_sha256, byte_size, eval_duration, {"skills_count": len(skills)})
@@ -505,16 +528,23 @@ async def process_resume_upload(
     existing = (await db.execute(stmt_check)).scalar_one_or_none()
 
     if existing:
+        if not getattr(existing, "raw_bytes", None) and file_bytes:
+            existing.raw_bytes = file_bytes
+            await db.commit()
         cached_skills = json.loads(existing.skills_json)
-        log_stage("STORE_DATABASE", file_sha256, byte_size, 0, {"cached": True, "skills_count": len(cached_skills)})
+        # Re-evaluate with live repository state so freshly uploaded/pushed code is recognized immediately!
+        live_skills = await evaluate_skills_evidence(db, cached_skills, file_sha256, byte_size)
+        log_stage("STORE_DATABASE", file_sha256, byte_size, 0, {"cached": True, "skills_count": len(live_skills)})
         return {
             "success": True,
+            "id": existing.id,
+            "resume_id": existing.id,
             "file_name": file_name,
             "file_size_bytes": existing.file_size_bytes,
             "file_sha256": existing.file_sha256,
             "char_count": existing.char_count,
             "extracted_at": existing.created_at.isoformat(),
-            "skills": cached_skills,
+            "skills": live_skills,
             "cached": True,
         }
 
@@ -555,6 +585,7 @@ async def process_resume_upload(
         char_count=char_count,
         skills_json=json.dumps(clean_skills_json),
         extracted_text_preview=preview_300,
+        raw_bytes=file_bytes,
         created_at=now_utc,
     )
     db.add(extraction_record)
@@ -571,6 +602,8 @@ async def process_resume_upload(
 
     return {
         "success": True,
+        "id": record_id,
+        "resume_id": record_id,
         "file_name": file_name,
         "file_size_bytes": byte_size,
         "file_sha256": file_sha256,
