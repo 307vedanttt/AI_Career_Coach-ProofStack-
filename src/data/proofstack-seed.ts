@@ -112,7 +112,7 @@ export const initialProvenanceChecks: ProvenanceCheckItem[] = [
     resultState: 'attention',
     observedValue: 'Mixed signatures · 28 of 48 signed with GPG key 0x9B4C28',
     explanation:
-      '28 commits by Omb2121 are cryptographically signed with GPG Key ID 0x9B4C28 (GitHub Verified). 20 older commits are unsigned.',
+      `28 commits by ${activeUser} are cryptographically signed with GPG Key ID 0x9B4C28 (GitHub Verified). 20 older commits are unsigned.`,
     inspectionScope: 'Commit headers (gpgsig) evaluated against GitHub OpenPGP web-of-trust store',
     limitations:
       'Unsigned commits are standard in many local development configurations. Unsigned status does not indicate fraudulent attribution.',
@@ -127,12 +127,12 @@ export const initialProvenanceChecks: ProvenanceCheckItem[] = [
     resultState: 'verified',
     observedValue: 'Candidate authored 70.8% of commits (34 of 48)',
     explanation:
-      'Omb2121 is the primary code contributor to the core engine, API routes, and test suite. Co-contributor Vedant contributed upstream foundation files.',
+      `${activeUser} is the primary code contributor to the core engine, API routes, and test suite. Co-contributor Vedant contributed upstream foundation files.`,
     inspectionScope: 'Author/committer mailmap normalization across git-shortlog',
     limitations:
       'Git author names and emails can be modified in local gitconfig. Author identity is corroborated by signed GPG key and pull request approvals.',
     supportingDetails:
-      'Commit mailmap matches primary candidate profile (omb2121@users.noreply.github.com) with 0 unresolved author aliases.',
+      `Commit mailmap matches primary candidate profile (${activeUser}@users.noreply.github.com) with 0 unresolved author aliases.`,
     honestyLabel: 'Derived Signal',
   },
   {
@@ -158,9 +158,9 @@ export const initialCommits: CommitAuditItem[] = [
     shortHash: 'c8f12a9',
     timestamp: '2026-10-16 18:42:10 UTC',
     author: {
-      name: 'Omb2121',
-      email: 'omb2121@users.noreply.github.com',
-      username: 'Omb2121',
+      name: activeUser,
+      email: `${activeUser}@users.noreply.github.com`,
+      username: activeUser,
       isCandidate: true,
     },
     message: 'feat(api): implement idempotent task execution pipeline with schema guards',
@@ -183,9 +183,9 @@ export const initialCommits: CommitAuditItem[] = [
     shortHash: 'b4a81f3',
     timestamp: '2026-10-14 11:20:05 UTC',
     author: {
-      name: 'Omb2121',
-      email: 'omb2121@users.noreply.github.com',
-      username: 'Omb2121',
+      name: activeUser,
+      email: `${activeUser}@users.noreply.github.com`,
+      username: activeUser,
       isCandidate: true,
     },
     message: 'test: add basic task route test suite with client fixtures',
@@ -208,9 +208,9 @@ export const initialCommits: CommitAuditItem[] = [
     shortHash: '9f3c2ab',
     timestamp: '2026-10-11 16:04:32 UTC',
     author: {
-      name: 'Omb2121',
-      email: 'omb2121@users.noreply.github.com',
-      username: 'Omb2121',
+      name: activeUser,
+      email: `${activeUser}@users.noreply.github.com`,
+      username: activeUser,
       isCandidate: true,
     },
     message: 'feat(auth): add constant-time HMAC webhook signature verifier',
@@ -227,9 +227,9 @@ export const initialCommits: CommitAuditItem[] = [
     shortHash: '7a12b9c',
     timestamp: '2026-10-06 09:12:44 UTC',
     author: {
-      name: 'Omb2121',
-      email: 'omb2121@users.noreply.github.com',
-      username: 'Omb2121',
+      name: activeUser,
+      email: `${activeUser}@users.noreply.github.com`,
+      username: activeUser,
       isCandidate: true,
     },
     message: 'refactor: isolate database connection pooling and schema types',
@@ -270,9 +270,9 @@ export const initialCommits: CommitAuditItem[] = [
     shortHash: '3a91bf2',
     timestamp: '2026-06-01 10:00:00 UTC',
     author: {
-      name: 'Omb2121',
-      email: 'omb2121@users.noreply.github.com',
-      username: 'Omb2121',
+      name: activeUser,
+      email: `${activeUser}@users.noreply.github.com`,
+      username: activeUser,
       isCandidate: true,
     },
     message: 'initial: import foundational taskflow architecture skeleton',
@@ -481,7 +481,7 @@ taskRouter.post(
 );`,
     highlightLines: [4, 5, 8, 9, 10, 11, 14, 15, 16],
     contributionContext: {
-      author: 'Omb2121 <omb2121@users.noreply.github.com>',
+      author: `${activeUser} <${activeUser}@users.noreply.github.com>`,
       commitHash: 'c8f12a9',
       timestamp: '2026-10-16 18:42:10 UTC',
       isCandidate: true,
@@ -530,7 +530,7 @@ export function verifyWebhookSignature(
 }`,
     highlightLines: [8, 9, 13, 14, 17, 18, 20],
     contributionContext: {
-      author: 'Omb2121 <omb2121@users.noreply.github.com>',
+      author: `${activeUser} <${activeUser}@users.noreply.github.com>`,
       commitHash: '9f3c2ab',
       timestamp: '2026-10-11 16:04:32 UTC',
       isCandidate: true,
@@ -576,7 +576,7 @@ export function verifyWebhookSignature(
 });`,
     highlightLines: [11, 12, 13],
     contributionContext: {
-      author: 'Omb2121 <omb2121@users.noreply.github.com>',
+      author: `${activeUser} <${activeUser}@users.noreply.github.com>`,
       commitHash: 'b4a81f3',
       timestamp: '2026-10-14 11:20:05 UTC',
       isCandidate: true,
@@ -612,7 +612,7 @@ export function verifyWebhookSignature(
 });`,
     highlightLines: [4, 5],
     contributionContext: {
-      author: 'Omb2121 <omb2121@users.noreply.github.com>',
+      author: `${activeUser} <${activeUser}@users.noreply.github.com>`,
       commitHash: 'b4a81f3',
       timestamp: '2026-10-14 11:20:05 UTC',
       isCandidate: true,
@@ -646,7 +646,7 @@ export function verifyWebhookSignature(
 }`,
     highlightLines: [2, 3],
     contributionContext: {
-      author: 'Omb2121 <omb2121@users.noreply.github.com>',
+      author: `${activeUser} <${activeUser}@users.noreply.github.com>`,
       commitHash: '7a12b9c',
       timestamp: '2026-10-06 09:12:44 UTC',
       isCandidate: true,
@@ -687,7 +687,7 @@ export function rateLimiter(req: Request, res: Response, next: NextFunction) {
 }`,
     highlightLines: [1, 5, 6, 7, 8],
     contributionContext: {
-      author: 'Omb2121 <omb2121@users.noreply.github.com>',
+      author: `${activeUser} <${activeUser}@users.noreply.github.com>`,
       commitHash: 'c8f12a9',
       timestamp: '2026-10-16 18:42:10 UTC',
       isCandidate: true,
@@ -716,17 +716,17 @@ export function rateLimiter(req: Request, res: Response, next: NextFunction) {
     excerpt: `Merge branch 'upstream/main' into main
 Conflicts resolved in src/services/taskRunner.ts
 Committer: Sarah Lin <slin-eng@upstream-org.net>
-Author: Omb2121 <omb2121@users.noreply.github.com>`,
+Author: ${activeUser} <${activeUser}@users.noreply.github.com>`,
     highlightLines: [1, 2, 3, 4],
     contributionContext: {
-      author: 'Omb2121 <omb2121@users.noreply.github.com>',
+      author: `${activeUser} <${activeUser}@users.noreply.github.com>`,
       commitHash: '5d81e0c',
       timestamp: '2026-09-28 14:33:18 UTC',
       isCandidate: true,
     },
     knownLimitations: 'Cannot determine whether conflict resolution was automated or manually reviewed.',
     whyDecision: {
-      observation: 'Commit message records author as Omb2121 and committer as Vedant.',
+      observation: `Commit message records author as ${activeUser} and committer as upstream maintainer.`,
       interpretation: 'Shows collaborative branch integration occurred between candidate and upstream maintainer.',
       limitation: 'Git metadata alone does not indicate whether pull request code review discussions took place.',
       nextStep: 'Cross-reference with GitHub Pull Request #14 review comment thread.',

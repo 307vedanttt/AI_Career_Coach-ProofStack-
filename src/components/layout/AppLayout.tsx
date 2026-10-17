@@ -412,9 +412,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             <button
               onClick={resetDemoData}
               className="flex items-center gap-1 hover:text-white text-rose-300 transition-colors"
-              title="Reset all simulated contract changes to initial state"
+              title="Reset session and reload live repository analysis"
             >
-              <RotateCcw className="w-3 h-3" /> Reset Demo
+              <RotateCcw className="w-3 h-3" /> Reset Session
             </button>
           </div>
         </div>

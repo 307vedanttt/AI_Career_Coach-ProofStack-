@@ -16,8 +16,10 @@ import {
 import { ResumeUploadAnalysis } from '../components/resume/ResumeUploadAnalysis';
 import { AtsReadabilityPanel } from '../components/resume/AtsReadabilityPanel';
 import { DeepResumeAuditPanel } from '../components/resume/DeepResumeAuditPanel';
+import { useProofStack } from '../context/ProofStackContext';
 
 export const ResumePage: React.FC = () => {
+  const { repository, evidenceItems } = useProofStack();
   const [data, setData] = useState<ResumeAttestationData | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
   const [activeFootnote, setActiveFootnote] = useState<number | null>(null);
@@ -31,10 +33,26 @@ export const ResumePage: React.FC = () => {
 
   // Evidence footnotes mapping
   const footnoteDetails: Record<number, { title: string; sha: string; file: string }> = {
-    1: { title: 'REST API APIRouter Mounted Invariant', sha: data?.commitHash || 'a182c4f', file: 'src/core/router.py' },
-    2: { title: 'Automated Pytest Regression Suite Invariant', sha: '8e41c0d', file: 'tests/test_router.py' },
-    3: { title: 'Docker Container Multi-Stage Dockerfile', sha: '7a12b9c', file: 'Dockerfile' },
-    4: { title: 'Go Token Bucket Limiter Monotonic Mutex', sha: 'a182c4f', file: 'src/auth/token.go' },
+    1: {
+      title: evidenceItems[0]?.title || `${repository?.primaryLanguage || 'Code'} Modular Architecture`,
+      sha: evidenceItems[0]?.contributionContext?.commitHash || repository?.headSha?.slice(0, 7) || data?.commitHash || 'a182c4f',
+      file: evidenceItems[0]?.filePath || 'src/components/index.tsx',
+    },
+    2: {
+      title: evidenceItems[1]?.title || 'Automated Regression Suite Invariant',
+      sha: evidenceItems[1]?.contributionContext?.commitHash || '8e41c0d',
+      file: evidenceItems[1]?.filePath || 'tests/components.test.tsx',
+    },
+    3: {
+      title: evidenceItems[2]?.title || 'Modular Boundary & Separation of Concerns',
+      sha: evidenceItems[2]?.contributionContext?.commitHash || '7a12b9c',
+      file: evidenceItems[2]?.filePath || 'src/services/api.ts',
+    },
+    4: {
+      title: evidenceItems[3]?.title || 'Merkle DAG & Cryptographic Commit Provenance',
+      sha: evidenceItems[3]?.contributionContext?.commitHash || repository?.headSha?.slice(0, 7) || 'a182c4f',
+      file: evidenceItems[3]?.filePath || `.git/refs/heads/${repository?.defaultBranch || 'main'}`,
+    },
   };
 
   const handleCopyProofLink = () => {
@@ -181,19 +199,19 @@ export const ResumePage: React.FC = () => {
             </div>
 
             <h1 className="font-display text-4xl font-bold tracking-tight text-neutral-900">
-              {data?.candidate?.name || 'Verified Engineer'}
+              {data?.candidate?.name || repository?.owner || 'Verified Engineer'}
             </h1>
 
             <p className="text-base text-neutral-600 mt-1 font-medium">
-              {data?.candidate?.title || 'Distributed Systems & Backend Engineer'}
+              {data?.candidate?.title || `${repository?.primaryLanguage || 'Software'} Architecture Engineer`}
             </p>
 
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs text-neutral-500 mt-3">
-              <span className="hover:text-black">{data?.candidate?.email || 'candidate@proofstack.dev'}</span>
+              <span className="hover:text-black">{data?.candidate?.email || `${repository?.owner || 'candidate'}@users.noreply.github.com`}</span>
               <span>/</span>
-              <span className="hover:text-black">{data?.candidate?.github || 'github.com/verified'}</span>
+              <span className="hover:text-black">{data?.candidate?.github || (repository?.fullName ? `github.com/${repository.fullName}` : 'github.com/developer')}</span>
               <span>/</span>
-              <span>{data?.candidate?.location || 'San Francisco, CA'}</span>
+              <span>{data?.candidate?.location || 'Remote / Worldwide'}</span>
               <span>/</span>
               <span className="text-[#00BA81] font-semibold">
                 Clearance: {data?.candidate?.clearance || 'Level 3 Attestation'}

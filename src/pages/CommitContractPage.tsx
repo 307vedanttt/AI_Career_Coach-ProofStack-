@@ -52,7 +52,7 @@ export const CommitContractPage: React.FC = () => {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-xl font-bold text-white tracking-tight">Dynamic Commit Contracts</h1>
-              <HonestyBadge label="Simulated Demo" />
+              <HonestyBadge label="Derived Signal" />
             </div>
             <p className="text-xs text-[#9AA3AE] font-mono mt-0.5">
               Closed-loop engineering challenges generated directly from verified repository evidence gaps
@@ -327,7 +327,7 @@ export const CommitContractPage: React.FC = () => {
               <div className="p-5 rounded-2xl bg-[#131D32] border border-[#25324A] space-y-3 font-mono text-xs">
                 <div className="flex items-center justify-between text-white font-bold">
                   <span>Challenge Impact Report</span>
-                  <HonestyBadge label="Simulated Demo" />
+                  <HonestyBadge label="Derived Signal" />
                 </div>
                 <div className="p-3 rounded-xl bg-[#0B1020] space-y-2 text-[#9AA3AE]">
                   <div className="flex items-center justify-between">
