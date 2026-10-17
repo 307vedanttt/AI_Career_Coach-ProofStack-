@@ -79,6 +79,7 @@ pnpm-debug.log*
 *.sw?
 .DS_Store
 Thumbs.db
+.vercel/
 
 # Backup folders
 AI-CarrerCoach-main/
