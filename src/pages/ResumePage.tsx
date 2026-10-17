@@ -1,22 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppLayout } from '../components/layout/AppLayout';
 import { Button } from '../components/ui/Button';
-import { mockResumeAttestation, mockSystemMetrics } from '../lib/api';
+import { getResumeAttestation } from '../lib/api';
+import { ResumeAttestationData } from '../types/api';
 import {
   Download,
   Check,
   ShieldCheck,
   Share2,
+  FileUp,
+  FileText,
 } from 'lucide-react';
+import { ResumeUploadAnalysis } from '../components/resume/ResumeUploadAnalysis';
 
 export const ResumePage: React.FC = () => {
-  const [data] = useState(mockResumeAttestation);
+  const [data, setData] = useState<ResumeAttestationData | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
   const [activeFootnote, setActiveFootnote] = useState<number | null>(null);
+  const [activeView, setActiveView] = useState<'all' | 'upload' | 'dossier'>('all');
+
+  useEffect(() => {
+    getResumeAttestation()
+      .then(setData)
+      .catch(() => {});
+  }, []);
 
   // Evidence footnotes mapping
   const footnoteDetails: Record<number, { title: string; sha: string; file: string }> = {
-    1: { title: 'REST API APIRouter Mounted Invariant', sha: '9f3c2ab', file: 'src/core/router.py' },
+    1: { title: 'REST API APIRouter Mounted Invariant', sha: data?.commitHash || 'a182c4f', file: 'src/core/router.py' },
     2: { title: 'Automated Pytest Regression Suite Invariant', sha: '8e41c0d', file: 'tests/test_router.py' },
     3: { title: 'Docker Container Multi-Stage Dockerfile', sha: '7a12b9c', file: 'Dockerfile' },
     4: { title: 'Go Token Bucket Limiter Monotonic Mutex', sha: 'a182c4f', file: 'src/auth/token.go' },
@@ -33,8 +44,62 @@ export const ResumePage: React.FC = () => {
   };
 
   return (
-    <AppLayout metrics={mockSystemMetrics}>
-      <div className="max-w-[1360px] w-full mx-auto px-4 py-8 flex flex-col xl:flex-row items-center xl:items-start justify-center gap-8 select-none">
+    <AppLayout>
+      {/* Top View Selector: All Views vs Upload Engine vs Attested Dossier */}
+      <div className="max-w-[1360px] w-full mx-auto px-4 pt-4 pb-2 flex flex-wrap items-center justify-between border-b border-white/10 mb-6 font-mono text-xs gap-3">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveView('all')}
+            className={`px-3 py-1.5 rounded-lg flex items-center gap-2 font-semibold transition-all ${
+              activeView === 'all'
+                ? 'bg-emerald-500 text-[#0A0C0F] shadow-[0_0_12px_rgba(52,211,153,0.3)]'
+                : 'text-[#9AA3AE] hover:text-white bg-white/5'
+            }`}
+          >
+            <span>All Workspace</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveView('upload')}
+            className={`px-3 py-1.5 rounded-lg flex items-center gap-2 font-semibold transition-all ${
+              activeView === 'upload'
+                ? 'bg-emerald-500 text-[#0A0C0F] shadow-[0_0_12px_rgba(52,211,153,0.3)]'
+                : 'text-[#9AA3AE] hover:text-white bg-white/5'
+            }`}
+          >
+            <FileUp className="w-3.5 h-3.5" />
+            <span>Upload & Analysis</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveView('dossier')}
+            className={`px-3 py-1.5 rounded-lg flex items-center gap-2 font-semibold transition-all ${
+              activeView === 'dossier'
+                ? 'bg-emerald-500 text-[#0A0C0F] shadow-[0_0_12px_rgba(52,211,153,0.3)]'
+                : 'text-[#9AA3AE] hover:text-white bg-white/5'
+            }`}
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span>Attested Dossier</span>
+          </button>
+        </div>
+
+        <span className="text-[#9AA3AE] text-[11px] hidden sm:inline">
+          Deterministic Claim Verification
+        </span>
+      </div>
+
+      {/* Upload and Analysis Engine Section */}
+      {(activeView === 'all' || activeView === 'upload') && (
+        <div className="mb-12 w-full">
+          <ResumeUploadAnalysis />
+        </div>
+      )}
+
+      {/* Attested PDF Dossier Section */}
+      {(activeView === 'all' || activeView === 'dossier') && (
+        <div className="max-w-[1360px] w-full mx-auto px-4 py-4 flex flex-col xl:flex-row items-center xl:items-start justify-center gap-8 select-none">
         {/* ======================================================== */}
         {/* PHYSICAL A4 WHITE DOSSIER (Crisp White Substrate)        */}
         {/* ======================================================== */}
@@ -56,7 +121,7 @@ export const ResumePage: React.FC = () => {
                   ATTESTED PROOF
                 </span>
                 <span className="font-mono text-[9px] text-[#00BA81] font-bold">
-                  COMMIT #9F3C2AB • 2025
+                  COMMIT #{data?.commitHash?.toUpperCase() || 'A182C4F'} • 2026
                 </span>
               </div>
             </div>
@@ -66,7 +131,7 @@ export const ResumePage: React.FC = () => {
           <header className="pb-6 border-b border-neutral-200">
             <div className="flex items-center gap-2 mb-2 font-mono text-xs text-neutral-500">
               <span className="w-2 h-2 rounded-full bg-[#00BA81]" />
-              <span>AUDIT IDENTIFIER: #9f3c2ab</span>
+              <span>AUDIT IDENTIFIER: #{data?.commitHash || 'a182c4f'}</span>
               <span>•</span>
               <span className="bg-neutral-100 text-neutral-800 px-1.5 py-0.5 rounded text-[10px] font-semibold">
                 MERKLE VERIFIED
@@ -74,22 +139,22 @@ export const ResumePage: React.FC = () => {
             </div>
 
             <h1 className="font-display text-4xl font-bold tracking-tight text-neutral-900">
-              {data.candidate.name}
+              {data?.candidate?.name || 'Verified Engineer'}
             </h1>
 
             <p className="text-base text-neutral-600 mt-1 font-medium">
-              {data.candidate.title}
+              {data?.candidate?.title || 'Distributed Systems & Backend Engineer'}
             </p>
 
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs text-neutral-500 mt-3">
-              <span className="hover:text-black">{data.candidate.email}</span>
+              <span className="hover:text-black">{data?.candidate?.email || 'candidate@proofstack.dev'}</span>
               <span>/</span>
-              <span className="hover:text-black">{data.candidate.github}</span>
+              <span className="hover:text-black">{data?.candidate?.github || 'github.com/verified'}</span>
               <span>/</span>
-              <span>{data.candidate.location}</span>
+              <span>{data?.candidate?.location || 'San Francisco, CA'}</span>
               <span>/</span>
               <span className="text-[#00BA81] font-semibold">
-                Clearance: {data.candidate.clearance}
+                Clearance: {data?.candidate?.clearance || 'Level 3 Attestation'}
               </span>
             </div>
           </header>
@@ -100,7 +165,7 @@ export const ResumePage: React.FC = () => {
               Executive Summary
             </div>
             <p className="text-sm text-neutral-800 leading-relaxed">
-              {data.candidate.summary}
+              {data?.candidate?.summary || 'Engineering track record verified by cryptographic commit contracts.'}
             </p>
           </section>
 
@@ -322,8 +387,8 @@ export const ResumePage: React.FC = () => {
               </div>
             </div>
 
-            {/* QR Code Block */}
-            <div className="pt-4 border-t border-white/10 flex flex-col items-center text-center space-y-2">
+            {/* Desktop: QR Code Block */}
+            <div className="hidden sm:flex pt-4 border-t border-white/10 flex-col items-center text-center space-y-2">
               <span className="font-mono text-[10px] uppercase font-bold text-[#9AA3AE] tracking-wider">
                 Instant Recruiter Verification QR
               </span>
@@ -339,9 +404,22 @@ export const ResumePage: React.FC = () => {
                 SCAN TO VERIFY SIGNATURES
               </span>
             </div>
+
+            {/* Mobile (P6 rule): QR Code replaced by prominent 44px Share button */}
+            <div className="sm:hidden pt-4 border-t border-white/10 w-full">
+              <button
+                type="button"
+                onClick={handleCopyProofLink}
+                className="w-full min-h-[44px] rounded-xl bg-emerald-500 text-[#0A0C0F] font-mono font-bold text-sm flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all"
+              >
+                <Share2 className="w-4 h-4" />
+                <span>{copiedLink ? 'Proof Link Copied!' : 'Share Proof Dossier'}</span>
+              </button>
+            </div>
           </div>
         </aside>
       </div>
+      )}
     </AppLayout>
   );
 };

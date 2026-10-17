@@ -19,7 +19,7 @@ const steps: Step[] = [
   {
     number: '02',
     title: 'Paste a real posting',
-    description: 'Or test against Northwind benchmark.',
+    description: 'Or test against curated industry benchmarks.',
     icon: FileText,
   },
   {

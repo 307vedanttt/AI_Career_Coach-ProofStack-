@@ -19,19 +19,24 @@ export const SignatureFeaturesSection: React.FC = () => {
     if (shouldReduceMotion) return;
 
     const ctx = gsap.context(() => {
-      // 1. Panels rise with a stagger
+      // 1. Panels rise with a subtle stagger (progressive enhancement: visible by default)
       if (panelsRef.current) {
-        gsap.from(panelsRef.current.children, {
-          y: 40,
-          opacity: 0,
-          duration: 0.5,
-          stagger: 0.12,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: panelsRef.current,
-            start: 'top 80%',
-          },
-        });
+        gsap.fromTo(
+          panelsRef.current.children,
+          { y: 20, opacity: 0.9 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 0.45,
+            stagger: 0.08,
+            ease: 'power2.out',
+            scrollTrigger: {
+              trigger: sectionRef.current,
+              start: 'top 85%',
+              once: true,
+            },
+          }
+        );
       }
 
       // 2. Mini Treemap recolors on scroll
@@ -62,6 +67,12 @@ export const SignatureFeaturesSection: React.FC = () => {
       });
     }, sectionRef);
 
+    if (typeof document !== 'undefined' && document.fonts) {
+      document.fonts.ready.then(() => {
+        ScrollTrigger.refresh();
+      });
+    }
+
     return () => ctx.revert();
   }, [shouldReduceMotion]);
 
@@ -69,7 +80,7 @@ export const SignatureFeaturesSection: React.FC = () => {
     <section
       id="capabilities"
       ref={sectionRef}
-      className="relative py-28 lg:py-36 overflow-hidden border-t border-white/[0.06]"
+      className="relative py-12 lg:py-16 overflow-hidden border-t border-white/[0.06]"
       aria-label="Core Capabilities Bento Grid"
     >
       {/* Ambient Section Radial Glow */}
@@ -77,7 +88,7 @@ export const SignatureFeaturesSection: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="flex flex-col items-center text-center space-y-4 mb-20 max-w-3xl mx-auto">
+        <div className="flex flex-col items-center text-center space-y-3 mb-8 sm:mb-10 max-w-3xl mx-auto">
           <span className="font-mono text-xs font-semibold text-[#9AA3AE] tracking-[0.25em] uppercase px-3 py-1 rounded-full bg-white/5 border border-white/10">
             Core Capabilities
           </span>

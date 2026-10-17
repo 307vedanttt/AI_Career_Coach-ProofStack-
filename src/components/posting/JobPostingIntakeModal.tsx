@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { FileText, Sparkles, X, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { FileText, Sparkles, X, ArrowRight, CheckCircle2, AlertCircle } from 'lucide-react';
 import { Button } from '../ui/Button';
-import { setMockSignedIn, createJobPosting } from '../../lib/api';
-
+import { createJobPosting } from '../../lib/api';
 
 interface JobPostingIntakeModalProps {
   isOpen: boolean;
@@ -12,7 +11,7 @@ interface JobPostingIntakeModalProps {
   onIntakeComplete?: (jobTitle: string) => void;
 }
 
-const SAMPLE_POSTING = `Senior Backend Engineer — Northwind Labs
+const DEFAULT_POSTING_PROMPT = `Senior Backend Engineer — Distributed Systems
 
 Requirements:
 - Production persistence with SQL (SQLite / PostgreSQL schema migrations)
@@ -27,48 +26,37 @@ export const JobPostingIntakeModal: React.FC<JobPostingIntakeModalProps> = ({
   onIntakeComplete,
 }) => {
   const navigate = useNavigate();
-  const [postingText, setPostingText] = useState(SAMPLE_POSTING);
+  const [postingText, setPostingText] = useState(DEFAULT_POSTING_PROMPT);
   const [isProcessing, setIsProcessing] = useState(false);
   const [extractedCount, setExtractedCount] = useState<number | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleParse = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!postingText.trim()) return;
 
     setIsProcessing(true);
+    setErrorMsg(null);
     try {
-      await createJobPosting({
+      const res = await createJobPosting({
         title: 'Senior Backend Engineer',
         description: postingText,
-        company: 'Northwind Labs',
+        company: 'Distributed Systems',
       });
-      setExtractedCount(5);
+      const count = res.requirements_count || 5;
+      setExtractedCount(count);
       if (onIntakeComplete) {
         onIntakeComplete('Senior Backend Engineer');
       }
-      await setMockSignedIn(true);
       setTimeout(() => {
         setIsProcessing(false);
         onClose();
         navigate('/app');
-      }, 400);
-    } catch {
-      setExtractedCount(5);
-      if (onIntakeComplete) {
-        onIntakeComplete('Senior Backend Engineer');
-      }
-      await setMockSignedIn(true);
-      setTimeout(() => {
-        setIsProcessing(false);
-        onClose();
-        navigate('/app');
-      }, 400);
+      }, 500);
+    } catch (err: any) {
+      setIsProcessing(false);
+      setErrorMsg(err.message || 'Failed to ingest job posting. Please check your backend connection and try again.');
     }
-  };
-
-
-  const handleLoadSample = () => {
-    setPostingText(SAMPLE_POSTING);
   };
 
   if (!isOpen) return null;
@@ -78,101 +66,96 @@ export const JobPostingIntakeModal: React.FC<JobPostingIntakeModalProps> = ({
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
       role="dialog"
       aria-modal="true"
-      aria-labelledby="intake-title"
+      aria-labelledby="intake-modal-title"
     >
-      <div className="fixed inset-0" onClick={onClose} aria-hidden="true" />
-
       <motion.div
-        initial={{ opacity: 0, scale: 0.95, y: 16 }}
+        initial={{ opacity: 0, scale: 0.95, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.95, y: 16 }}
-        transition={{ duration: 0.2 }}
-        className="relative w-full max-w-2xl bg-[#12161B] border border-white/15 rounded-2xl shadow-2xl p-6 sm:p-8 text-[#F4F2EC] z-10 space-y-6"
+        exit={{ opacity: 0, scale: 0.95, y: 10 }}
+        className="relative w-full max-w-2xl bg-[#12161B] border border-white/15 rounded-2xl p-6 sm:p-8 shadow-2xl flex flex-col gap-6"
       >
         {/* Header */}
-        <div className="flex items-start justify-between">
-          <div className="space-y-1">
-            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-mono text-[10px] uppercase font-bold tracking-wider">
-              <Sparkles className="w-3 h-3" />
-              <span>BEAT 2: REQUIREMENT INTAKE</span>
+        <div className="flex items-center justify-between pb-4 border-b border-white/10">
+          <div className="flex items-center space-x-3">
+            <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+              <FileText className="w-5 h-5" />
             </div>
-            <h2 id="intake-title" className="font-display text-2xl text-white font-bold">
-              Paste Job Posting
-            </h2>
-            <p className="text-xs text-[#9AA3AE] font-mono">
-              ProofStack extracts hard technical invariants and maps them against verified code commits.
-            </p>
+            <div>
+              <h3 id="intake-modal-title" className="font-display text-xl font-bold text-white tracking-tight">
+                Job Posting Intake
+              </h3>
+              <p className="font-mono text-xs text-[#9AA3AE] mt-0.5">
+                Deterministic regex & schema parser maps posting sentences into formal invariants.
+              </p>
+            </div>
           </div>
           <button
+            type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-[#9AA3AE] hover:text-white hover:bg-white/5 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-8 h-8 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[#9AA3AE] hover:text-white transition-colors"
             aria-label="Close dialog"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* Textarea Form */}
-        <form onSubmit={handleParse} className="space-y-4">
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-xs font-mono text-[#9AA3AE]">
-              <label htmlFor="posting-textarea" className="flex items-center gap-1.5">
-                <FileText className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Job Description or Requirements Spec</span>
-              </label>
-              <button
-                type="button"
-                onClick={handleLoadSample}
-                className="text-[11px] text-emerald-400 hover:underline focus:outline-none"
-              >
-                Insert Sample Posting
-              </button>
+        {errorMsg && (
+          <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 flex items-start gap-3 text-xs text-red-300">
+            <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="font-semibold">{errorMsg}</p>
             </div>
+          </div>
+        )}
 
+        {/* Text Area */}
+        <form onSubmit={handleParse} className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
+            <label htmlFor="posting-textarea" className="font-mono text-xs font-semibold text-white/80 uppercase tracking-wider flex items-center justify-between">
+              <span>Raw Job Posting Text</span>
+              <span className="text-[10px] text-[#9AA3AE] lowercase">markdown or plain text</span>
+            </label>
             <textarea
               id="posting-textarea"
               rows={8}
               value={postingText}
               onChange={(e) => setPostingText(e.target.value)}
               placeholder="Paste job posting text here..."
-              className="w-full bg-[#08090C] border border-white/10 rounded-xl p-3.5 text-xs font-mono text-white placeholder-[#64748B] focus:border-emerald-500/60 focus:outline-none focus:ring-1 focus:ring-emerald-500 leading-relaxed resize-none"
-              autoFocus
+              className="w-full p-4 rounded-xl bg-black/40 border border-white/15 font-mono text-xs text-[#F4F2EC] placeholder:text-[#9AA3AE]/50 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all resize-none"
             />
           </div>
 
           {/* Action Row */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
-            <div className="text-[11px] font-mono text-[#9AA3AE] flex items-center gap-1.5">
-              {extractedCount !== null ? (
-                <span className="text-emerald-400 flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>5 requirements mapped to repo ledger</span>
-                </span>
-              ) : (
-                <span>Zero hallucination: only commits matching AST invariants will count</span>
+          <div className="flex items-center justify-between pt-2">
+            <div className="font-mono text-xs text-emerald-400 flex items-center gap-2">
+              {extractedCount !== null && (
+                <>
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <span>{extractedCount} Invariant Requirements Extracted</span>
+                </>
               )}
             </div>
 
-            <div className="flex items-center gap-3 w-full sm:w-auto">
-              <Button
-                type="button"
-                variant="ghost"
-                size="md"
-                onClick={onClose}
-                className="flex-1 sm:flex-none"
-              >
+            <div className="flex items-center space-x-3">
+              <Button type="button" variant="outline" onClick={onClose}>
                 Cancel
               </Button>
               <Button
                 type="submit"
-                variant="solid_paper"
-                size="md"
-                isLoading={isProcessing}
-                icon={<ArrowRight className="w-4 h-4 text-[#14171A]" />}
-                className="flex-1 sm:flex-none"
-                aria-label="Map evidence to dashboard"
+                variant="solid_emerald"
+                disabled={isProcessing || !postingText.trim()}
               >
-                Map Evidence to Dashboard
+                {isProcessing ? (
+                  <span className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 animate-spin text-emerald-950" />
+                    <span>Extracting Invariants...</span>
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <span>Extract & Save Invariants</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </span>
+                )}
               </Button>
             </div>
           </div>

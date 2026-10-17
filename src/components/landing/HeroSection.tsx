@@ -299,7 +299,7 @@ async def create_order(payload: OrderPayload):
                       <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
                       <span>Invariant checks satisfied</span>
                     </span>
-                    <span className="text-[#14171A] font-bold">sha256:9f3c2ab</span>
+                    <span className="text-[#14171A] font-bold">sha256:7f83b16</span>
                   </div>
                 </div>
 

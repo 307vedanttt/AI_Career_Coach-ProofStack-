@@ -21,7 +21,13 @@ export const AuthGuard: React.FC<AuthGuardProps> = ({ children }) => {
     );
   }
 
-  if (!user) {
+  // Check demo mode per Master Build Prompt Section 11
+  const isDemo =
+    new URLSearchParams(location.search).get('demo') === '1' ||
+    (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('ps_demo_mode') === 'true') ||
+    (typeof document !== 'undefined' && document.documentElement.classList.contains('demo-mode'));
+
+  if (!user && !isDemo) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 

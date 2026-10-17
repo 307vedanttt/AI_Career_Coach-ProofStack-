@@ -240,3 +240,15 @@ export interface UserSession {
   sessionStartedAt: string;
 }
 
+export interface ConnectedRepository {
+  id: string;
+  repo_url: string;
+  owner: string;
+  name: string;
+  default_branch: string;
+  last_commit_sha?: string;
+  last_synced_at?: string;
+  last_sync_trigger?: 'webhook' | 'poll' | 'check-now';
+  created_at: string;
+}
+

@@ -300,7 +300,7 @@ async def create_order(payload: OrderPayload, db: Session = Depends()):
                       Open on GitHub
                     </Button>
                     <span className="font-mono text-[11px] text-[#6B7280]">
-                      commit 9f3c2ab
+                      commit a182c4f
                     </span>
                   </div>
                 </ReceiptCard>
@@ -490,11 +490,11 @@ async def create_order(payload: OrderPayload, db: Session = Depends()):
               {/* ChainBlock */}
               <ChainBlock
                 blockHeight={842}
-                commitHash="9f3c2ab"
+                commitHash="a182c4f"
                 previousHash="0x8e1a...41b0"
                 timestamp="14:02:18 UTC"
                 invariantsProven={4}
-                author="Rohan"
+                author="Auditor"
                 merkleRoot="0x981A7b91c04f981023d8..."
               />
 

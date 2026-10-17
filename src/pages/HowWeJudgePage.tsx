@@ -1,11 +1,9 @@
 import React from 'react';
 import { AppLayout } from '../components/layout/AppLayout';
-import { mockSystemMetrics } from '../lib/api';
-
 
 export const HowWeJudgePage: React.FC = () => {
   return (
-    <AppLayout metrics={mockSystemMetrics}>
+    <AppLayout>
       <div className="max-w-[1200px] w-full mx-auto px-4 lg:px-8 py-8 flex flex-col space-y-10 select-none">
         {/* HERO TITLE */}
         <header className="space-y-3">

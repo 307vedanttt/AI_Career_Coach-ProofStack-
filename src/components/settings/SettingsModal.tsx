@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Key, Sparkles, X, Check, Eye, EyeOff, ShieldCheck, Github, Cpu, RefreshCw, AlertCircle } from 'lucide-react';
+import { Key, Sparkles, X, ArrowLeft, Check, Eye, EyeOff, ShieldCheck, Github, Cpu, RefreshCw, AlertCircle } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { getSettings, updateSettings, AppSettings } from '../../lib/api';
 
@@ -25,6 +25,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
   useEffect(() => {
     if (isOpen) {
       loadCurrentSettings();
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          onClose();
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
     }
   }, [isOpen]);
 
@@ -119,13 +128,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, o
                 Connect your LLM and GitHub keys for live automated invariant validation.
               </p>
             </div>
-            <button
-              onClick={onClose}
-              className="p-1.5 rounded-lg text-[#9AA3AE] hover:text-white hover:bg-white/5 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              aria-label="Close dialog"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={onClose}
+                className="p-1.5 rounded-lg text-[#9AA3AE] hover:text-white hover:bg-white/5 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 flex items-center gap-1 text-xs font-mono"
+                aria-label="Return to previous view"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span className="hidden sm:inline">Back</span>
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                className="p-1.5 rounded-lg text-[#9AA3AE] hover:text-white hover:bg-white/5 transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                aria-label="Close dialog"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           </div>
 
           {/* Form */}

@@ -62,6 +62,8 @@ class RepoResponse(BaseModel):
     name: str
     default_branch: str
     last_commit_sha: Optional[str] = None
+    last_synced_at: Optional[datetime.datetime] = None
+    last_sync_trigger: Optional[str] = "check-now"
     created_at: datetime.datetime
 
 # --- Evidence & Assessment ---

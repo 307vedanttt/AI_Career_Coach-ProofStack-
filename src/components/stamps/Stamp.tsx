@@ -22,7 +22,8 @@ export type StampStatus =
   | 'hollow'
   | 'fulfilled'
   | 'partly'
-  | 'not_fulfilled';
+  | 'not_fulfilled'
+  | 'pending';
 
 export type StampSize = 'sm' | 'md' | 'lg';
 
@@ -109,6 +110,13 @@ const statusConfigs: Record<StampStatus, StatusConfig> = {
   not_fulfilled: {
     defaultLabel: 'NOT FULFILLED',
     icon: XCircle,
+    colors: 'text-[#64748B] bg-[#64748B]/10',
+    borderStyle: 'border-[#64748B]',
+    glow: 'shadow-[0_0_8px_rgba(100,116,139,0.2)]',
+  },
+  pending: {
+    defaultLabel: 'PENDING',
+    icon: Clock,
     colors: 'text-[#64748B] bg-[#64748B]/10',
     borderStyle: 'border-[#64748B]',
     glow: 'shadow-[0_0_8px_rgba(100,116,139,0.2)]',

@@ -74,6 +74,8 @@ class Repository(Base):
     last_commit_sha = Column(String(64), nullable=True)
     last_etag = Column(String(128), nullable=True)
     webhook_secret = Column(String(128), nullable=True)
+    last_synced_at = Column(DateTime(timezone=True), default=utcnow)
+    last_sync_trigger = Column(String(50), default="check-now")
     created_at = Column(DateTime(timezone=True), default=utcnow)
     updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
     
@@ -246,3 +248,21 @@ class TraceRun(Base):
     steps_json = Column(Text, default="[]")
     created_at = Column(DateTime(timezone=True), default=utcnow)
     finished_at = Column(DateTime(timezone=True), nullable=True)
+
+
+class ResumeExtraction(Base):
+    __tablename__ = "resume_extractions"
+    
+    id = Column(String(36), primary_key=True)
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    file_sha256 = Column(String(64), nullable=False, index=True)
+    file_name = Column(String(255), nullable=False)
+    file_size_bytes = Column(Integer, nullable=False)
+    char_count = Column(Integer, nullable=False)
+    skills_json = Column(Text, nullable=False)
+    extracted_text_preview = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    
+    __table_args__ = (
+        Index("idx_resume_user_sha", "user_id", "file_sha256", unique=True),
+    )

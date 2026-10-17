@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AppLayout } from '../components/layout/AppLayout';
 import { Button } from '../components/ui/Button';
-import { mockSystemMetrics } from '../lib/api';
 import {
   ShieldCheck,
   ShieldAlert,
@@ -29,7 +28,7 @@ export const VerifyPage: React.FC = () => {
   const blocks: ChainBlockNode[] = [
     { height: 1, commit: '7a12b9c', prevHash: '00000000', rootHash: 'sha256:1a82bc...0041', invariants: 2, timestamp: '10:00:12' },
     { height: 2, commit: '8e41c0d', prevHash: '1a82bc00', rootHash: 'sha256:39fa01...88ab', invariants: 4, timestamp: '10:08:45' },
-    { height: 3, commit: '9f3c2ab', prevHash: '39fa0188', rootHash: 'sha256:7f83b1...d069', invariants: 7, timestamp: '10:14:22' },
+    { height: 3, commit: 'a182c4f', prevHash: '39fa0188', rootHash: 'sha256:7f83b1...d069', invariants: 7, timestamp: '10:14:22' },
     { height: 4, commit: 'a12bc4f', prevHash: '7f83b1d0', rootHash: 'sha256:44ef10...aa21', invariants: 9, timestamp: '10:20:01' },
     { height: 5, commit: 'b23cd5e', prevHash: '44ef10aa', rootHash: 'sha256:99c011...bc44', invariants: 11, timestamp: '10:25:30' },
     { height: 6, commit: 'c34de6f', prevHash: '99c011bc', rootHash: 'sha256:55aa32...ef90', invariants: 13, timestamp: '10:31:15' },
@@ -56,7 +55,7 @@ export const VerifyPage: React.FC = () => {
   }, [isTampered]);
 
   return (
-    <AppLayout metrics={mockSystemMetrics}>
+    <AppLayout>
       <div className="max-w-[1360px] w-full mx-auto px-4 lg:px-8 py-8 flex flex-col space-y-8 select-none">
         {/* HEADER */}
         <header className="glass-panel p-6 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-6 border border-white/10">

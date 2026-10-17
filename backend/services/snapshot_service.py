@@ -35,7 +35,19 @@ class SnapshotService:
         Identifies requirements that experienced an evidence regression.
         E.g. Strong -> Basic/Not demonstrated, or Basic -> Not demonstrated.
         """
-        old_map = {a["requirement_id"]: a["status"] for a in old_assessments}
+        old_map = {}
+        if isinstance(old_assessments, list):
+            for a in old_assessments:
+                if isinstance(a, dict) and "requirement_id" in a and "status" in a:
+                    old_map[a["requirement_id"]] = a["status"]
+        elif isinstance(old_assessments, dict):
+            # If map of {req_id: status} was passed directly
+            for k, v in old_assessments.items():
+                if isinstance(v, str):
+                    old_map[k] = v
+                elif isinstance(v, dict) and "status" in v:
+                    old_map[k] = v["status"]
+
         rank = {STATUS_STRONG: 2, STATUS_BASIC: 1, STATUS_NOT_DEMONSTRATED: 0, STATUS_UNCLEAR: -1}
 
         regressions = []

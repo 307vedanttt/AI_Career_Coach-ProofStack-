@@ -1,7 +1,7 @@
 import React from 'react';
 import { clsx } from 'clsx';
 
-export type ButtonVariant = 'solid_paper' | 'solid_ink' | 'ghost' | 'quiet_text' | 'emerald';
+export type ButtonVariant = 'solid_paper' | 'solid_ink' | 'ghost' | 'quiet_text' | 'emerald' | 'outline' | 'solid_emerald';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -47,6 +47,12 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       // bonus verified action: deep emerald
       emerald:
         'bg-[#1F8A5B] hover:bg-[#19754c] text-[#0A0C0F] font-bold shadow-[0_0_16px_rgba(52,211,153,0.35)] active:scale-[0.985]',
+
+      outline:
+        'bg-transparent hover:bg-white/5 text-[#F4F2EC] border border-white/20 active:scale-[0.985]',
+
+      solid_emerald:
+        'bg-emerald-600 hover:bg-emerald-500 text-white font-medium shadow-[0_2px_8px_rgba(16,185,129,0.3)] active:scale-[0.985]',
     };
 
     const sizeStyles: Record<ButtonSize, string> = {

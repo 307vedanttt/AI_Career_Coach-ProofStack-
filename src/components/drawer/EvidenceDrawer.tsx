@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, CheckCircle, ShieldAlert, Sparkles, Copy, Check } from 'lucide-react';
+import { X, ArrowLeft, CheckCircle, ShieldAlert, Sparkles, Copy, Check } from 'lucide-react';
 import { Evidence, RejectedCandidate } from '../../types/api';
 import { Stamp } from '../stamps/Stamp';
 import { CodeBlock } from '../ui/CodeBlock';
@@ -93,18 +93,21 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({
             aria-hidden="true"
           />
 
-          {/* Drawer Panel: Spring slide-in from right (stiffness 260, damping 28) */}
+          {/* Drawer Panel: Slide-in on desktop, Bottom Sheet on mobile */}
           <motion.aside
             ref={drawerRef}
-            initial={{ x: '100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '100%' }}
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
             transition={{ type: 'spring', stiffness: 260, damping: 28 }}
-            className="fixed top-0 right-0 w-full max-w-[540px] h-full bg-[#0E1116]/95 backdrop-blur-2xl border-l border-white/10 z-50 flex flex-col shadow-2xl overflow-hidden focus:outline-none"
+            className="fixed sm:top-0 bottom-0 right-0 sm:left-auto left-0 w-full sm:max-w-[540px] max-h-[90vh] sm:max-h-full h-full bg-[#0E1116]/95 backdrop-blur-2xl sm:border-l border-t sm:border-t-0 border-white/10 z-50 flex flex-col shadow-2xl overflow-hidden focus:outline-none rounded-t-3xl sm:rounded-none"
             role="dialog"
             aria-modal="true"
             aria-labelledby="drawer-title"
           >
+            {/* Mobile Sheet Drag Handle Pill */}
+            <div className="sm:hidden w-12 h-1.5 rounded-full bg-white/25 mx-auto my-2.5 shrink-0" />
+
             {/* Top Bar / Header */}
             <header className="h-14 px-6 border-b border-white/10 flex items-center justify-between bg-black/30 shrink-0">
               <div className="flex items-center gap-2.5">
@@ -142,16 +145,27 @@ export const EvidenceDrawer: React.FC<EvidenceDrawerProps> = ({
                 </button>
               </div>
 
-              {/* Close Button */}
-              <button
-                ref={closeButtonRef}
-                type="button"
-                onClick={onClose}
-                className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-[#9AA3AE] hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                aria-label="Close evidence inspection drawer"
-              >
-                <X className="w-4 h-4" />
-              </button>
+              {/* Action buttons: Back arrow & Close X */}
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="h-8 px-2.5 rounded-lg bg-white/5 hover:bg-white/10 flex items-center gap-1.5 text-xs font-mono text-[#9AA3AE] hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  aria-label="Back to dashboard view"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Back</span>
+                </button>
+                <button
+                  ref={closeButtonRef}
+                  type="button"
+                  onClick={onClose}
+                  className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-[#9AA3AE] hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  aria-label="Close evidence inspection drawer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </header>
 
             {/* Drawer Body / Physical Paper Docket */}

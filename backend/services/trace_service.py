@@ -81,6 +81,11 @@ class TraceService:
         if q in self._subscribers:
             self._subscribers.remove(q)
 
+    def register_callback(self, cb) -> None:
+        if not hasattr(self, "_callbacks"):
+            self._callbacks = []
+        self._callbacks.append(cb)
+
     def broadcast_event(self, event_type: str, data: Dict[str, Any]) -> None:
         message = f"event: {event_type}\ndata: {json.dumps(data)}\n\n"
         for q in list(self._subscribers):
@@ -89,5 +94,15 @@ class TraceService:
             except asyncio.QueueFull:
                 # Disconnect slow or stuck subscribers safely
                 self._subscribers.remove(q)
+
+        if hasattr(self, "_callbacks"):
+            for cb in self._callbacks:
+                try:
+                    if asyncio.iscoroutinefunction(cb):
+                        asyncio.create_task(cb(data))
+                    else:
+                        cb(data)
+                except Exception:
+                    pass
 
 trace_service = TraceService()
