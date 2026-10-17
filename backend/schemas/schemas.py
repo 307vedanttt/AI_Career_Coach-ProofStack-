@@ -252,6 +252,7 @@ class CorrectionResponse(BaseModel):
 # --- User & Session ---
 class ApiKeyAuthRequest(BaseModel):
     api_key: Optional[str] = None
+    username: Optional[str] = None
     role: Optional[str] = "developer"
 
 class ApiKeyAuthResponse(BaseModel):

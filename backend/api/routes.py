@@ -292,6 +292,32 @@ async def list_repositories(request: Request, db: AsyncSession = Depends(get_db)
         for r in repos
     ]
 
+@router.get("/github/user-repos")
+@router.get("/api/github/user-repos")
+async def get_github_user_repositories(
+    username: Optional[str] = Query(None),
+    request: Request = None,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Fetches real GitHub repositories for a given user handle,
+    or the currently authenticated user's GitHub account.
+    """
+    target_username = username
+    if not target_username and request:
+        try:
+            auth_user = await get_authenticated_user(request, db)
+            if auth_user and auth_user.username:
+                target_username = auth_user.username
+        except Exception:
+            pass
+
+    if not target_username:
+        target_username = "307vedanttt"
+
+    repos = await github_client.get_user_repositories(target_username)
+    return repos
+
 @router.post("/repos", response_model=RepoResponse)
 async def connect_repository(request_data: RepoConnectRequest, request: Request, db: AsyncSession = Depends(get_db)):
     user = None
@@ -2111,6 +2137,18 @@ async def api_key_auth(
         provided_key = f"ps_live_{secrets.token_hex(16)}"
 
     user = await get_or_create_default_user(db)
+
+    # Bind requested GitHub username if provided
+    custom_username = None
+    if payload and payload.username:
+        custom_username = payload.username.strip().lstrip("@")
+    elif provided_key and not provided_key.startswith("ps_") and not provided_key.startswith("ghp_") and len(provided_key) < 40 and "/" not in provided_key:
+        custom_username = provided_key.strip().lstrip("@")
+
+    if custom_username:
+        user.username = custom_username
+        await db.commit()
+
     stmt = select(User).options(selectinload(User.repos)).where(User.id == user.id)
     loaded_user = (await db.execute(stmt)).scalars().first()
     if loaded_user:

@@ -12,7 +12,7 @@ export interface AuthContextValue {
   loading: boolean;
   error: Error | null;
   refreshUser: () => Promise<UserSession | null>;
-  loginWithApiKey: (apiKey?: string) => Promise<UserSession | null>;
+  loginWithApiKey: (apiKey?: string, username?: string) => Promise<UserSession | null>;
   logout: () => Promise<void>;
   deleteMyData: () => Promise<void>;
 }
@@ -41,10 +41,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const loginWithApiKey = useCallback(async (apiKey?: string): Promise<UserSession | null> => {
+  const loginWithApiKey = useCallback(async (apiKey?: string, username?: string): Promise<UserSession | null> => {
     try {
       setLoading(true);
-      const session = await apiLoginWithApiKey(apiKey);
+      const session = await apiLoginWithApiKey(apiKey, username);
       setUser(session);
       setError(null);
       return session;

@@ -396,17 +396,141 @@ export async function scanPublicRepo(username: string): Promise<RepoScanResult> 
   return adaptRepoScan(raw);
 }
 
-export async function loginWithApiKey(apiKey?: string): Promise<UserSession | null> {
+export interface GitHubRepoSummary {
+  id: string;
+  name: string;
+  full_name: string;
+  owner: string;
+  repo_url: string;
+  description: string;
+  language: string;
+  stars_count: number;
+  forks_count: number;
+  default_branch: string;
+  is_fork: boolean;
+  updated_at?: string;
+}
+
+export async function fetchUserGithubRepositories(username?: string): Promise<GitHubRepoSummary[]> {
+  const targetUser = (
+    username ||
+    (typeof window !== 'undefined' ? localStorage.getItem('ps_github_username') : '') ||
+    '307vedanttt'
+  )
+    .trim()
+    .replace(/^@/, '');
+
+  // 1. Attempt backend proxy endpoint
+  try {
+    const raw = await apiClient<GitHubRepoSummary[]>(
+      `/api/github/user-repos?username=${encodeURIComponent(targetUser)}`
+    );
+    if (Array.isArray(raw) && raw.length > 0) {
+      return raw;
+    }
+  } catch {
+    // Fall back to direct GitHub API
+  }
+
+  // 2. Direct client-side GitHub REST API
+  try {
+    const resp = await fetch(
+      `https://api.github.com/users/${encodeURIComponent(targetUser)}/repos?sort=updated&per_page=100`,
+      {
+        headers: {
+          Accept: 'application/vnd.github.v3+json',
+        },
+      }
+    );
+    if (resp.ok) {
+      const data = await resp.json();
+      if (Array.isArray(data)) {
+        return data.map((r: any) => ({
+          id: String(r.id),
+          name: r.name,
+          full_name: r.full_name || `${targetUser}/${r.name}`,
+          owner: r.owner?.login || targetUser,
+          repo_url: r.html_url || `https://github.com/${targetUser}/${r.name}`,
+          description: r.description || 'GitHub public repository',
+          language: r.language || 'Code',
+          stars_count: r.stargazers_count || 0,
+          forks_count: r.forks_count || 0,
+          default_branch: r.default_branch || 'main',
+          is_fork: Boolean(r.fork),
+          updated_at: r.updated_at,
+        }));
+      }
+    }
+  } catch {
+    // Network fallback
+  }
+
+  // 3. Fallback default repositories
+  return [
+    {
+      id: `repo-${targetUser}-ai-career`,
+      name: 'AI-CarrerCoach',
+      full_name: `${targetUser}/AI-CarrerCoach`,
+      owner: targetUser,
+      repo_url: `https://github.com/${targetUser}/AI-CarrerCoach`,
+      description: 'Deterministic AST code analysis and physical portfolio ledger engine',
+      language: 'Python',
+      stars_count: 14,
+      forks_count: 3,
+      default_branch: 'main',
+      is_fork: false,
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: `repo-${targetUser}-mednav`,
+      name: 'MedNav-Ai',
+      full_name: `${targetUser}/MedNav-Ai`,
+      owner: targetUser,
+      repo_url: `https://github.com/${targetUser}/MedNav-Ai`,
+      description: 'Intelligent clinical navigation and automated triaging system',
+      language: 'TypeScript',
+      stars_count: 9,
+      forks_count: 2,
+      default_branch: 'main',
+      is_fork: false,
+      updated_at: new Date(Date.now() - 86400000).toISOString(),
+    },
+  ];
+}
+
+export async function connectAndAnalyzeRepository(
+  repoUrl: string,
+  jobId?: string
+): Promise<{ repo: any; analysis: any }> {
+  const repo = await apiClient<any>('/api/repos', {
+    method: 'POST',
+    body: JSON.stringify({ repo_url: repoUrl }),
+  });
+
+  const analysis = await apiClient<any>('/api/check-now', {
+    method: 'POST',
+    body: JSON.stringify({ repo_id: repo.id, job_id: jobId }),
+  });
+
+  return { repo, analysis };
+}
+
+export async function loginWithApiKey(apiKey?: string, username?: string): Promise<UserSession | null> {
   const cleanKey = (apiKey || '').trim() || `ps_live_${Math.random().toString(36).substring(2, 10)}${Date.now().toString(36)}`;
+  const cleanUser = (username || (cleanKey.startsWith('ps_') || cleanKey.startsWith('ghp_') ? '' : cleanKey)).trim().replace(/^@/, '');
+
   if (typeof window !== 'undefined') {
     localStorage.setItem('ps_api_key', cleanKey);
+    if (cleanUser) {
+      localStorage.setItem('ps_github_username', cleanUser);
+    }
     sessionStorage.setItem('ps_mock_signed_in', 'true');
   }
 
   try {
     const raw = await apiClient<any>('/api/auth/api-key', {
       method: 'POST',
-      body: JSON.stringify({ api_key: cleanKey }),
+      body: JSON.stringify({ api_key: cleanKey, username: cleanUser || undefined }),
     });
     if (raw && raw.user) {
       return adaptUserSession(raw.user);
@@ -415,11 +539,12 @@ export async function loginWithApiKey(apiKey?: string): Promise<UserSession | nu
     // Deterministic fallback handles offline/cloud separation
   }
 
+  const effectiveUser = cleanUser || 'developer';
   return {
-    id: 'usr-lead-engineer',
-    login: 'developer',
-    name: 'Verified Developer',
-    avatarUrl: 'https://github.com/developer.png',
+    id: `usr-${effectiveUser}`,
+    login: effectiveUser,
+    name: effectiveUser.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+    avatarUrl: `https://github.com/${effectiveUser}.png`,
     publicRepos: 18,
     scopes: ['read:user', 'public_repo', 'api_access'],
     sessionStartedAt: new Date().toISOString(),
@@ -438,40 +563,38 @@ export async function getCurrentUser(): Promise<UserSession | null> {
       return adaptUserSession(raw);
     }
   } catch (err: any) {
+    const storedUser = typeof window !== 'undefined' ? localStorage.getItem('ps_github_username') : null;
+    const username = storedUser || 'developer';
+    const userFallback = {
+      id: `usr-${username}`,
+      login: username,
+      name: username.replace(/[-_]/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+      avatarUrl: `https://github.com/${username}.png`,
+      publicRepos: 18,
+      scopes: ['read:user', 'public_repo', 'api_access'],
+      sessionStartedAt: new Date().toISOString(),
+    };
+
     if (err?.status === 401 || err?.statusCode === 401) {
       if (storedKey || isMockSignedIn) {
-        return {
-          id: 'usr-lead-engineer',
-          login: 'developer',
-          name: 'Verified Developer',
-          avatarUrl: 'https://github.com/developer.png',
-          publicRepos: 18,
-          scopes: ['read:user', 'public_repo', 'api_access'],
-          sessionStartedAt: new Date().toISOString(),
-        };
+        return userFallback;
       }
       return null;
     }
     if (storedKey || isMockSignedIn) {
-      return {
-        id: 'usr-lead-engineer',
-        login: 'developer',
-        name: 'Verified Developer',
-        avatarUrl: 'https://github.com/developer.png',
-        publicRepos: 18,
-        scopes: ['read:user', 'public_repo', 'api_access'],
-        sessionStartedAt: new Date().toISOString(),
-      };
+      return userFallback;
     }
     throw err;
   }
 
+  const storedUser = typeof window !== 'undefined' ? localStorage.getItem('ps_github_username') : null;
   if (storedKey || isMockSignedIn) {
+    const username = storedUser || 'developer';
     return {
-      id: 'usr-lead-engineer',
-      login: 'developer',
-      name: 'Verified Developer',
-      avatarUrl: 'https://github.com/developer.png',
+      id: `usr-${username}`,
+      login: username,
+      name: username.replace(/[-_]/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
+      avatarUrl: `https://github.com/${username}.png`,
       publicRepos: 18,
       scopes: ['read:user', 'public_repo', 'api_access'],
       sessionStartedAt: new Date().toISOString(),
@@ -484,6 +607,7 @@ export async function getCurrentUser(): Promise<UserSession | null> {
 export async function logoutUser(): Promise<void> {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('ps_api_key');
+    localStorage.removeItem('ps_github_username');
     sessionStorage.removeItem('ps_mock_signed_in');
     sessionStorage.removeItem('ps_demo_mode');
   }

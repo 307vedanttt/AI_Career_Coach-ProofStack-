@@ -28,6 +28,7 @@ import { RecommendationCard } from '../components/ui/RecommendationCard';
 import { EvidenceDrawer } from '../components/drawer/EvidenceDrawer';
 import { Button } from '../components/ui/Button';
 import { JobPostingIntakeModal } from '../components/posting/JobPostingIntakeModal';
+import { RepositorySelectorModal } from '../components/repository/RepositorySelectorModal';
 import {
   Radio,
   AlertOctagon,
@@ -37,6 +38,7 @@ import {
   AlertCircle,
   Github,
   X,
+  FolderGit2,
 } from 'lucide-react';
 
 export const DashboardPage: React.FC = () => {
@@ -58,6 +60,7 @@ export const DashboardPage: React.FC = () => {
   } | null>(null);
   const [isCheckingNow, setIsCheckingNow] = useState<boolean>(false);
   const [pollingRepoId, setPollingRepoId] = useState<string | null>(null);
+  const [isRepoSelectorOpen, setIsRepoSelectorOpen] = useState<boolean>(false);
 
   // Push Event Animation States
   const [isTilePulsing, setIsTilePulsing] = useState<boolean>(false);
@@ -439,6 +442,15 @@ export const DashboardPage: React.FC = () => {
                 </button>
                 <button
                   type="button"
+                  onClick={() => setIsRepoSelectorOpen(true)}
+                  className="flex items-center gap-1.5 px-3 py-1 rounded bg-violet-500/20 border border-violet-500/40 text-violet-300 font-semibold hover:bg-violet-500/30 transition-colors"
+                  title="Discover, search, and analyze your GitHub repositories"
+                >
+                  <FolderGit2 className="w-3.5 h-3.5 text-violet-300" />
+                  <span>Switch / Analyze Repo</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => setIsIntakeOpen(true)}
                   className="text-xs text-[#9AA3AE] hover:text-white underline underline-offset-2 ml-1"
                 >
@@ -744,6 +756,15 @@ export const DashboardPage: React.FC = () => {
         isOpen={isIntakeOpen}
         onClose={() => setIsIntakeOpen(false)}
         onIntakeComplete={() => {
+          loadDashboardData();
+        }}
+      />
+
+      {/* GitHub Repository Discovery & Real-Time AST Analyzer Modal */}
+      <RepositorySelectorModal
+        isOpen={isRepoSelectorOpen}
+        onClose={() => {
+          setIsRepoSelectorOpen(false);
           loadDashboardData();
         }}
       />

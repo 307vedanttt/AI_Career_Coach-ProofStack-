@@ -36,7 +36,7 @@ import { Button } from '../ui/Button';
 import { BackButton } from '../ui/BackButton';
 import { initialMetrics, getDiagnostics, DiagnosticsResult, getRepoRejections } from '../../lib/api';
 import { SettingsModal } from '../settings/SettingsModal';
-import { ConnectGitHubModal } from '../common/ConnectGitHubModal';
+import { RepositorySelectorModal } from '../repository/RepositorySelectorModal';
 import { RefusedSignalsDrawer } from '../drawer/RefusedSignalsDrawer';
 
 interface AppLayoutProps {
@@ -403,9 +403,10 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             )}
             <button
               onClick={() => setConnectModalOpen(true)}
-              className="hover:text-white text-cyan-300 underline flex items-center gap-1"
+              className="hover:text-white text-emerald-300 hover:text-emerald-200 underline flex items-center gap-1 font-mono text-xs transition-colors"
+              title="Browse, search, and analyze any GitHub repository"
             >
-              <Github className="w-3 h-3" /> Connect GitHub
+              <Github className="w-3 h-3 text-emerald-400" /> Switch / Analyze Repos
             </button>
             <span className="text-[#25324A]">·</span>
             <button
@@ -947,15 +948,10 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         onClose={() => setIsSettingsOpen(false)}
       />
 
-      {/* Connect GitHub Prototype Modal */}
-      <ConnectGitHubModal
+      {/* GitHub Repository Discovery & Real-Time AST Analyzer Modal */}
+      <RepositorySelectorModal
         isOpen={connectModalOpen}
         onClose={() => setConnectModalOpen(false)}
-        onExploreDemo={() => {
-          setConnectModalOpen(false);
-          resetDemoData();
-          navigate('/app');
-        }}
       />
 
       {/* Refused Signals Ledger Drawer */}

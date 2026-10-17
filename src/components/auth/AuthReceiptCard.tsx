@@ -35,6 +35,9 @@ export const AuthReceiptCard: React.FC<AuthReceiptCardProps> = ({
 
   const [authMethod, setAuthMethod] = useState<'apikey' | 'oauth'>('apikey');
   const [apiKeyInput, setApiKeyInput] = useState<string>('');
+  const [githubHandleInput, setGithubHandleInput] = useState<string>(() => {
+    return typeof window !== 'undefined' ? localStorage.getItem('ps_github_username') || '' : '';
+  });
   const [isSubmittingKey, setIsSubmittingKey] = useState<boolean>(false);
 
   const [loadingProvider, setLoadingProvider] = useState<'google' | 'github' | null>(null);
@@ -46,7 +49,7 @@ export const AuthReceiptCard: React.FC<AuthReceiptCardProps> = ({
       return 'Sign-in was cancelled.';
     }
     if (reason === 'email_linked' || reason === 'account_exists') {
-      return 'Email already linked to another sign-in method.';
+      return 'Account already linked to another sign-in method.';
     }
     return null;
   });
@@ -64,7 +67,7 @@ export const AuthReceiptCard: React.FC<AuthReceiptCardProps> = ({
 
     try {
       const keyToUse = typeof customKey === 'string' ? customKey : apiKeyInput;
-      await loginWithApiKey(keyToUse || undefined);
+      await loginWithApiKey(keyToUse || undefined, githubHandleInput || undefined);
       await refreshUser();
       setTimeout(() => {
         setIsSubmittingKey(false);
@@ -90,7 +93,7 @@ export const AuthReceiptCard: React.FC<AuthReceiptCardProps> = ({
     try {
       const res = await devLoginBackend();
       if (!res) {
-        await loginWithApiKey('ps_live_github_verified');
+        await loginWithApiKey('ps_live_github_verified', githubHandleInput || undefined);
       }
       await refreshUser();
       setTimeout(() => {
@@ -99,7 +102,7 @@ export const AuthReceiptCard: React.FC<AuthReceiptCardProps> = ({
         if (onSuccess) onSuccess();
       }, 500);
     } catch {
-      await loginWithApiKey('ps_live_github_verified');
+      await loginWithApiKey('ps_live_github_verified', githubHandleInput || undefined);
       await refreshUser();
       setLoadingProvider(null);
       setShowWelcome(true);
@@ -120,7 +123,7 @@ export const AuthReceiptCard: React.FC<AuthReceiptCardProps> = ({
     try {
       const res = await devLoginBackend();
       if (!res) {
-        await loginWithApiKey('ps_live_google_verified');
+        await loginWithApiKey('ps_live_google_verified', githubHandleInput || undefined);
       }
       await refreshUser();
       setTimeout(() => {
@@ -129,7 +132,7 @@ export const AuthReceiptCard: React.FC<AuthReceiptCardProps> = ({
         if (onSuccess) onSuccess();
       }, 500);
     } catch {
-      await loginWithApiKey('ps_live_google_verified');
+      await loginWithApiKey('ps_live_google_verified', githubHandleInput || undefined);
       await refreshUser();
       setLoadingProvider(null);
       setShowWelcome(true);
@@ -214,9 +217,31 @@ export const AuthReceiptCard: React.FC<AuthReceiptCardProps> = ({
               <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-[#14171A] tracking-tight mb-1.5">
                 Sign in to analyze
               </h1>
-              <p className="text-xs text-[#575D65] mb-5 leading-relaxed">
+              <p className="text-xs text-[#575D65] mb-4 leading-relaxed">
                 Connect your account or use an instant API key to inspect repositories and establish skill proof.
               </p>
+
+              {/* GitHub Handle Input Strip */}
+              <div className="mb-4">
+                <label
+                  htmlFor="github-handle-input"
+                  className="block font-mono text-[11px] font-bold text-[#14171A] mb-1.5 flex items-center justify-between"
+                >
+                  <span>GitHub Username</span>
+                  <span className="text-[10px] text-[#1F8A5B] font-normal">Discovers your repos</span>
+                </label>
+                <div className="relative">
+                  <input
+                    id="github-handle-input"
+                    name="githubHandle"
+                    type="text"
+                    value={githubHandleInput}
+                    onChange={(e) => setGithubHandleInput(e.target.value)}
+                    placeholder="e.g. 307vedanttt or your username"
+                    className="w-full h-10 px-3 rounded-xl border border-[#D3CDBD] bg-white text-[#14171A] font-mono text-xs placeholder:text-[#9AA3AE] focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all shadow-inner"
+                  />
+                </div>
+              </div>
 
               {/* AUTH METHOD SELECTOR TABS */}
               <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#E6E1D6] mb-5 font-mono text-xs">

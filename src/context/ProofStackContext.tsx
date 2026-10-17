@@ -374,7 +374,17 @@ export const ProofStackProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       });
       if (resp.ok) {
         const created = await resp.json();
-        await loadConnectedRepos();
+        try {
+          await fetch('/api/check-now', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ repo_id: created.id }),
+          });
+        } catch {
+          // non-blocking
+        }
+        await loadConnectedRepos(created.id);
         applyRepo({
           id: created.id,
           owner: created.owner,
@@ -530,8 +540,8 @@ export const ProofStackProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       excerpt: targetContract.diffPreview?.diffSnippet || `// Verified integration test suite\nexpect(response.status).toBe(422);\nexpect(response.status).toBe(401);`,
       highlightedLines: [1, 2, 3, 4],
       contributionContext: {
-        author: 'Alex Chen <alex.chen@acme-labs.io>',
-        commitHash: 'f4b19c8',
+        author: `${repository.owner} <${repository.owner.toLowerCase()}@users.noreply.github.com>`,
+        commitHash: repository.headSha ? repository.headSha.slice(0, 7) : 'f4b19c8',
         timestamp: 'Just now',
         isCandidate: true,
       },
