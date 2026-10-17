@@ -249,12 +249,14 @@ export const SignupPage: React.FC = () => {
               >
                 <Button
                   type="button"
-                  variant="solid_ink"
+                  variant={isFormComplete ? 'solid_paper' : 'solid_ink'}
                   size="lg"
                   disabled={!isFormComplete || isSubmitting}
                   isLoading={isSubmitting && submittingProvider === 'google'}
-                  className={`w-full text-xs sm:text-sm font-semibold tracking-tight min-h-[50px] transition-all duration-300 bg-white hover:bg-white/90 text-[#14171A] border-white/20 ${
-                    !isFormComplete ? 'opacity-50 cursor-not-allowed bg-white/10 text-[#6B7280]' : 'shadow-md'
+                  className={`w-full text-xs sm:text-sm font-semibold tracking-tight min-h-[50px] transition-all duration-300 ${
+                    !isFormComplete
+                      ? 'opacity-50 cursor-not-allowed bg-white/5 border-white/10 text-[#6B7280]'
+                      : 'shadow-md border-[#34D399]/30'
                   }`}
                   icon={
                     <svg className="w-4 h-4" viewBox="0 0 24 24">
