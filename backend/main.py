@@ -7,6 +7,7 @@ from fastapi.responses import FileResponse, HTMLResponse
 from backend.config import settings
 from backend.db.session import init_db
 from backend.api.routes import router as api_router
+from backend.api.enterprise_routes import router as enterprise_router
 
 import logging
 
@@ -133,6 +134,10 @@ async def csrf_protect_middleware(request: Request, call_next):
             "/resume",
             "/api/repos",
             "/repos",
+            "/api/organizations",
+            "/organizations",
+            "/api/candidates",
+            "/candidates",
         )
         if not any(path.startswith(prefix) for prefix in exempt_prefixes):
             csrf_cookie = request.cookies.get("ps_csrf_token")
@@ -148,8 +153,10 @@ async def csrf_protect_middleware(request: Request, call_next):
 
 # Include API routes
 app.include_router(api_router, prefix="/api")
+app.include_router(enterprise_router, prefix="/api")
 # Direct webhook and auth path support
 app.include_router(api_router, prefix="")
+app.include_router(enterprise_router, prefix="")
 
 # Serve Production Frontend if dist directory exists (same-origin cookie & session support)
 dist_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "dist"))

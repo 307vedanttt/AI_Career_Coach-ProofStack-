@@ -12,12 +12,22 @@ if db_url.startswith("sqlite+aiosqlite:///"):
     if db_dir:
         os.makedirs(db_dir, exist_ok=True)
 
-engine = create_async_engine(
-    settings.DATABASE_URL,
-    echo=settings.DEBUG,
-    future=True,
-    connect_args={"check_same_thread": False, "timeout": 30} if "sqlite" in settings.DATABASE_URL else {}
-)
+is_sqlite = "sqlite" in settings.DATABASE_URL
+engine_kwargs = {
+    "echo": settings.DEBUG,
+    "future": True,
+}
+
+if is_sqlite:
+    engine_kwargs["connect_args"] = {"check_same_thread": False, "timeout": 30}
+else:
+    # Enterprise PostgreSQL connection pool settings for scalable workloads
+    engine_kwargs["pool_size"] = int(os.getenv("DB_POOL_SIZE", "20"))
+    engine_kwargs["max_overflow"] = int(os.getenv("DB_MAX_OVERFLOW", "10"))
+    engine_kwargs["pool_pre_ping"] = True
+    engine_kwargs["pool_recycle"] = 3600
+
+engine = create_async_engine(settings.DATABASE_URL, **engine_kwargs)
 
 # Async session factory
 AsyncSessionLocal = async_sessionmaker(
@@ -53,6 +63,7 @@ async def init_db():
                 ("rejected_candidates", "detector_version", "VARCHAR(50)"),
                 ("rejected_candidates", "guard_reason", "TEXT"),
                 ("resume_extractions", "raw_bytes", "BLOB"),
+                ("users", "email", "VARCHAR(255)"),
             ]
             for tbl, col, col_type in cols:
                 try:

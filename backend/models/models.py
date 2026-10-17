@@ -14,10 +14,13 @@ class User(Base):
     
     id = Column(String(36), primary_key=True)
     username = Column(String(100), unique=True, nullable=False)
+    email = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), default=utcnow)
     
     jobs = relationship("Job", back_populates="user", cascade="all, delete-orphan")
     repos = relationship("Repository", back_populates="user", cascade="all, delete-orphan")
+    memberships = relationship("OrganizationMember", back_populates="user", cascade="all, delete-orphan")
+    audit_logs = relationship("AuditLog", back_populates="user")
 
 
 class Job(Base):
@@ -369,4 +372,80 @@ class AtsRun(Base):
     )
 
 
+class Organization(Base):
+    __tablename__ = "organizations"
 
+    id = Column(String(36), primary_key=True)
+    name = Column(String(255), nullable=False)
+    slug = Column(String(100), unique=True, nullable=False, index=True)
+    tier = Column(String(50), default="starter", nullable=False) # "free", "starter", "growth", "enterprise"
+    max_seats = Column(Integer, default=5, nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+    members = relationship("OrganizationMember", back_populates="organization", cascade="all, delete-orphan")
+    candidate_evaluations = relationship("CandidateEvaluation", back_populates="organization", cascade="all, delete-orphan")
+    audit_logs = relationship("AuditLog", back_populates="organization", cascade="all, delete-orphan")
+
+
+class OrganizationMember(Base):
+    __tablename__ = "organization_members"
+
+    id = Column(String(36), primary_key=True)
+    org_id = Column(String(36), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
+    role = Column(String(50), default="engineer", nullable=False) # "owner", "admin", "recruiter", "engineer", "auditor"
+    status = Column(String(50), default="active", nullable=False) # "active", "invited", "suspended"
+    invited_email = Column(String(255), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+    organization = relationship("Organization", back_populates="members")
+    user = relationship("User", back_populates="memberships")
+
+    __table_args__ = (
+        Index("idx_org_member_lookup", "org_id", "user_id"),
+        Index("idx_org_member_email", "org_id", "invited_email"),
+    )
+
+
+class CandidateEvaluation(Base):
+    __tablename__ = "candidate_evaluations"
+
+    id = Column(String(36), primary_key=True)
+    org_id = Column(String(36), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=False, index=True)
+    candidate_user_id = Column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    job_id = Column(String(36), ForeignKey("jobs.id", ondelete="SET NULL"), nullable=True, index=True)
+    candidate_name = Column(String(255), nullable=False)
+    candidate_email = Column(String(255), nullable=True)
+    github_handle = Column(String(100), nullable=True)
+    match_score = Column(Float, nullable=True)
+    verified_claims_count = Column(Integer, default=0)
+    hollow_claims_count = Column(Integer, default=0)
+    evaluation_status = Column(String(50), default="pending", nullable=False) # "pending", "verified", "needs_review", "rejected", "hired"
+    integrity_signals_json = Column(Text, default="{}", nullable=False)
+    recruiter_notes = Column(Text, nullable=True)
+    share_token = Column(String(64), unique=True, nullable=True, index=True)
+    created_at = Column(DateTime(timezone=True), default=utcnow)
+    updated_at = Column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+    organization = relationship("Organization", back_populates="candidate_evaluations")
+    candidate_user = relationship("User", foreign_keys=[candidate_user_id])
+    job = relationship("Job", foreign_keys=[job_id])
+
+
+class AuditLog(Base):
+    __tablename__ = "audit_logs"
+
+    id = Column(String(36), primary_key=True)
+    org_id = Column(String(36), ForeignKey("organizations.id", ondelete="CASCADE"), nullable=True, index=True)
+    user_id = Column(String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True)
+    action = Column(String(100), nullable=False, index=True)
+    target_type = Column(String(100), nullable=True)
+    target_id = Column(String(100), nullable=True)
+    ip_address = Column(String(45), nullable=True)
+    details_json = Column(Text, default="{}", nullable=False)
+    created_at = Column(DateTime(timezone=True), default=utcnow, index=True)
+
+    organization = relationship("Organization", back_populates="audit_logs")
+    user = relationship("User", back_populates="audit_logs")

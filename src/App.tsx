@@ -17,6 +17,7 @@ import { StyleguidePage } from './pages/StyleguidePage';
 import { AlertsPage } from './pages/AlertsPage';
 import { DiagnosticsPage } from './pages/DiagnosticsPage';
 import { CodeQualityTestsPage } from './pages/CodeQualityTestsPage';
+import { EnterpriseRecruiterPage } from './pages/EnterpriseRecruiterPage';
 
 // Auth Pages & Route Guard
 import { LoginPage } from './pages/auth/LoginPage';
@@ -221,6 +222,30 @@ export const App: React.FC = () => {
               element={
                 <AuthGuard>
                   <CodeQualityTestsPage />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/app/enterprise"
+              element={
+                <AuthGuard>
+                  <EnterpriseRecruiterPage />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/enterprise"
+              element={
+                <AuthGuard>
+                  <EnterpriseRecruiterPage />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/candidates"
+              element={
+                <AuthGuard>
+                  <EnterpriseRecruiterPage />
                 </AuthGuard>
               }
             />

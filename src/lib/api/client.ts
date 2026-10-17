@@ -292,6 +292,148 @@ function getDeterministicFallback(endpoint: string, options: ApiClientOptions = 
     };
   }
 
+  if (ep.includes('/organizations/me') || ep.endsWith('/organizations')) {
+    return [
+      {
+        id: 'org-acme-prod',
+        name: 'Acme Global Engineering',
+        slug: 'acme-global',
+        tier: 'enterprise',
+        max_seats: 25,
+        role: 'owner',
+        status: 'active',
+        created_at: new Date(Date.now() - 30 * 86400000).toISOString()
+      },
+      {
+        id: 'org-personal',
+        name: 'Personal Workspace',
+        slug: 'personal-dev',
+        tier: 'starter',
+        max_seats: 5,
+        role: 'owner',
+        status: 'active',
+        created_at: new Date(Date.now() - 90 * 86400000).toISOString()
+      }
+    ];
+  }
+
+  if (ep.includes('/candidates') && !ep.includes('/verify/')) {
+    return [
+      {
+        id: 'cand-1',
+        candidate_name: 'Elena Rostova',
+        candidate_email: 'elena.rostova@techmail.io',
+        github_handle: 'elena-dev',
+        job_id: 'job-101',
+        job_title: 'Senior Distributed Backend Engineer',
+        match_score: 94.2,
+        verified_claims_count: 18,
+        hollow_claims_count: 0,
+        evaluation_status: 'verified',
+        integrity_signals: {
+          plagiarism_check: 'passed',
+          commit_squash_risk: 'low',
+          reachability_verified_pct: 96.5,
+          hollow_assertion_ratio_pct: 2.1
+        },
+        recruiter_notes: 'All 18 code claims backed by reachable AST functions in repository.',
+        share_token: 'token-elena-dossier-verified-9921',
+        created_at: new Date(Date.now() - 2 * 86400000).toISOString()
+      },
+      {
+        id: 'cand-2',
+        candidate_name: 'Marcus Vance',
+        candidate_email: 'm.vance@inbox.net',
+        github_handle: 'mvance-code',
+        job_id: 'job-102',
+        job_title: 'Full Stack Systems Lead',
+        match_score: 72.0,
+        verified_claims_count: 11,
+        hollow_claims_count: 3,
+        evaluation_status: 'needs_review',
+        integrity_signals: {
+          plagiarism_check: 'passed',
+          commit_squash_risk: 'medium',
+          reachability_verified_pct: 68.0,
+          hollow_assertion_ratio_pct: 14.2
+        },
+        recruiter_notes: 'Flagged 3 hollow assertion tests with empty pass blocks in auth test suite.',
+        share_token: 'token-marcus-dossier-flagged-4412',
+        created_at: new Date(Date.now() - 5 * 86400000).toISOString()
+      }
+    ];
+  }
+
+  if (ep.includes('/members')) {
+    return [
+      {
+        id: 'mem-1',
+        user_id: 'user-lead',
+        username: 'tech-lead',
+        email: 'lead@enterprise.co',
+        role: 'owner',
+        status: 'active',
+        joined_at: new Date(Date.now() - 30 * 86400000).toISOString()
+      },
+      {
+        id: 'mem-2',
+        user_id: 'user-recruiter',
+        username: 'sarah-talent',
+        email: 'sarah@enterprise.co',
+        role: 'recruiter',
+        status: 'active',
+        joined_at: new Date(Date.now() - 14 * 86400000).toISOString()
+      },
+      {
+        id: 'mem-3',
+        user_id: 'user-eng',
+        username: 'alex-engineer',
+        email: 'alex@enterprise.co',
+        role: 'engineer',
+        status: 'active',
+        joined_at: new Date(Date.now() - 7 * 86400000).toISOString()
+      }
+    ];
+  }
+
+  if (ep.includes('/audit-logs')) {
+    return [
+      {
+        id: 'log-1',
+        action: 'candidate.evaluation.created',
+        actor_id: 'user-lead',
+        actor_username: 'tech-lead',
+        target_type: 'candidate_evaluation',
+        target_id: 'cand-1',
+        ip_address: '192.168.1.1',
+        details: { candidate_name: 'Elena Rostova', match_score: 94.2 },
+        created_at: new Date(Date.now() - 2 * 86400000).toISOString()
+      },
+      {
+        id: 'log-2',
+        action: 'org.member.invited',
+        actor_id: 'user-lead',
+        actor_username: 'tech-lead',
+        target_type: 'organization_member',
+        target_id: 'mem-2',
+        ip_address: '192.168.1.1',
+        details: { email: 'sarah@enterprise.co', role: 'recruiter' },
+        created_at: new Date(Date.now() - 14 * 86400000).toISOString()
+      },
+      {
+        id: 'log-3',
+        action: 'org.created',
+        actor_id: 'user-lead',
+        actor_username: 'tech-lead',
+        target_type: 'organization',
+        target_id: 'org-acme-prod',
+        ip_address: '192.168.1.1',
+        details: { name: 'Acme Global Engineering', tier: 'enterprise' },
+        created_at: new Date(Date.now() - 30 * 86400000).toISOString()
+      }
+    ];
+  }
+
   return null;
 }
 

@@ -26,6 +26,7 @@ import {
   Github,
   FileUp,
   Award,
+  Building2,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useProofStack } from '../../context/ProofStackContext';
@@ -233,6 +234,15 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         ],
       };
     }
+    if (path === '/app/enterprise' || path === '/enterprise' || path === '/candidates') {
+      return {
+        pageTitle: 'Enterprise Recruiter Hub',
+        breadcrumbs: [
+          { label: 'Overview', to: '/app' },
+          { label: 'Recruiter Hub', to: '/app/enterprise' },
+        ],
+      };
+    }
     if (path === '/how-we-judge') {
       return {
         pageTitle: 'How We Judge',
@@ -260,7 +270,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
     };
   }, [location.pathname]);
 
-  // Desktop Left Rail navigation items (5 Primary Destinations)
+  // Desktop Left Rail navigation items (Primary Destinations)
   const navItems = [
     { to: '/app', label: 'Overview', icon: LayoutDashboard },
     { to: '/app/audit', label: 'Audit', icon: ShieldCheck },
@@ -269,6 +279,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
     { to: '/app/proof-map', label: 'ProofMap', icon: Layers },
     { to: '/resume', label: 'Resume', icon: FileUp },
     { to: '/app/skill-tests', label: 'Skill Tests', icon: Award },
+    { to: '/app/enterprise', label: 'Recruiter', icon: Building2 },
   ];
 
   // Mobile 5-Tab Bar items (4 primary + More sheet)
@@ -664,6 +675,15 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                   >
                     <FileText className="w-3.5 h-3.5 text-emerald-400" />
                     <span>Resume Attestation</span>
+                  </Link>
+
+                  <Link
+                    to="/app/enterprise"
+                    onClick={() => setUserMenuOpen(false)}
+                    className="flex items-center gap-2.5 p-2 rounded hover:bg-white/5 text-[#9AA3AE] hover:text-white transition-colors"
+                  >
+                    <Building2 className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Enterprise Recruiter Hub</span>
                   </Link>
 
                   <Link
