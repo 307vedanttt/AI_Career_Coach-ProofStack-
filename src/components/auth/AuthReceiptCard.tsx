@@ -31,12 +31,12 @@ export const AuthReceiptCard: React.FC<AuthReceiptCardProps> = ({
 }) => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user, refreshUser, loginWithApiKey } = useAuth();
+  const { refreshUser, loginWithApiKey } = useAuth();
 
   const [authMethod, setAuthMethod] = useState<'apikey' | 'oauth'>('apikey');
   const [apiKeyInput, setApiKeyInput] = useState<string>('');
   const [githubHandleInput, setGithubHandleInput] = useState<string>(() => {
-    return typeof window !== 'undefined' ? localStorage.getItem('ps_github_username') || '' : '';
+    return typeof window !== 'undefined' ? (localStorage.getItem('ps_github_username') || '307vedanttt') : '307vedanttt';
   });
   const [isSubmittingKey, setIsSubmittingKey] = useState<boolean>(false);
 
@@ -54,7 +54,7 @@ export const AuthReceiptCard: React.FC<AuthReceiptCardProps> = ({
     return null;
   });
 
-  const [showWelcome, setShowWelcome] = useState<boolean>(initialMode === 'welcome' || !!user);
+  const [showWelcome, setShowWelcome] = useState<boolean>(initialMode === 'welcome');
 
   // Handle API Key Login
   const handleApiKeySubmit = async (customKey?: string) => {
@@ -65,15 +65,23 @@ export const AuthReceiptCard: React.FC<AuthReceiptCardProps> = ({
     setIsSubmittingKey(true);
     setErrorMessage(null);
 
+    const targetUser = (githubHandleInput || '307vedanttt').trim().replace(/^@/, '');
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ps_github_username', targetUser);
+    }
+
     try {
       const keyToUse = typeof customKey === 'string' ? customKey : apiKeyInput;
-      await loginWithApiKey(keyToUse || undefined, githubHandleInput || undefined);
+      await loginWithApiKey(keyToUse || undefined, targetUser);
       await refreshUser();
       setTimeout(() => {
         setIsSubmittingKey(false);
-        setShowWelcome(true);
-        if (onSuccess) onSuccess();
-      }, 400);
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          navigate('/app', { replace: true });
+        }
+      }, 300);
     } catch (err: any) {
       setIsSubmittingKey(false);
       setErrorMessage(err?.message || 'Authentication failed. Please verify your token.');
@@ -90,23 +98,37 @@ export const AuthReceiptCard: React.FC<AuthReceiptCardProps> = ({
     setLoadingProvider('github');
     setErrorMessage(null);
 
+    const targetUser = (githubHandleInput || '307vedanttt').trim().replace(/^@/, '');
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ps_github_username', targetUser);
+    }
+
     try {
-      const res = await devLoginBackend();
-      if (!res) {
-        await loginWithApiKey('ps_live_github_verified', githubHandleInput || undefined);
-      }
+      await devLoginBackend();
+    } catch {
+      // offline/cloud fallback
+    }
+
+    try {
+      await loginWithApiKey('ps_live_github_verified', targetUser);
       await refreshUser();
       setTimeout(() => {
         setLoadingProvider(null);
-        setShowWelcome(true);
-        if (onSuccess) onSuccess();
-      }, 500);
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          navigate('/app', { replace: true });
+        }
+      }, 400);
     } catch {
-      await loginWithApiKey('ps_live_github_verified', githubHandleInput || undefined);
+      await loginWithApiKey('ps_live_github_verified', targetUser);
       await refreshUser();
       setLoadingProvider(null);
-      setShowWelcome(true);
-      if (onSuccess) onSuccess();
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        navigate('/app', { replace: true });
+      }
     }
   };
 
@@ -120,23 +142,37 @@ export const AuthReceiptCard: React.FC<AuthReceiptCardProps> = ({
     setLoadingProvider('google');
     setErrorMessage(null);
 
+    const targetUser = (githubHandleInput || '307vedanttt').trim().replace(/^@/, '');
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ps_github_username', targetUser);
+    }
+
     try {
-      const res = await devLoginBackend();
-      if (!res) {
-        await loginWithApiKey('ps_live_google_verified', githubHandleInput || undefined);
-      }
+      await devLoginBackend();
+    } catch {
+      // offline/cloud fallback
+    }
+
+    try {
+      await loginWithApiKey('ps_live_google_verified', targetUser);
       await refreshUser();
       setTimeout(() => {
         setLoadingProvider(null);
-        setShowWelcome(true);
-        if (onSuccess) onSuccess();
-      }, 500);
+        if (onSuccess) {
+          onSuccess();
+        } else {
+          navigate('/app', { replace: true });
+        }
+      }, 400);
     } catch {
-      await loginWithApiKey('ps_live_google_verified', githubHandleInput || undefined);
+      await loginWithApiKey('ps_live_google_verified', targetUser);
       await refreshUser();
       setLoadingProvider(null);
-      setShowWelcome(true);
-      if (onSuccess) onSuccess();
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        navigate('/app', { replace: true });
+      }
     }
   };
 

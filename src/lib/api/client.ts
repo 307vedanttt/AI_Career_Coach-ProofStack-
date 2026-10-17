@@ -110,17 +110,18 @@ function getDeterministicFallback(endpoint: string, options: ApiClientOptions = 
 
   if (ep.includes('/auth/api-key') || ep.includes('/auth/dev-login')) {
     const storedKey = (typeof window !== 'undefined' ? localStorage.getItem('ps_api_key') : null) || 'ps_live_instant_dev_key';
+    const targetUser = (typeof window !== 'undefined' ? localStorage.getItem('ps_github_username') : null) || '307vedanttt';
     return {
       status: 'authenticated',
       api_key: storedKey,
       token: storedKey,
       csrf_token: 'ps_csrf_deterministic_token',
       user: {
-        id: 'usr-lead-engineer',
-        login: 'developer',
-        name: 'Verified Developer',
-        avatar_url: 'https://github.com/developer.png',
-        public_repos: 18,
+        id: `usr-${targetUser}`,
+        login: targetUser,
+        name: targetUser,
+        avatar_url: `https://github.com/${targetUser}.png`,
+        public_repos: 13,
         scopes: ['read:user', 'public_repo', 'api_access'],
         session_started_at: new Date().toISOString()
       }
@@ -131,12 +132,13 @@ function getDeterministicFallback(endpoint: string, options: ApiClientOptions = 
     const storedKey = typeof window !== 'undefined' ? localStorage.getItem('ps_api_key') : null;
     const isMockSignedIn = typeof window !== 'undefined' && sessionStorage.getItem('ps_mock_signed_in') === 'true';
     if (storedKey || isMockSignedIn) {
+      const targetUser = (typeof window !== 'undefined' ? localStorage.getItem('ps_github_username') : null) || '307vedanttt';
       return {
-        id: 'usr-lead-engineer',
-        login: 'developer',
-        name: 'Verified Developer',
-        avatar_url: 'https://github.com/developer.png',
-        public_repos: 18,
+        id: `usr-${targetUser}`,
+        login: targetUser,
+        name: targetUser,
+        avatar_url: `https://github.com/${targetUser}.png`,
+        public_repos: 13,
         scopes: ['read:user', 'public_repo', 'api_access'],
         session_started_at: new Date().toISOString()
       };

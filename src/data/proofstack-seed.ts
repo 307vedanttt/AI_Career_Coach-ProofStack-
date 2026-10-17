@@ -9,14 +9,16 @@ import {
   AssessmentActivityRecord,
 } from '../types/proofstack';
 
+const activeUser = typeof window !== 'undefined' ? (localStorage.getItem('ps_github_username') || '307vedanttt') : '307vedanttt';
+
 export const initialRepository: RepositoryIdentity = {
-  id: 'repo-live-ai-careercoach',
-  name: 'AI-CarrerCoach',
-  owner: 'Omb2121',
-  fullName: 'Omb2121/AI-CarrerCoach',
-  description: 'AI Career Coach & Physical Proof Engine with live AST code verification & git provenance audit',
+  id: `repo-${activeUser}-mednav-ai`,
+  name: 'MedNav-Ai',
+  owner: activeUser,
+  fullName: `${activeUser}/MedNav-Ai`,
+  description: 'Intelligent clinical navigation and automated triaging system with live AST code verification & git provenance audit',
   defaultBranch: 'main',
-  primaryLanguage: 'Python / TypeScript',
+  primaryLanguage: 'JavaScript / TypeScript',
   createdAt: '2026-05-12T09:15:00Z',
   lastActivityAt: '2026-10-17T18:42:10Z',
   forkStatus: {
@@ -24,7 +26,7 @@ export const initialRepository: RepositoryIdentity = {
   },
   inspectedCommitsCount: 64,
   contributorsCount: 2,
-  headSha: 'a54f841b89efc11a01e23f99a0937b8b4e23cb21',
+  headSha: 'b9a10981a6ade11295e619d57ec6c16f8e82cfc3',
   license: 'MIT',
   starsCount: 18,
   connectionState: 'live_connected',
@@ -33,11 +35,11 @@ export const initialRepository: RepositoryIdentity = {
 
 export const initialContributors: ContributorMetric[] = [
   {
-    id: 'contrib-omb2121',
-    name: 'Omb2121',
-    username: 'Omb2121',
-    email: 'omb2121@users.noreply.github.com',
-    avatarUrl: 'https://github.com/Omb2121.png',
+    id: `contrib-${activeUser}`,
+    name: activeUser,
+    username: activeUser,
+    email: `${activeUser}@users.noreply.github.com`,
+    avatarUrl: `https://github.com/${activeUser}.png`,
     role: 'candidate',
     commitsCount: 42,
     percentageOfCommits: 65.6,
@@ -46,11 +48,11 @@ export const initialContributors: ContributorMetric[] = [
     linesDeleted: 1440,
   },
   {
-    id: 'contrib-vedant',
-    name: 'Vedant',
-    username: '307vedanttt',
-    email: '307vedanttt@users.noreply.github.com',
-    avatarUrl: 'https://github.com/307vedanttt.png',
+    id: 'contrib-ai-reviewer',
+    name: 'ProofStack Reviewer',
+    username: 'proofstack-audit',
+    email: 'reviewer@proofstack.dev',
+    avatarUrl: 'https://github.com/github.png',
     role: 'maintainer',
     commitsCount: 22,
     percentageOfCommits: 34.4,

@@ -468,6 +468,34 @@ export async function fetchUserGithubRepositories(username?: string): Promise<Gi
   // 3. Fallback default repositories
   return [
     {
+      id: `repo-${targetUser}-mednav`,
+      name: 'MedNav-Ai',
+      full_name: `${targetUser}/MedNav-Ai`,
+      owner: targetUser,
+      repo_url: `https://github.com/${targetUser}/MedNav-Ai`,
+      description: 'Intelligent clinical navigation and automated triaging system',
+      language: 'JavaScript',
+      stars_count: 9,
+      forks_count: 2,
+      default_branch: 'main',
+      is_fork: false,
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: `repo-${targetUser}-satquery`,
+      name: 'SatqueryAI',
+      full_name: `${targetUser}/SatqueryAI`,
+      owner: targetUser,
+      repo_url: `https://github.com/${targetUser}/SatqueryAI`,
+      description: 'Satellite imagery analysis and spatial natural language query system',
+      language: 'Python',
+      stars_count: 12,
+      forks_count: 1,
+      default_branch: 'main',
+      is_fork: false,
+      updated_at: new Date().toISOString(),
+    },
+    {
       id: `repo-${targetUser}-ai-career`,
       name: 'AI-CarrerCoach',
       full_name: `${targetUser}/AI-CarrerCoach`,
@@ -482,18 +510,60 @@ export async function fetchUserGithubRepositories(username?: string): Promise<Gi
       updated_at: new Date().toISOString(),
     },
     {
-      id: `repo-${targetUser}-mednav`,
-      name: 'MedNav-Ai',
-      full_name: `${targetUser}/MedNav-Ai`,
+      id: `repo-${targetUser}-spoon-knife`,
+      name: 'Spoon-Knife',
+      full_name: `${targetUser}/Spoon-Knife`,
       owner: targetUser,
-      repo_url: `https://github.com/${targetUser}/MedNav-Ai`,
-      description: 'Intelligent clinical navigation and automated triaging system',
-      language: 'TypeScript',
-      stars_count: 9,
+      repo_url: `https://github.com/${targetUser}/Spoon-Knife`,
+      description: 'Upstream git provenance and fork divergence demonstration suite',
+      language: 'HTML',
+      stars_count: 2,
+      forks_count: 0,
+      default_branch: 'main',
+      is_fork: true,
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: `repo-${targetUser}-iot`,
+      name: 'IOT',
+      full_name: `${targetUser}/IOT`,
+      owner: targetUser,
+      repo_url: `https://github.com/${targetUser}/IOT`,
+      description: 'Hardware telemetry capture and embedded sensor network processing',
+      language: 'Python',
+      stars_count: 5,
+      forks_count: 1,
+      default_branch: 'master',
+      is_fork: false,
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: `repo-${targetUser}-insurance-prediction`,
+      name: 'Insurance-Prediction',
+      full_name: `${targetUser}/Insurance-Prediction`,
+      owner: targetUser,
+      repo_url: `https://github.com/${targetUser}/Insurance-Prediction`,
+      description: 'Actuarial risk scoring and gradient-boosted regression pipeline',
+      language: 'Jupyter Notebook',
+      stars_count: 4,
+      forks_count: 1,
+      default_branch: 'main',
+      is_fork: false,
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: `repo-${targetUser}-vit-hackathon`,
+      name: 'VIT_Hackthon',
+      full_name: `${targetUser}/VIT_Hackthon`,
+      owner: targetUser,
+      repo_url: `https://github.com/${targetUser}/VIT_Hackthon`,
+      description: 'Autonomous multi-agent consensus and physical evidence engine',
+      language: 'Python',
+      stars_count: 8,
       forks_count: 2,
       default_branch: 'main',
       is_fork: false,
-      updated_at: new Date(Date.now() - 86400000).toISOString(),
+      updated_at: new Date().toISOString(),
     },
   ];
 }
@@ -539,13 +609,13 @@ export async function loginWithApiKey(apiKey?: string, username?: string): Promi
     // Deterministic fallback handles offline/cloud separation
   }
 
-  const effectiveUser = cleanUser || 'developer';
+  const effectiveUser = cleanUser || (typeof window !== 'undefined' ? localStorage.getItem('ps_github_username') : '') || '307vedanttt';
   return {
     id: `usr-${effectiveUser}`,
     login: effectiveUser,
     name: effectiveUser.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
     avatarUrl: `https://github.com/${effectiveUser}.png`,
-    publicRepos: 18,
+    publicRepos: 13,
     scopes: ['read:user', 'public_repo', 'api_access'],
     sessionStartedAt: new Date().toISOString(),
   };
@@ -564,13 +634,13 @@ export async function getCurrentUser(): Promise<UserSession | null> {
     }
   } catch (err: any) {
     const storedUser = typeof window !== 'undefined' ? localStorage.getItem('ps_github_username') : null;
-    const username = storedUser || 'developer';
+    const username = storedUser || '307vedanttt';
     const userFallback = {
       id: `usr-${username}`,
       login: username,
       name: username.replace(/[-_]/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
       avatarUrl: `https://github.com/${username}.png`,
-      publicRepos: 18,
+      publicRepos: 13,
       scopes: ['read:user', 'public_repo', 'api_access'],
       sessionStartedAt: new Date().toISOString(),
     };
@@ -589,13 +659,13 @@ export async function getCurrentUser(): Promise<UserSession | null> {
 
   const storedUser = typeof window !== 'undefined' ? localStorage.getItem('ps_github_username') : null;
   if (storedKey || isMockSignedIn) {
-    const username = storedUser || 'developer';
+    const username = storedUser || '307vedanttt';
     return {
       id: `usr-${username}`,
       login: username,
       name: username.replace(/[-_]/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase()),
       avatarUrl: `https://github.com/${username}.png`,
-      publicRepos: 18,
+      publicRepos: 13,
       scopes: ['read:user', 'public_repo', 'api_access'],
       sessionStartedAt: new Date().toISOString(),
     };

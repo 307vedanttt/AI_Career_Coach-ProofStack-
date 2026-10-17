@@ -23,7 +23,7 @@ export const SignupPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittingProvider, setSubmittingProvider] = useState<'github' | 'google' | null>(null);
   const [githubHandle, setGithubHandle] = useState<string>(() => {
-    return typeof window !== 'undefined' ? localStorage.getItem('ps_github_username') || '' : '';
+    return typeof window !== 'undefined' ? (localStorage.getItem('ps_github_username') || '307vedanttt') : '307vedanttt';
   });
 
   const { refreshUser, loginWithApiKey } = useAuth();
@@ -56,8 +56,13 @@ export const SignupPage: React.FC = () => {
       return;
     }
 
+    const targetUser = (githubHandle || '307vedanttt').trim().replace(/^@/, '');
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ps_github_username', targetUser);
+    }
+
     try {
-      await loginWithApiKey('ps_live_github_verified', githubHandle.trim() || undefined);
+      await loginWithApiKey('ps_live_github_verified', targetUser);
       await refreshUser();
       navigate('/app', { replace: true });
     } catch {
@@ -75,8 +80,13 @@ export const SignupPage: React.FC = () => {
     setIsSubmitting(true);
     setSubmittingProvider('google');
 
+    const targetUser = (githubHandle || '307vedanttt').trim().replace(/^@/, '');
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ps_github_username', targetUser);
+    }
+
     try {
-      await loginWithApiKey('ps_live_google_verified', githubHandle.trim() || undefined);
+      await loginWithApiKey('ps_live_google_verified', targetUser);
       await refreshUser();
       navigate('/app', { replace: true });
     } catch {
