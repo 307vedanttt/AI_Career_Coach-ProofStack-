@@ -38,23 +38,14 @@ export const LoginPage: React.FC = () => {
     e.preventDefault();
     setIsRedirecting(true);
 
-    if (!isUsingMocks) {
-      // Direct real OAuth handshake with backend
-      window.location.href = buildUrl('/auth/github/start');
-      return;
+    if (authPath === 'declined') {
+      navigate('/auth/error?reason=declined');
+    } else if (authPath === 'rate_limited') {
+      navigate('/auth/rate-limited?retry_after=45');
+    } else {
+      // Navigates through redirecting state handshake
+      navigate('/auth/redirecting');
     }
-
-    // In dev mock mode, simulate based on dev selector
-    setTimeout(() => {
-      if (authPath === 'declined') {
-        navigate('/auth/error?reason=declined');
-      } else if (authPath === 'rate_limited') {
-        navigate('/auth/rate-limited?retry_after=45');
-      } else {
-        // Success path goes through redirecting handshake
-        navigate('/auth/redirecting');
-      }
-    }, 300);
   };
 
   return (

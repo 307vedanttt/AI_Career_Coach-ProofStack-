@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { ShieldCheck } from 'lucide-react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { setMockSignedIn } from '../../lib/api';
+import { useAuth } from '../../context/AuthContext';
 
 export const RedirectingPage: React.FC = () => {
   const navigate = useNavigate();
+  const auth = useAuth();
   const headingRef = useRef<HTMLHeadingElement>(null);
   const shouldReduceMotion = useReducedMotion();
 
@@ -15,11 +17,14 @@ export const RedirectingPage: React.FC = () => {
     // Simulate OAuth handshake completion in mock mode
     const timer = setTimeout(async () => {
       await setMockSignedIn(true);
+      if (auth?.refreshUser) {
+        await auth.refreshUser();
+      }
       navigate('/app', { replace: true });
-    }, 1800);
+    }, 1200);
 
     return () => clearTimeout(timer);
-  }, [navigate]);
+  }, [navigate, auth]);
 
   return (
     <div className="min-h-screen bg-[#0A0C0F] text-[#F7F5F0] flex flex-col items-center justify-center p-6 relative select-none">

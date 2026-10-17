@@ -41,25 +41,16 @@ export const SignupPage: React.FC = () => {
     if (!isFormComplete) return;
 
     setIsSubmitting(true);
-
-    if (!isUsingMocks) {
-      // Direct real OAuth handshake with backend
-      window.location.href = buildUrl('/auth/github/start');
-      return;
-    }
-
     const authPath = getMockAuthPath();
 
-    setTimeout(() => {
-      if (authPath === 'declined') {
-        navigate('/auth/error?reason=declined');
-      } else if (authPath === 'rate_limited') {
-        navigate('/auth/rate-limited?retry_after=45');
-      } else {
-        // Direct to consent preview or redirecting
-        navigate('/auth/consent');
-      }
-    }, 300);
+    if (authPath === 'declined') {
+      navigate('/auth/error?reason=declined');
+    } else if (authPath === 'rate_limited') {
+      navigate('/auth/rate-limited?retry_after=45');
+    } else {
+      // Direct to consent preview
+      navigate('/auth/consent');
+    }
   };
 
   return (
