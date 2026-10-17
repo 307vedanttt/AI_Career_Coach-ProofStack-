@@ -15,6 +15,9 @@ import {
   UserSession,
   ConnectedRepository,
   AtsAnalysisResult,
+  DeepForensicResult,
+  CodeQualityTestSession,
+  CodeQualityTestSubmissionResult,
 } from '../types/api';
 import { apiClient, buildUrl, getCsrfTokenFromCookie } from './api/client';
 import {
@@ -646,5 +649,26 @@ export async function getLatestAtsAnalysis(resumeId: string): Promise<AtsAnalysi
     if (err?.status === 404) return null;
     throw err;
   }
+}
+
+export async function getDeepResumeForensic(resumeId: string = 'latest'): Promise<DeepForensicResult> {
+  return await apiClient<DeepForensicResult>(`/api/resume/${encodeURIComponent(resumeId)}/deep-forensic`);
+}
+
+export async function getCodeQualityTests(): Promise<CodeQualityTestSession> {
+  return await apiClient<CodeQualityTestSession>('/api/skill-tests');
+}
+
+export async function submitCodeQualityTests(
+  testSessionId: string,
+  answers: Record<string, number>
+): Promise<CodeQualityTestSubmissionResult> {
+  return await apiClient<CodeQualityTestSubmissionResult>('/api/skill-tests/submit', {
+    method: 'POST',
+    body: JSON.stringify({
+      test_session_id: testSessionId,
+      answers,
+    }),
+  });
 }
 

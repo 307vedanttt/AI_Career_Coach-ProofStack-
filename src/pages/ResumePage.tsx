@@ -11,15 +11,17 @@ import {
   FileUp,
   FileText,
   FileCheck2,
+  Sparkles,
 } from 'lucide-react';
 import { ResumeUploadAnalysis } from '../components/resume/ResumeUploadAnalysis';
 import { AtsReadabilityPanel } from '../components/resume/AtsReadabilityPanel';
+import { DeepResumeAuditPanel } from '../components/resume/DeepResumeAuditPanel';
 
 export const ResumePage: React.FC = () => {
   const [data, setData] = useState<ResumeAttestationData | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
   const [activeFootnote, setActiveFootnote] = useState<number | null>(null);
-  const [activeView, setActiveView] = useState<'all' | 'upload' | 'ats' | 'dossier'>('all');
+  const [activeView, setActiveView] = useState<'all' | 'forensic' | 'ats' | 'upload' | 'dossier'>('all');
 
   useEffect(() => {
     getResumeAttestation()
@@ -63,6 +65,18 @@ export const ResumePage: React.FC = () => {
           </button>
           <button
             type="button"
+            onClick={() => setActiveView('forensic')}
+            className={`px-3 py-1.5 rounded-lg flex items-center gap-2 font-semibold transition-all ${
+              activeView === 'forensic'
+                ? 'bg-emerald-500 text-[#0A0C0F] shadow-[0_0_12px_rgba(52,211,153,0.3)]'
+                : 'text-[#9AA3AE] hover:text-white bg-white/5'
+            }`}
+          >
+            <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+            <span>Deep Forensic Audit</span>
+          </button>
+          <button
+            type="button"
             onClick={() => setActiveView('ats')}
             className={`px-3 py-1.5 rounded-lg flex items-center gap-2 font-semibold transition-all ${
               activeView === 'ats'
@@ -103,6 +117,13 @@ export const ResumePage: React.FC = () => {
           Deterministic Claim Verification
         </span>
       </div>
+
+      {/* Deep Forensic Audit Panel Section */}
+      {(activeView === 'all' || activeView === 'forensic') && (
+        <div className="max-w-[1360px] w-full mx-auto px-4 mb-12">
+          <DeepResumeAuditPanel resumeId="latest" />
+        </div>
+      )}
 
       {/* ATS Readability Panel Section */}
       {(activeView === 'all' || activeView === 'ats') && (

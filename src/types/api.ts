@@ -390,3 +390,143 @@ export interface AtsAnalysisResult {
   created_at: string;
 }
 
+export interface BulletDiagnostic {
+  id: string;
+  original_text: string;
+  status: 'exemplary_xyz' | 'partial_xyz' | 'needs_work';
+  word_count: number;
+  starts_with_power_verb: boolean;
+  has_quantifiable_metrics: boolean;
+  has_first_person_pronouns: boolean;
+  critique: string[];
+  google_xyz_rewrite: string;
+}
+
+export interface GoogleXyzAudit {
+  score: number;
+  metric_density_pct: number;
+  power_verb_pct: number;
+  total_bullets_analyzed: number;
+  compliant_bullets_count: number;
+  bullets: BulletDiagnostic[];
+}
+
+export interface ContactCheckItem {
+  item: string;
+  present: boolean;
+  impact: string;
+}
+
+export interface SectionHealthDiagnostic {
+  overall_score: number;
+  contact: {
+    score: number;
+    checklist: ContactCheckItem[];
+  };
+  summary: {
+    present: boolean;
+    has_first_person_flaw: boolean;
+    score: number;
+    critique: string;
+  };
+  experience: {
+    present: boolean;
+    detected_milestones: number;
+    bullet_count: number;
+    score: number;
+    critique: string;
+  };
+  skills: {
+    present: boolean;
+    categorized_breakdown: Record<string, string[]>;
+    covered_categories_count: number;
+    score: number;
+    critique: string;
+  };
+  education: {
+    present: boolean;
+    score: number;
+    critique: string;
+  };
+}
+
+export interface VerifiedClaim {
+  skill: string;
+  status: string;
+  evidence_file: string;
+  line_range: string;
+  confidence: string;
+  provenance_summary: string;
+}
+
+export interface UnsubstantiatedRisk {
+  skill: string;
+  status: string;
+  reason: string;
+  risk_level: string;
+  action_required: string;
+}
+
+export interface ClaimVsRealityMatrix {
+  proof_integrity_index: number;
+  verified_claims_count: number;
+  unsubstantiated_risks_count: number;
+  verified_claims: VerifiedClaim[];
+  unsubstantiated_risks: UnsubstantiatedRisk[];
+}
+
+export interface CodeAnchoredRewrite {
+  original: string;
+  improved: string;
+  evidence_anchor: string;
+  impact_gain: string;
+}
+
+export interface DeepForensicResult {
+  google_xyz_audit: GoogleXyzAudit;
+  section_health: SectionHealthDiagnostic;
+  claim_vs_reality_matrix: ClaimVsRealityMatrix;
+  code_anchored_rewrites: CodeAnchoredRewrite[];
+  generated_at: string;
+}
+
+export interface CodeQualityQuestion {
+  id: string;
+  category: string;
+  difficulty: string;
+  repo_name: string;
+  file_path: string;
+  line_target: string;
+  code_context: string;
+  question: string;
+  options: string[];
+  correct_option_index: number;
+  explanation: string;
+}
+
+export interface CodeQualityTestSession {
+  test_session_id: string;
+  repo_name: string;
+  total_questions: number;
+  estimated_minutes: number;
+  questions: CodeQualityQuestion[];
+  generated_at: string;
+}
+
+export interface CodeQualityTestSubmissionResult {
+  test_session_id: string;
+  score_percent: number;
+  correct_count: number;
+  total_questions: number;
+  mastery_label: string;
+  cryptographic_proof_hash: string;
+  results_breakdown: Array<{
+    question_id: string;
+    user_selected_index: number | null;
+    correct_index: number;
+    is_correct: boolean;
+  }>;
+  passed: boolean;
+  evaluation_time: string;
+}
+

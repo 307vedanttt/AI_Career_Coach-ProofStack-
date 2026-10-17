@@ -25,6 +25,7 @@ import {
   GitFork,
   Github,
   FileUp,
+  Award,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useProofStack } from '../../context/ProofStackContext';
@@ -223,6 +224,15 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         ],
       };
     }
+    if (path === '/app/skill-tests' || path === '/skill-tests' || path === '/app/code-quality-tests') {
+      return {
+        pageTitle: 'Code-Quality Skill Tests',
+        breadcrumbs: [
+          { label: 'Overview', to: '/app' },
+          { label: 'Skill Tests', to: '/app/skill-tests' },
+        ],
+      };
+    }
     if (path === '/how-we-judge') {
       return {
         pageTitle: 'How We Judge',
@@ -258,6 +268,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
     { to: '/app/contracts', label: 'Contracts', icon: FileText },
     { to: '/app/proof-map', label: 'ProofMap', icon: Layers },
     { to: '/resume', label: 'Resume', icon: FileUp },
+    { to: '/app/skill-tests', label: 'Skill Tests', icon: Award },
   ];
 
   // Mobile 5-Tab Bar items (4 primary + More sheet)

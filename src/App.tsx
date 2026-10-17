@@ -16,6 +16,7 @@ import { HowWeJudgePage } from './pages/HowWeJudgePage';
 import { StyleguidePage } from './pages/StyleguidePage';
 import { AlertsPage } from './pages/AlertsPage';
 import { DiagnosticsPage } from './pages/DiagnosticsPage';
+import { CodeQualityTestsPage } from './pages/CodeQualityTestsPage';
 
 // Auth Pages & Route Guard
 import { LoginPage } from './pages/auth/LoginPage';
@@ -207,6 +208,23 @@ export const App: React.FC = () => {
               }
             />
             
+            <Route
+              path="/app/skill-tests"
+              element={
+                <AuthGuard>
+                  <CodeQualityTestsPage />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/app/code-quality-tests"
+              element={
+                <AuthGuard>
+                  <CodeQualityTestsPage />
+                </AuthGuard>
+              }
+            />
+
             {/* Direct Spec Public Routes */}
             <Route path="/audit" element={<RepositoryAuditPage />} />
             <Route path="/evidence" element={<EvidenceValidationPage />} />
@@ -215,6 +233,7 @@ export const App: React.FC = () => {
             <Route path="/diagnostics" element={<DiagnosticsPage />} />
             <Route path="/breakme" element={<BreakMePage />} />
             <Route path="/resume" element={<ResumePage />} />
+            <Route path="/skill-tests" element={<CodeQualityTestsPage />} />
             <Route path="/verify" element={<VerifyPage />} />
             <Route path="/scan" element={<ScannerPage />} />
             <Route path="/alerts" element={<AlertsPage />} />
