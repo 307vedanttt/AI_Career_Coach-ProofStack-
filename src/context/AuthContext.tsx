@@ -1,12 +1,18 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { UserSession } from '../types/api';
-import { getCurrentUser, logoutUser, deleteMyData as apiDeleteMyData } from '../lib/api';
+import {
+  getCurrentUser,
+  logoutUser,
+  deleteMyData as apiDeleteMyData,
+  loginWithApiKey as apiLoginWithApiKey,
+} from '../lib/api';
 
 export interface AuthContextValue {
   user: UserSession | null;
   loading: boolean;
   error: Error | null;
   refreshUser: () => Promise<UserSession | null>;
+  loginWithApiKey: (apiKey?: string) => Promise<UserSession | null>;
   logout: () => Promise<void>;
   deleteMyData: () => Promise<void>;
 }
@@ -29,6 +35,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const e = err instanceof Error ? err : new Error(String(err));
       setError(e);
       setUser(null);
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const loginWithApiKey = useCallback(async (apiKey?: string): Promise<UserSession | null> => {
+    try {
+      setLoading(true);
+      const session = await apiLoginWithApiKey(apiKey);
+      setUser(session);
+      setError(null);
+      return session;
+    } catch (err) {
+      const e = err instanceof Error ? err : new Error(String(err));
+      setError(e);
       return null;
     } finally {
       setLoading(false);
@@ -62,6 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loading,
         error,
         refreshUser,
+        loginWithApiKey,
         logout,
         deleteMyData,
       }}
@@ -79,6 +102,7 @@ export const useAuth = (): AuthContextValue => {
       loading: false,
       error: null,
       refreshUser: async () => null,
+      loginWithApiKey: async () => null,
       logout: async () => {},
       deleteMyData: async () => {},
     };

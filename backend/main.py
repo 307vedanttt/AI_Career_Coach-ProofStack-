@@ -126,6 +126,8 @@ async def csrf_protect_middleware(request: Request, call_next):
             "/settings",
             "/api/auth/dev-login",
             "/auth/dev-login",
+            "/api/auth/api-key",
+            "/auth/api-key",
             "/api/check-now",
             "/check-now",
             "/api/resume/upload",

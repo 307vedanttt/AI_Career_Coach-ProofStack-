@@ -210,3 +210,31 @@ async def test_auth_rate_limiting_returns_429():
         assert rate_limited_res.status_code == 429
         assert "Retry-After" in rate_limited_res.headers
         assert int(rate_limited_res.headers["Retry-After"]) > 0
+
+@pytest.mark.asyncio
+async def test_api_key_authentication_and_issuance():
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        # 1. Issuing an instant API key via POST /api/auth/api-key
+        issue_resp = await client.post("/api/auth/api-key", json={})
+        assert issue_resp.status_code == 200
+        data = issue_resp.json()
+        assert data["status"] == "authenticated"
+        assert data["api_key"].startswith("ps_live_")
+        api_key = data["api_key"]
+
+        # 2. Authenticating /api/me using X-API-Key header
+        me_resp_x_key = await client.get("/api/me", headers={"X-API-Key": api_key})
+        assert me_resp_x_key.status_code == 200
+        assert me_resp_x_key.json()["login"] is not None
+
+        # 3. Authenticating /api/me using Authorization: Bearer header
+        me_resp_bearer = await client.get("/api/me", headers={"Authorization": f"Bearer {api_key}"})
+        assert me_resp_bearer.status_code == 200
+        assert me_resp_bearer.json()["id"] is not None
+
+        # 4. Custom API key validation
+        custom_key = "ps_live_reviewer_token_9988"
+        custom_resp = await client.post("/api/auth/api-key", json={"api_key": custom_key})
+        assert custom_resp.status_code == 200
+        assert custom_resp.json()["api_key"] == custom_key

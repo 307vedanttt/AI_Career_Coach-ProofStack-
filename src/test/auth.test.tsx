@@ -207,5 +207,41 @@ describe('Auth Screens Component & Security Tests', () => {
 
     expect(screen.getByTestId('dashboard-screen')).toBeInTheDocument();
   });
+
+  it('renders API Key login controls and allows instant 1-click token authentication', () => {
+    render(
+      <MemoryRouter initialEntries={['/login']}>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    // Verify API Key tab is rendered and active by default
+    expect(screen.getByRole('button', { name: /API Key \/ Token/i })).toBeInTheDocument();
+    expect(screen.getByText(/Instant 1-Click Access/i)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/ps_live_... or GitHub Personal Token/i)).toBeInTheDocument();
+  });
+
+  it('allows switching between API Key tab and OAuth SSO tab', () => {
+    render(
+      <MemoryRouter initialEntries={['/login']}>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    const oauthTabButton = screen.getByRole('button', { name: /OAuth SSO/i });
+    fireEvent.click(oauthTabButton);
+
+    expect(screen.getByText(/Continue with Google/i)).toBeInTheDocument();
+    expect(screen.getByText(/Continue with GitHub/i)).toBeInTheDocument();
+
+    const apiKeyTabButton = screen.getByRole('button', { name: /API Key \/ Token/i });
+    fireEvent.click(apiKeyTabButton);
+
+    expect(screen.getByText(/Instant 1-Click Access/i)).toBeInTheDocument();
+  });
 });
 

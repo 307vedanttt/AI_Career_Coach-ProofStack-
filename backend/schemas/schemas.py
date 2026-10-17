@@ -250,6 +250,18 @@ class CorrectionResponse(BaseModel):
     message: str
 
 # --- User & Session ---
+class ApiKeyAuthRequest(BaseModel):
+    api_key: Optional[str] = None
+    role: Optional[str] = "developer"
+
+class ApiKeyAuthResponse(BaseModel):
+    status: str = "authenticated"
+    api_key: str
+    token: str
+    session_token: str
+    csrf_token: str
+    user: "UserSessionResponse"
+
 class UserSessionResponse(BaseModel):
     id: str
     login: str
