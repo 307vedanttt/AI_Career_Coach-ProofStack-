@@ -114,7 +114,7 @@ export const ReceiptStackLogin: React.FC = () => {
           {/* Code Footer meta */}
           <div className="flex items-center justify-between font-mono text-[10px] text-[#6B7280]">
             <span>src/api/routes/orders.py</span>
-            <span className="font-semibold text-[#14171A]">commit 9f3c2ab</span>
+            <span className="font-semibold text-[#14171A]">verified head commit</span>
           </div>
 
           {/* PROVEN Slam Stamp (Framer Motion Slam) */}
@@ -164,7 +164,7 @@ export const ReceiptStackLogin: React.FC = () => {
       {/* Footer Audit line */}
       <div className="mt-4 flex items-center gap-2 font-mono text-xs text-[#9AA3AE]">
         <span className="w-2 h-2 rounded-full bg-[#34D399] animate-pulse" />
-        <span>Evidence coverage 58% — updated 2 minutes ago</span>
+        <span>Evidence coverage verified — cryptographic audit ledger</span>
       </div>
     </div>
   );

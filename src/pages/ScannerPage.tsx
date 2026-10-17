@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AppLayout } from '../components/layout/AppLayout';
 import { Button } from '../components/ui/Button';
-import { scanPublicRepo, mockSystemMetrics } from '../lib/api';
+import { scanPublicRepo } from '../lib/api';
 import { RepoScanResult } from '../types/api';
 import {
   Terminal,
@@ -47,7 +47,7 @@ export const ScannerPage: React.FC = () => {
   };
 
   return (
-    <AppLayout metrics={mockSystemMetrics}>
+    <AppLayout>
       {/* MOBILE FIRST CONTAINER: STRICTLY 390px WIDTH ON MOBILE */}
       <div className="w-full max-w-[390px] mx-auto px-3 py-6 flex flex-col space-y-5 select-none">
         {/* Scope Header */}
@@ -89,7 +89,7 @@ export const ScannerPage: React.FC = () => {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="e.g. rohan or octocat"
+                placeholder="e.g. torvalds or octocat"
                 spellCheck={false}
                 className="w-full bg-transparent py-2.5 pr-3 text-white font-mono text-xs placeholder-[#64748B] focus:outline-none"
               />
@@ -142,7 +142,7 @@ export const ScannerPage: React.FC = () => {
             </div>
 
             <div className="flex items-center justify-between text-[11px] font-mono text-[#9AA3AE]">
-              <span>Indexing commit tree 9f3c2ab...</span>
+              <span>Indexing remote commit tree...</span>
               <span className="text-white font-medium">{scanProgress}%</span>
             </div>
 

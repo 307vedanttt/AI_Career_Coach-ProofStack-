@@ -44,6 +44,7 @@ def run_e2e_push_test():
     main_bytes = json.dumps(main_payload).encode("utf-8")
     valid_sig = sign_payload(main_bytes, SECRET)
 
+    test_ts = int(time.time())
     with httpx.Client(base_url=BASE_URL, timeout=10.0) as client:
         # TEST 1: Valid signed push
         print("\n[TEST 1] Sending correctly signed webhook payload...")
@@ -53,7 +54,7 @@ def run_e2e_push_test():
             headers={
                 "Content-Type": "application/json",
                 "X-GitHub-Event": "push",
-                "X-GitHub-Delivery": "deliv-001-primary",
+                "X-GitHub-Delivery": f"deliv-{test_ts}-primary",
                 "X-Hub-Signature-256": valid_sig,
             }
         )
@@ -69,7 +70,7 @@ def run_e2e_push_test():
             headers={
                 "Content-Type": "application/json",
                 "X-GitHub-Event": "push",
-                "X-GitHub-Delivery": "deliv-002-duplicate",
+                "X-GitHub-Delivery": f"deliv-{test_ts}-duplicate",
                 "X-Hub-Signature-256": valid_sig,
             }
         )
@@ -86,7 +87,7 @@ def run_e2e_push_test():
             headers={
                 "Content-Type": "application/json",
                 "X-GitHub-Event": "push",
-                "X-GitHub-Delivery": "deliv-003-forged",
+                "X-GitHub-Delivery": f"deliv-{test_ts}-forged",
                 "X-Hub-Signature-256": forged_sig,
             }
         )
@@ -106,7 +107,7 @@ def run_e2e_push_test():
             headers={
                 "Content-Type": "application/json",
                 "X-GitHub-Event": "push",
-                "X-GitHub-Delivery": "deliv-004-branch",
+                "X-GitHub-Delivery": f"deliv-{test_ts}-branch",
                 "X-Hub-Signature-256": branch_sig,
             }
         )

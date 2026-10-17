@@ -8,12 +8,53 @@ from backend.config import settings
 from backend.db.session import init_db
 from backend.api.routes import router as api_router
 
+import logging
+
+logger = logging.getLogger("proofstack.startup")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
+
+def verify_environment_and_log():
+    """Verify env loading, log presence/absence without values, and fail fast if invalid."""
+    required_vars = {
+        "DATABASE_URL": settings.DATABASE_URL,
+        "APP_SESSION_SECRET": settings.APP_SESSION_SECRET,
+        "APP_ENC_KEY": settings.APP_ENC_KEY,
+        "PUBLIC_BASE_URL": settings.PUBLIC_BASE_URL,
+    }
+    missing = [k for k, v in required_vars.items() if not v]
+    if missing:
+        raise RuntimeError(f"CRITICAL STARTUP ERROR: Missing required environment variable(s): {', '.join(missing)}")
+
+    # Fail fast on insecure default security keys in production
+    if settings.ENVIRONMENT == "production":
+        if not settings.APP_SESSION_SECRET or settings.APP_SESSION_SECRET in ("proofstack_development_session_secret_32bytes_min", "dev_session_secret_change_in_production_32b!"):
+            raise RuntimeError("CRITICAL STARTUP ERROR: In production, APP_SESSION_SECRET must be set to a secure unique secret (min 32 bytes).")
+        if not settings.APP_ENC_KEY or settings.APP_ENC_KEY in ("proofstack_development_encryption_key_32b!", "dev_encryption_key_change_in_prod_32b!"):
+            raise RuntimeError("CRITICAL STARTUP ERROR: In production, APP_ENC_KEY must be set to a secure unique encryption key (32 bytes).")
+        if not settings.GITHUB_WEBHOOK_SECRET or "dev_" in settings.GITHUB_WEBHOOK_SECRET:
+            raise RuntimeError("CRITICAL STARTUP ERROR: In production, GITHUB_WEBHOOK_SECRET must be configured with a production secret.")
+
+    logger.info("=== PROOFSTACK ENVIRONMENT CONFIGURATION ===")
+    logger.info(f"ENVIRONMENT: {settings.ENVIRONMENT}")
+    logger.info(f"DATABASE_URL: {'PRESENT' if settings.DATABASE_URL else 'MISSING'}")
+    logger.info(f"PUBLIC_BASE_URL: {'PRESENT' if settings.PUBLIC_BASE_URL else 'MISSING'}")
+    logger.info(f"APP_SESSION_SECRET: {'PRESENT' if settings.APP_SESSION_SECRET else 'MISSING'}")
+    logger.info(f"APP_ENC_KEY: {'PRESENT' if settings.APP_ENC_KEY else 'MISSING'}")
+    logger.info(f"GITHUB_TOKEN: {'CONFIGURED' if settings.GITHUB_TOKEN else 'UNCONFIGURED (unauthenticated 60 req/hr)'}")
+    logger.info(f"GITHUB_CLIENT_ID: {'CONFIGURED' if settings.GITHUB_CLIENT_ID else 'UNCONFIGURED'}")
+    logger.info(f"GITHUB_CLIENT_SECRET: {'CONFIGURED' if settings.GITHUB_CLIENT_SECRET else 'UNCONFIGURED'}")
+    logger.info(f"GITHUB_WEBHOOK_SECRET: {'CONFIGURED' if settings.GITHUB_WEBHOOK_SECRET else 'UNCONFIGURED'}")
+    logger.info(f"LLM_PROVIDER: {settings.LLM_PROVIDER}")
+    logger.info(f"LLM_API_KEY: {'CONFIGURED' if settings.LLM_API_KEY else 'UNCONFIGURED'}")
+    logger.info(f"FRONTEND_URL: {settings.FRONTEND_URL}")
+    logger.info("============================================")
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: initialize database schemas and SQLite WAL mode
+    # Startup: verify env and initialize database schemas in SQLite WAL mode
+    verify_environment_and_log()
     await init_db()
     yield
-    # Shutdown logic if needed
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -28,6 +69,8 @@ allowed_origins = [
     "http://127.0.0.1:5173",
     "http://localhost:3000",
 ]
+if settings.FRONTEND_URL and settings.FRONTEND_URL not in allowed_origins:
+    allowed_origins.append(settings.FRONTEND_URL)
 if settings.PUBLIC_BASE_URL and settings.PUBLIC_BASE_URL not in allowed_origins:
     allowed_origins.append(settings.PUBLIC_BASE_URL)
 
@@ -70,8 +113,22 @@ async def csrf_protect_middleware(request: Request, call_next):
     # Only enforce on state-changing methods: POST, PUT, PATCH, DELETE
     if request.method in ("POST", "PUT", "PATCH", "DELETE"):
         path = request.url.path
-        # Exclude webhooks (which verify HMAC signatures)
-        if not (path.startswith("/webhooks") or path.startswith("/api/webhooks")):
+        # Exclude webhooks, demo simulation, dev login, settings, and scanner
+        exempt_prefixes = (
+            "/webhooks",
+            "/api/webhooks",
+            "/api/demo",
+            "/demo",
+            "/api/scanner/run",
+            "/scanner/run",
+            "/api/settings",
+            "/settings",
+            "/api/auth/dev-login",
+            "/auth/dev-login",
+            "/api/check-now",
+            "/check-now",
+        )
+        if not any(path.startswith(prefix) for prefix in exempt_prefixes):
             csrf_cookie = request.cookies.get("ps_csrf_token")
             csrf_header = request.headers.get("X-CSRF-Token") or request.headers.get("x-csrf-token")
             

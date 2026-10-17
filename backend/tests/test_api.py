@@ -112,3 +112,18 @@ async def test_sse_endpoint_connects():
     gen = response.body_iterator
     first_chunk = await gen.__anext__()
     assert "connected" in first_chunk or "ProofStack" in first_chunk
+
+@pytest.mark.asyncio
+async def test_poll_repository(async_client: AsyncClient):
+    repo_resp = await async_client.post(
+        "/api/repos",
+        json={"repo_url": "https://github.com/example/poll-demo"}
+    )
+    assert repo_resp.status_code == 200
+    repo_id = repo_resp.json()["id"]
+
+    poll_resp = await async_client.post(f"/api/repos/{repo_id}/poll")
+    assert poll_resp.status_code == 200
+    poll_data = poll_resp.json()
+    assert "changed" in poll_data
+

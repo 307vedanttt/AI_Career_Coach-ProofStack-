@@ -10,6 +10,12 @@ export function buildUrl(path: string): string {
   return `${cleanBase}${cleanPath}`;
 }
 
+export function getCsrfTokenFromCookie(): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(/(^|;)\s*ps_csrf_token=([^;]+)/);
+  return match ? decodeURIComponent(match[2]) : null;
+}
+
 export interface ApiClientOptions extends RequestInit {
   schema?: any;
   params?: Record<string, string | number>;
@@ -28,12 +34,33 @@ export async function apiClient<T = any>(endpoint: string, options: ApiClientOpt
     if (qs) url += (url.includes('?') ? '&' : '?') + qs;
   }
 
+  const method = (options.method || 'GET').toUpperCase();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    ...(options.headers as Record<string, string>),
+  };
+
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method) && !headers['X-CSRF-Token']) {
+    let token = getCsrfTokenFromCookie();
+    if (!token) {
+      try {
+        const csrfRes = await fetch(buildUrl('/api/csrf'), { credentials: 'include' });
+        if (csrfRes.ok) {
+          const csrfData = await csrfRes.json();
+          token = csrfData.csrf_token || getCsrfTokenFromCookie();
+        }
+      } catch {
+        // Fallback
+      }
+    }
+    if (token) {
+      headers['X-CSRF-Token'] = token;
+    }
+  }
+
   const res = await fetch(url, {
-    method: options.method || 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
+    method,
+    headers,
     credentials: 'include',
     body: options.body,
   });
@@ -41,7 +68,6 @@ export async function apiClient<T = any>(endpoint: string, options: ApiClientOpt
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}: ${res.statusText || 'API Request Failed'}`);
   }
-
 
   const data = await res.json();
   if (options.schema) {

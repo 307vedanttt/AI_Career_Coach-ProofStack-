@@ -55,7 +55,7 @@ export const FinalCtaSection: React.FC = () => {
           <div className="pt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-6 border-t border-[#E6E1D6]">
             {/* Primary Action Button */}
             <Link
-              to="/styleguide"
+              to="/app"
               className="h-14 px-8 rounded-xl bg-[#14171A] text-[#FAF8F3] hover:bg-black font-display text-base font-bold flex items-center justify-center gap-2 shadow-xl hover:scale-102 transition-transform focus:outline-none focus:ring-2 focus:ring-emerald-500"
               aria-label="Launch interactive demo in styleguide"
             >

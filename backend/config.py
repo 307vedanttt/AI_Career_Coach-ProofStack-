@@ -32,7 +32,10 @@ class Settings(BaseModel):
     MAX_FILE_BYTES: int = int(os.getenv("MAX_FILE_BYTES", str(2 * 1024 * 1024))) # 2MB limit
     
     # LLM Settings (optional provider-agnostic verifier)
-    LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "none") # none, openai, anthropic, mock
+    GEMINI_API_KEY: Optional[str] = os.getenv("GEMINI_API_KEY", None)
+    OPENAI_API_KEY: Optional[str] = os.getenv("OPENAI_API_KEY", None)
+    ANTHROPIC_API_KEY: Optional[str] = os.getenv("ANTHROPIC_API_KEY", None)
+    LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "none") # none, gemini, openai, anthropic, mock
     LLM_API_KEY: Optional[str] = os.getenv("LLM_API_KEY", None)
     LLM_MODEL: str = os.getenv("LLM_MODEL", "gpt-4o-mini")
     FALLBACK_LLM_PROVIDER: Optional[str] = os.getenv("FALLBACK_LLM_PROVIDER", None)
@@ -40,3 +43,25 @@ class Settings(BaseModel):
     FALLBACK_LLM_MODEL: Optional[str] = os.getenv("FALLBACK_LLM_MODEL", None)
 
 settings = Settings()
+
+# Auto-detect API key if LLM_API_KEY is not set
+if not settings.LLM_API_KEY:
+    if settings.GEMINI_API_KEY:
+        settings.LLM_API_KEY = settings.GEMINI_API_KEY
+        if settings.LLM_PROVIDER in ("none", ""):
+            settings.LLM_PROVIDER = "gemini"
+            settings.LLM_MODEL = "gemini-1.5-flash"
+    elif settings.OPENAI_API_KEY:
+        settings.LLM_API_KEY = settings.OPENAI_API_KEY
+        if settings.LLM_PROVIDER in ("none", ""):
+            settings.LLM_PROVIDER = "openai"
+            settings.LLM_MODEL = "gpt-4o-mini"
+    elif settings.ANTHROPIC_API_KEY:
+        settings.LLM_API_KEY = settings.ANTHROPIC_API_KEY
+        if settings.LLM_PROVIDER in ("none", ""):
+            settings.LLM_PROVIDER = "anthropic"
+            settings.LLM_MODEL = "claude-3-5-sonnet-20241022"
+
+if settings.LLM_API_KEY and settings.LLM_PROVIDER != "none":
+    settings.RUN_MODE = "llm_assisted"
+

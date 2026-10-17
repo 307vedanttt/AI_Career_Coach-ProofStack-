@@ -82,3 +82,7 @@ Thumbs.db
 
 # Backup folders
 AI-CarrerCoach-main/
+
+# Scratch & temporary artifacts
+inspect_dom.cjs
+task1_scan_results.txt

@@ -8,6 +8,7 @@ import os
 import time
 import uuid
 import datetime
+import json
 import sqlite3
 
 def utcnow():
@@ -113,6 +114,7 @@ def seed_demo():
     snap3_id = str(uuid.uuid4())
     snap3_hash = "d260ab40dd53d36bcdea0f3b7d423a2327ee8e4752356db54e872daf8d9a0f1b"
 
+    baseline_summary = json.dumps([{"requirement_id": a[3], "status": a[4]} for a in assessments_data])
     cursor.executemany(
         """
         INSERT OR REPLACE INTO snapshots
@@ -120,9 +122,9 @@ def seed_demo():
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         """,
         [
-            (snap1_id, repo_id, job_id, "7a12b9c", "0" * 40, snap1_hash, 2.0, 4.5, 25.0, '{"commit": "7a12b9c", "coverage": 25.0}', "2025-05-14T09:12:00Z"),
-            (snap2_id, repo_id, job_id, "8e41c0d", snap1_hash, snap2_hash, 4.0, 4.5, 45.0, '{"commit": "8e41c0d", "coverage": 45.0}', "2025-05-16T14:30:00Z"),
-            (snap3_id, repo_id, job_id, "9f3c2ab", snap2_hash, snap3_hash, 2.6, 4.5, 58.0, '{"commit": "9f3c2ab", "coverage": 58.0}', "2025-05-18T10:42:01Z"),
+            (snap1_id, repo_id, job_id, "7a12b9c", "0" * 40, snap1_hash, 2.0, 4.5, 25.0, baseline_summary, "2025-05-14T09:12:00Z"),
+            (snap2_id, repo_id, job_id, "8e41c0d", snap1_hash, snap2_hash, 4.0, 4.5, 45.0, baseline_summary, "2025-05-16T14:30:00Z"),
+            (snap3_id, repo_id, job_id, "9f3c2ab", snap2_hash, snap3_hash, 2.6, 4.5, 58.0, baseline_summary, "2025-05-18T10:42:01Z"),
         ]
     )
 

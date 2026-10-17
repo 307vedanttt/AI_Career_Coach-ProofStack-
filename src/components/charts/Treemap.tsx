@@ -42,6 +42,8 @@ export const TreemapTile: React.FC<TreemapTileProps> = ({ item, onClick, classNa
       'bg-gradient-to-br from-[#B7791F]/85 to-[#8C5712]/95 border-[#B7791F]/60 text-white',
     not_fulfilled:
       'bg-gradient-to-br from-[#64748B]/40 to-[#334155]/60 border-[#64748B]/40 text-slate-200',
+    pending:
+      'bg-gradient-to-br from-[#64748B]/40 to-[#334155]/60 border-[#64748B]/40 text-slate-200',
   };
 
   return (

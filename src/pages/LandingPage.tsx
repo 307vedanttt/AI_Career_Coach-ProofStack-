@@ -7,8 +7,8 @@ import { LandingFooter } from '../components/landing/LandingFooter';
 const ProblemSection = lazy(() =>
   import('../components/landing/ProblemSection').then((m) => ({ default: m.ProblemSection }))
 );
-const LifecycleSection = lazy(() =>
-  import('../components/landing/LifecycleSection').then((m) => ({ default: m.LifecycleSection }))
+const HowItWorksStory = lazy(() =>
+  import('../components/landing/HowItWorksStory').then((m) => ({ default: m.HowItWorksStory }))
 );
 const SignatureFeaturesSection = lazy(() =>
   import('../components/landing/SignatureFeaturesSection').then((m) => ({
@@ -55,8 +55,8 @@ export const LandingPage: React.FC = () => {
           {/* 2. The Problem: Keywords Are Not Evidence */}
           <ProblemSection />
 
-          {/* 3. Verification Lifecycle: Every Commit Closes The Loop */}
-          <LifecycleSection />
+          {/* 3. How It Works: Scroll-Driven Pinned Product Tour */}
+          <HowItWorksStory />
 
           {/* 4. Core Capabilities: Four Ways It Proves It */}
           <SignatureFeaturesSection />

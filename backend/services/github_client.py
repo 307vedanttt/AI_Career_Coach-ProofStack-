@@ -65,7 +65,7 @@ class GitHubClient:
     async def get_tree(self, owner: str, repo: str, commit_sha: str) -> List[Dict[str, Any]]:
         """Retrieves recursive repository tree for a commit."""
         url = f"{self.base_url}/repos/{owner}/{repo}/git/trees/{commit_sha}?recursive=1"
-        async with httpx.AsyncClient(timeout=15.0) as client:
+        async with httpx.AsyncClient(timeout=5.0) as client:
             resp = await client.get(url, headers=self._get_headers())
             if resp.status_code != 200:
                 raise GitHubAPIError(f"Failed to fetch tree for {owner}/{repo} at {commit_sha}: {resp.text}")

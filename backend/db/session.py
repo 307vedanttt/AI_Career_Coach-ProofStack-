@@ -36,6 +36,15 @@ async def init_db():
             await conn.execute(text("PRAGMA synchronous=NORMAL;"))
             await conn.execute(text("PRAGMA foreign_keys=ON;"))
         await conn.run_sync(Base.metadata.create_all)
+        if "sqlite" in settings.DATABASE_URL:
+            try:
+                await conn.execute(text("ALTER TABLE repositories ADD COLUMN last_synced_at DATETIME;"))
+            except Exception:
+                pass
+            try:
+                await conn.execute(text("ALTER TABLE repositories ADD COLUMN last_sync_trigger VARCHAR;"))
+            except Exception:
+                pass
 
 async def get_db():
     """Dependency for obtaining async db sessions."""

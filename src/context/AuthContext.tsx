@@ -19,27 +19,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [error, setError] = useState<Error | null>(null);
 
   const refreshUser = useCallback(async (): Promise<UserSession | null> => {
-    const isDemo =
-      (typeof window !== 'undefined' &&
-        new URLSearchParams(window.location.search).get('demo') === '1') ||
-      (typeof sessionStorage !== 'undefined' &&
-        sessionStorage.getItem('ps_demo_mode') === 'true');
-
-    if (isDemo) {
-      const demoUser: UserSession = {
-        id: 'usr-demo',
-        login: 'demo-judge',
-        name: 'Demo Reviewer',
-        avatarUrl: '',
-        publicRepos: 12,
-        scopes: ['read:user', 'public_repo'],
-        sessionStartedAt: new Date().toISOString(),
-      };
-      setUser(demoUser);
-      setLoading(false);
-      return demoUser;
-    }
-
     try {
       setLoading(true);
       const session = await getCurrentUser();
@@ -92,16 +71,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-const defaultAuthContext: AuthContextValue = {
-  user: null,
-  loading: false,
-  error: null,
-  refreshUser: async () => null,
-  logout: async () => {},
-  deleteMyData: async () => {},
-};
-
 export const useAuth = (): AuthContextValue => {
   const context = useContext(AuthContext);
-  return context || defaultAuthContext;
+  if (!context) {
+    return {
+      user: null,
+      loading: false,
+      error: null,
+      refreshUser: async () => null,
+      logout: async () => {},
+      deleteMyData: async () => {},
+    };
+  }
+  return context;
 };

@@ -25,7 +25,7 @@ import {
   mockBackendLedgerBlocks,
   mockBackendScanner,
   mockBackendAdversarial,
-} from '../lib/api/msw-handlers';
+} from './mocks/msw-handlers';
 
 describe('Contract Schema Conformance Tests', () => {
   it('validates UserSession mock against UserSessionResponseSchema', () => {

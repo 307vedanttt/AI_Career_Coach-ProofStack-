@@ -128,6 +128,18 @@ export const mockBackendCoverage = {
 
 export const mockBackendProofMap = {
   job_id: 'job-001',
+  active_snapshot: {
+    commit_hash: '9f3c2ab',
+    message: 'Harden JWT token validation',
+    percentage: 58,
+    timestamp: '2 hours ago',
+  },
+  snapshots: [
+    { commit_hash: '5e81d2f', message: 'Initial commit', percentage: 20, timestamp: '4 days ago' },
+    { commit_hash: '6f09e1a', message: 'Add dockerfile', percentage: 35, timestamp: '3 days ago' },
+    { commit_hash: '7a12b9c', message: 'Add basic unit tests', percentage: 48, timestamp: 'Yesterday' },
+    { commit_hash: '9f3c2ab', message: 'Harden JWT token validation', percentage: 58, timestamp: '2 hours ago' },
+  ],
   files: [
     { id: 'f-1', name: 'routes.py', path: 'src/api/routes.py', size: 1024, status: 'proven' },
     { id: 'f-2', name: 'models.py', path: 'src/api/models.py', size: 2048, status: 'proven' },
@@ -218,9 +230,58 @@ export const mockBackendScanner = {
 };
 
 export const mockBackendAdversarial = {
-  stats: { total: 10, passed: 10 },
-  tests: [
-    { id: 'atk-1', name: 'SQL Injection Guard', passed: true },
+  attacks_sent: 10,
+  upgrades_granted: 0,
+  guard_reasons_logged: 10,
+  protocol: 'AIR-GAPPED EVALUATION',
+  spec: 'SPEC § 4.6 INJECTION MATRIX',
+  vectors: [
+    {
+      id: 'atk-1',
+      name: 'SQL Injection Guard',
+      category: 'SQL_INJECTION',
+      target_file: 'src/db/queries.py',
+      payload_preview: "'; DROP TABLE users; --",
+      injection_type: 'AST_MUTATION',
+      status: 'REFUSED',
+      guard_reason: 'GUARD INVARIANT INTACT',
+      timestamp: 'Just now',
+      signature_hash: 'sha256:7f83b165...',
+      lines: '42-45',
+    },
+  ],
+};
+
+export const mockBackendResumeAttestation = {
+  candidate: {
+    name: 'ROHAN VERMA',
+    title: 'Senior Systems Engineer',
+    email: 'rohan@example.com',
+    github: 'github.com/rohan',
+    location: 'Bangalore, IN',
+    clearance: 'Level 3 Attestation',
+  },
+  audit_identifier: '#0492-ZK',
+  merkle_root: 'sha256:7f83b165...',
+  commit_hash: 'a182c4f',
+  skills: [
+    {
+      category: 'Backend Architecture',
+      items: [
+        { name: 'FastAPI', status: 'proven', footnote_ref: 1 },
+        { name: 'SQL', status: 'proven', footnote_ref: 2 },
+      ],
+    },
+  ],
+  experience: [
+    {
+      role: 'Staff Infrastructure Lead',
+      company: 'Taskflow Systems',
+      period: '2022 - Present',
+      bullets: [
+        { text: 'Architected distributed event engine', commit_sha: 'a182c4f', is_attested: true },
+      ],
+    },
   ],
 };
 
@@ -239,7 +300,22 @@ export const handlers = [
   http.post('/api/dry-run', () => HttpResponse.json(mockBackendDryRun)),
   http.post('/api/corrections', () => HttpResponse.json({ status: 'recorded', success: true })),
   http.get('/api/resume', () => HttpResponse.json(mockBackendResume)),
+  http.get('/api/resume/attestation', () => HttpResponse.json(mockBackendResumeAttestation)),
   http.get('/api/ledger/blocks', () => HttpResponse.json(mockBackendLedgerBlocks)),
   http.post('/api/scanner/run', () => HttpResponse.json(mockBackendScanner)),
   http.get('/api/breakme/suite', () => HttpResponse.json(mockBackendAdversarial)),
+  http.get('/api/adversarial', () => HttpResponse.json(mockBackendAdversarial)),
+  http.get('/api/repos', () => HttpResponse.json([])),
+  http.get('/api/diagnostics', () => HttpResponse.json({
+    status: 'healthy',
+    timestamp: new Date().toISOString(),
+    checks: {
+      github: { passed: true, rate_limit_remaining: 4980 },
+      database: { passed: true, latency_ms: 0.8 },
+      llm: { passed: true, latency_ms: 12 },
+      webhook: { passed: true, last_delivery_at: '2m ago' },
+      resume_parser: { passed: true, parsed_chars: 1420, duration_ms: 15 },
+      sse: { passed: true, active_subscribers: 2, status: 'active' },
+    },
+  })),
 ];
