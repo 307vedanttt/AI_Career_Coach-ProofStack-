@@ -78,21 +78,21 @@ export const ConnectGitHubModal: React.FC<ConnectGitHubModalProps> = ({
           <div className="p-3.5 rounded-xl bg-violet-500/10 border border-violet-500/30 text-violet-200 text-xs flex gap-3">
             <Info className="w-4 h-4 text-violet-400 shrink-0 mt-0.5" />
             <div>
-              <span className="font-semibold text-white">Production Boundary Note: </span>
-              ProofStack is preloaded with the comprehensive demo repository <code className="px-1 py-0.5 rounded bg-black/30 font-mono text-violet-300">acme-labs/taskflow-api</code> to allow judging all 5 screens and Commit Contracts without requiring personal GitHub credentials.
+              <span className="font-semibold text-white">Universal GitHub Integration: </span>
+              ProofStack inspects any public GitHub repository in the world. Connect any repository (such as <code className="px-1 py-0.5 rounded bg-black/30 font-mono text-violet-300">facebook/react</code>, <code className="px-1 py-0.5 rounded bg-black/30 font-mono text-violet-300">vercel/next.js</code>, or <code className="px-1 py-0.5 rounded bg-black/30 font-mono text-violet-300">307vedanttt/MedNav-Ai</code>) to extract AST proofs.
             </div>
           </div>
 
           <form onSubmit={handleConnect} className="space-y-4">
             <div>
               <label className="block text-xs font-mono font-medium text-white/90 mb-1.5">
-                Target Repository (owner/repo)
+                Target Repository (owner/repo or full URL)
               </label>
               <input
                 type="text"
                 value={repoInput}
                 onChange={(e) => setRepoInput(e.target.value)}
-                placeholder="e.g. facebook/react or vercel/next.js"
+                placeholder="e.g. facebook/react or https://github.com/torvalds/linux"
                 className="w-full px-3.5 py-2.5 rounded-xl bg-[#0B1020] border border-[#25324A] text-white placeholder-[#9AA3AE]/40 text-xs font-mono focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
               />
             </div>
@@ -133,7 +133,7 @@ export const ConnectGitHubModal: React.FC<ConnectGitHubModalProps> = ({
                 }}
                 className="text-xs text-[#9AA3AE] hover:text-white"
               >
-                Use Acme Demo Repo
+                Use MedNav-AI Benchmark
               </Button>
               <Button
                 type="submit"

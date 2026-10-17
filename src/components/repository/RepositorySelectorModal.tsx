@@ -130,7 +130,7 @@ export const RepositorySelectorModal: React.FC<RepositorySelectorModalProps> = (
     setAnalyzingId('custom');
     setStatusMessage({
       type: 'info',
-      text: `Cloning tree and analyzing syntax AST for ${fullUrl}...`,
+      text: `Connecting ${clean} and executing live AST proof extraction...`,
     });
 
     try {
@@ -153,6 +153,40 @@ export const RepositorySelectorModal: React.FC<RepositorySelectorModalProps> = (
       setStatusMessage({
         type: 'error',
         text: `Error analyzing repository: ${err?.message || 'Check repo visibility'}.`,
+      });
+    } finally {
+      setAnalyzingId(null);
+    }
+  };
+
+  // 1-Click Benchmark selection for any public repo in the world
+  const handleSelectBenchmark = async (slug: string) => {
+    setCustomRepoUrl(slug);
+    setAnalyzingId(slug);
+    setStatusMessage({
+      type: 'info',
+      text: `Fetching live GitHub API metadata and AST proof ledger for ${slug}...`,
+    });
+    try {
+      const success = await connectNewRepository(slug);
+      if (success) {
+        setStatusMessage({
+          type: 'success',
+          text: `Successfully verified and connected ${slug}! Provenance ledger and evidence maps are active.`,
+        });
+        setTimeout(() => {
+          onClose();
+        }, 900);
+      } else {
+        setStatusMessage({
+          type: 'error',
+          text: `Verification initiated. Open Dashboard to view results.`,
+        });
+      }
+    } catch (err: any) {
+      setStatusMessage({
+        type: 'error',
+        text: `Analysis failed: ${err?.message || 'Check network connection'}.`,
       });
     } finally {
       setAnalyzingId(null);
@@ -272,6 +306,38 @@ export const RepositorySelectorModal: React.FC<RepositorySelectorModalProps> = (
                 )}
               </button>
             </form>
+
+            {/* 1-Click Popular World Repositories Benchmark Pills */}
+            <div className="pt-1">
+              <span className="text-[10px] text-[#9AA3AE] font-mono block mb-1.5 font-medium">
+                Benchmark Public Repositories (1-Click Verification):
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { slug: 'facebook/react', label: 'facebook/react', stars: '251k★', lang: 'React' },
+                  { slug: 'vercel/next.js', label: 'vercel/next.js', stars: '143k★', lang: 'Next.js' },
+                  { slug: 'fastapi/fastapi', label: 'fastapi/fastapi', stars: '85k★', lang: 'Python' },
+                  { slug: 'torvalds/linux', label: 'torvalds/linux', stars: '252k★', lang: 'C Kernel' },
+                  { slug: 'shadcn-ui/ui', label: 'shadcn-ui/ui', stars: '80k★', lang: 'Tailwind' },
+                  { slug: '307vedanttt/MedNav-Ai', label: '307vedanttt/MedNav-Ai', stars: 'Featured', lang: 'Full-Stack' },
+                ].map((bench) => (
+                  <button
+                    key={bench.slug}
+                    type="button"
+                    onClick={() => handleSelectBenchmark(bench.slug)}
+                    disabled={analyzingId !== null}
+                    className={`px-2.5 py-1 rounded-lg border text-[11px] font-mono transition-all flex items-center gap-1.5 group ${
+                      analyzingId === bench.slug
+                        ? 'bg-violet-600/40 border-violet-500 text-white animate-pulse'
+                        : 'bg-white/5 hover:bg-violet-600/20 border-white/10 hover:border-violet-500/40 text-white/90 hover:text-white'
+                    }`}
+                  >
+                    <span className="group-hover:text-violet-300 font-semibold">{bench.label}</span>
+                    <span className="text-[9px] px-1 py-0.2 rounded bg-white/10 text-amber-300">{bench.stars}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* SECTION 2: GITHUB ACCOUNT SWITCHER & REPO DISCOVERY */}

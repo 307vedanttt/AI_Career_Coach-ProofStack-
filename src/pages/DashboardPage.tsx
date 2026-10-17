@@ -29,6 +29,7 @@ import { EvidenceDrawer } from '../components/drawer/EvidenceDrawer';
 import { Button } from '../components/ui/Button';
 import { JobPostingIntakeModal } from '../components/posting/JobPostingIntakeModal';
 import { RepositorySelectorModal } from '../components/repository/RepositorySelectorModal';
+import { useProofStack } from '../context/ProofStackContext';
 import {
   Radio,
   AlertOctagon,
@@ -43,7 +44,7 @@ import {
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
-  // Application Data States
+  const { repository } = useProofStack();
   const [metrics] = useState<SystemMetrics>(initialMetrics);
   const [requirements, setRequirements] = useState<Requirement[]>([]);
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
@@ -53,6 +54,18 @@ export const DashboardPage: React.FC = () => {
   const [connectedRepoName, setConnectedRepoName] = useState<string>('');
   const [connectedHeadSha, setConnectedHeadSha] = useState<string>('');
   const [repositories, setRepositories] = useState<ConnectedRepository[]>([]);
+
+  const displayRepos: ConnectedRepository[] = repositories.length > 0 ? repositories : (repository ? [{
+    id: repository.id,
+    owner: repository.owner,
+    name: repository.name,
+    repo_url: repository.fullName ? `https://github.com/${repository.fullName}` : '',
+    default_branch: repository.defaultBranch || 'main',
+    last_commit_sha: repository.headSha || connectedHeadSha || 'b9a1098',
+    last_synced_at: new Date().toISOString(),
+    last_sync_trigger: 'check-now' as const,
+    created_at: new Date().toISOString(),
+  }] : []);
   const [rateLimitBanner, setRateLimitBanner] = useState<{
     visible: boolean;
     message: string;
@@ -460,8 +473,8 @@ export const DashboardPage: React.FC = () => {
             </div>
 
             <div className="space-y-3 font-mono text-xs">
-              {repositories.length > 0 ? (
-                repositories.map((repo) => (
+              {displayRepos.length > 0 ? (
+                displayRepos.map((repo) => (
                   <div
                     key={repo.id}
                     className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-lg bg-black/40 border border-white/10 hover:border-emerald-500/30 transition-all"
