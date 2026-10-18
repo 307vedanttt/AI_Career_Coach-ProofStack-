@@ -409,6 +409,8 @@ export interface GitHubRepoSummary {
   default_branch: string;
   is_fork: boolean;
   updated_at?: string;
+  created_at?: string;
+  pushed_at?: string;
 }
 
 export function parseGitHubRepoInput(input: string, fallbackOwner = '307vedanttt'): { owner: string; name: string } {
@@ -458,6 +460,8 @@ export async function fetchGitHubRepoDetails(owner: string, name: string): Promi
         default_branch: data.default_branch || 'main',
         is_fork: Boolean(data.fork),
         updated_at: data.pushed_at || data.updated_at,
+        created_at: data.created_at,
+        pushed_at: data.pushed_at || data.updated_at,
       };
     }
   } catch {
@@ -478,6 +482,8 @@ export async function fetchGitHubRepoDetails(owner: string, name: string): Promi
     default_branch: 'main',
     is_fork: false,
     updated_at: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+    pushed_at: new Date().toISOString(),
   };
 }
 
@@ -541,6 +547,8 @@ export async function fetchUserGithubRepositories(username?: string): Promise<Gi
           default_branch: r.default_branch || 'main',
           is_fork: Boolean(r.fork),
           updated_at: r.updated_at,
+          created_at: r.created_at,
+          pushed_at: r.pushed_at || r.updated_at,
         }));
       }
     }
