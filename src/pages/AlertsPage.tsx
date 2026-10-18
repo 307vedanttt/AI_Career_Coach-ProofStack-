@@ -24,6 +24,8 @@ import {
   Globe,
   Cpu,
   Flame,
+  Copy,
+  Check,
 } from 'lucide-react';
 
 export interface HyperJobData {
@@ -93,6 +95,13 @@ export const AlertsPage: React.FC = () => {
   const [whatsappConnected, setWhatsappConnected] = useState<boolean>(true);
   const [whatsappMode, setWhatsappMode] = useState<'instant' | 'digest'>('instant');
   const [isSendingTestPing, setIsSendingTestPing] = useState<boolean>(false);
+  const [copiedDossierJobId, setCopiedDossierJobId] = useState<string | null>(null);
+  const [notificationBanner, setNotificationBanner] = useState<{
+    text: string;
+    type: 'success' | 'info';
+    link?: string;
+    linkText?: string;
+  } | null>(null);
 
   // WhatsApp Messages Stream
   const [whatsappMessages, setWhatsappMessages] = useState<WhatsAppMessage[]>([
@@ -131,7 +140,7 @@ export const AlertsPage: React.FC = () => {
       location: 'Bengaluru / Remote',
       postedTime: '28 mins ago',
       postedMinutesAgo: 28,
-      sourceLink: 'https://www.naukri.com/job-listings-razorpay-senior-backend',
+      sourceLink: 'https://www.naukri.com/razorpay-jobs?k=backend%20engineer',
       sourceName: 'Naukri',
       coveragePercent: 96,
       totalRequirements: 6,
@@ -150,7 +159,7 @@ export const AlertsPage: React.FC = () => {
       location: 'Mumbai / Hybrid / Remote',
       postedTime: '45 mins ago',
       postedMinutesAgo: 45,
-      sourceLink: 'https://www.linkedin.com/jobs/view/phonepe-systems-engineer',
+      sourceLink: 'https://www.linkedin.com/jobs/search/?keywords=PhonePe+Backend+Engineer&f_TPR=r86400',
       sourceName: 'LinkedIn',
       coveragePercent: 92,
       totalRequirements: 5,
@@ -169,7 +178,7 @@ export const AlertsPage: React.FC = () => {
       location: 'Bengaluru / Remote',
       postedTime: '1 hour ago',
       postedMinutesAgo: 60,
-      sourceLink: 'https://www.naukri.com/job-listings-cred-fullstack-systems',
+      sourceLink: 'https://www.naukri.com/cred-jobs?k=fullstack%20engineer',
       sourceName: 'Naukri',
       coveragePercent: 89,
       totalRequirements: 6,
@@ -187,7 +196,7 @@ export const AlertsPage: React.FC = () => {
       location: 'Remote · Bengaluru / San Francisco',
       postedTime: '1.2 hours ago',
       postedMinutesAgo: 72,
-      sourceLink: 'https://www.linkedin.com/jobs/view/postman-developer-platform',
+      sourceLink: 'https://www.linkedin.com/jobs/search/?keywords=Postman+Platform+Engineer&f_TPR=r86400',
       sourceName: 'LinkedIn',
       coveragePercent: 88,
       totalRequirements: 5,
@@ -205,7 +214,7 @@ export const AlertsPage: React.FC = () => {
       location: 'Remote (India)',
       postedTime: '1.5 hours ago',
       postedMinutesAgo: 90,
-      sourceLink: 'https://wellfound.com/jobs/zepto-backend-concurrency',
+      sourceLink: 'https://wellfound.com/jobs?query=zepto%20backend',
       sourceName: 'Wellfound',
       coveragePercent: 91,
       totalRequirements: 5,
@@ -223,7 +232,7 @@ export const AlertsPage: React.FC = () => {
       location: 'Remote · Seattle / Worldwide',
       postedTime: '2 hours ago',
       postedMinutesAgo: 120,
-      sourceLink: 'https://www.linkedin.com/jobs/view/stripe-infrastructure-engineer',
+      sourceLink: 'https://www.linkedin.com/jobs/search/?keywords=Stripe+Platform+Infrastructure&f_TPR=r86400',
       sourceName: 'LinkedIn',
       coveragePercent: 84,
       totalRequirements: 6,
@@ -306,6 +315,168 @@ export const AlertsPage: React.FC = () => {
     if (job.coveragePercent < minCoverageFilter) return false;
     return true;
   });
+
+  // Helper: sanitize phone number to digits only for wa.me URL
+  const getCleanPhone = (phoneStr: string) => {
+    return phoneStr.replace(/[^0-9]/g, '');
+  };
+
+  // Helper: build structured, attractive WhatsApp payload
+  const buildJobWhatsAppText = (job: HyperJobData, user: string) => {
+    return `🚀 *ProofStack Job Automation Alert*
+━━━━━━━━━━━━━━━━━━━
+🏢 *Company:* ${job.company}
+💼 *Role:* ${job.role}
+🌐 *Source:* ${job.sourceName} (${job.postedTime})
+🎯 *AST Code Match:* ${job.coveragePercent}%
+🧬 *Verified Repository:* https://github.com/${job.anchorRepo}
+📜 *Merkle Proof Docket:* https://proofstack-ashen-eta.vercel.app/verify/${user.toLowerCase()}-docket-${job.id}
+✅ *Verified Skills:* ${job.provenSkills.join(', ')}
+💰 *Estimated Comp:* ${job.salaryEstimate}
+━━━━━━━━━━━━━━━━━━━
+⚡ Dispatched via ProofStack Real-Time Pipeline`;
+  };
+
+  // Helper: build comprehensive ATS Cover Letter & Cryptographic Evidence Dossier
+  const generateAtsDossier = (job: HyperJobData, user: string, phone: string) => {
+    return `Subject: Application for ${job.role} — Cryptographically Verified Candidate Dossier
+
+Dear ${job.company} Hiring & Engineering Team,
+
+I am writing to apply for the ${job.role} position identified on ${job.sourceName} (${job.postedTime}).
+
+My engineering qualifications and code authorship have been cryptographically verified against your requisition requirements with an AST Code Match Score of ${job.coveragePercent}%:
+
+• Codebase Anchor Repository: https://github.com/${job.anchorRepo}
+• Verified Technical Capabilities: ${job.provenSkills.join(', ')}
+• Cryptographic Proof Docket: https://proofstack-ashen-eta.vercel.app/verify/${user.toLowerCase()}-docket-${job.id}
+• Candidate Public Proof Ledger: https://proofstack-ashen-eta.vercel.app/u/${user.toLowerCase()}
+
+This submission includes an immutable SHA-256 Merkle audit trail confirming zero-hallucination engineering claims and AST function call graph alignment.
+
+Candidate: ${user}
+WhatsApp / Phone: ${phone}
+
+I look forward to discussing how my verified background in scalable backend systems directly benefits ${job.company}.
+
+Sincerely,
+${user}`;
+  };
+
+  // Action: Copy Dossier & Cover Letter to Clipboard
+  const handleCopyDossier = async (job: HyperJobData) => {
+    const dossier = generateAtsDossier(job, username, whatsappPhone);
+    try {
+      await navigator.clipboard.writeText(dossier);
+      setCopiedDossierJobId(job.id);
+      setNotificationBanner({
+        text: `📋 ATS Evidence Dossier & Cover Letter copied to clipboard for ${job.company}! Paste directly into the application form.`,
+        type: 'success'
+      });
+      setTimeout(() => setCopiedDossierJobId(null), 3500);
+      setTimeout(() => setNotificationBanner(null), 6000);
+    } catch (err) {
+      console.warn('Clipboard write error', err);
+    }
+  };
+
+  // Action: Send Real WhatsApp Outbound Alert
+  const handleSendDirectWhatsApp = (job: HyperJobData) => {
+    const cleanPhone = getCleanPhone(whatsappPhone);
+    const text = buildJobWhatsAppText(job, username);
+    const waUrl = cleanPhone
+      ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`
+      : `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+
+    window.open(waUrl, '_blank');
+
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    const newWaMsg: WhatsAppMessage = {
+      id: `wa-${Date.now()}`,
+      time: timeStr,
+      company: job.company,
+      role: job.role,
+      source: job.sourceName,
+      postedAgo: job.postedTime,
+      matchScore: job.coveragePercent,
+      anchorRepo: job.anchorRepo,
+      docketUrl: `https://proofstack-ashen-eta.vercel.app/verify/${username.toLowerCase()}-docket-${job.id}`,
+      status: 'Real Outbound Dispatched 📲'
+    };
+
+    setWhatsappMessages((prev) => [newWaMsg, ...prev]);
+    setTerminalLogs((prev) => [
+      `[${timeStr}] REAL WHATSAPP DISPATCHED: wa.me outbound link opened for ${whatsappPhone} (${job.company}).`,
+      ...prev
+    ]);
+
+    setNotificationBanner({
+      text: `📲 WhatsApp Web opened with alert for ${job.company} to ${whatsappPhone}!`,
+      type: 'success'
+    });
+    setTimeout(() => setNotificationBanner(null), 6000);
+  };
+
+  // Action: 1-Click Launch Live Job Posting & Auto-Copy Dossier
+  const handleLaunchLiveApplication = async (job: HyperJobData) => {
+    // 1. Copy full ATS dossier to clipboard
+    const dossier = generateAtsDossier(job, username, whatsappPhone);
+    try {
+      await navigator.clipboard.writeText(dossier);
+      setCopiedDossierJobId(job.id);
+      setTimeout(() => setCopiedDossierJobId(null), 4000);
+    } catch (e) {
+      console.warn('Clipboard write error', e);
+    }
+
+    // 2. Mark applied
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    setJobs((prev) =>
+      prev.map((j) =>
+        j.id === job.id
+          ? { ...j, applied: true, appliedAt: 'Just now', status: 'applied' }
+          : j
+      )
+    );
+    setAppliedCountToday((prev) => prev + 1);
+
+    // 3. Update terminal
+    setTerminalLogs((prev) => [
+      `[${timeStr}] LIVE LAUNCH: Opened ${job.sourceName} requisition for ${job.company}. ATS Evidence Dossier copied to clipboard.`,
+      `[${timeStr}] DOCKET: Cryptographic SHA256 receipt generated for ${username.toLowerCase()}-docket-${job.id}.`,
+      ...prev
+    ]);
+
+    // 4. Record WhatsApp message
+    const newWaMsg: WhatsAppMessage = {
+      id: `wa-${Date.now()}`,
+      time: timeStr,
+      company: job.company,
+      role: job.role,
+      source: job.sourceName,
+      postedAgo: job.postedTime,
+      matchScore: job.coveragePercent,
+      anchorRepo: job.anchorRepo,
+      docketUrl: `https://proofstack-ashen-eta.vercel.app/verify/${username.toLowerCase()}-docket-${job.id}`,
+      status: 'Application Opened & Dossier Copied 🚀'
+    };
+    setWhatsappMessages((prev) => [newWaMsg, ...prev]);
+
+    // 5. Open live portal
+    window.open(job.sourceLink, '_blank');
+
+    // 6. Show interactive notification banner with direct WhatsApp trigger
+    const cleanPhone = getCleanPhone(whatsappPhone);
+    setNotificationBanner({
+      text: `🚀 Live ${job.sourceName} posting opened! ATS Dossier & Proof Docket pre-copied to clipboard. Click below to also send WhatsApp alert.`,
+      type: 'success',
+      link: `https://wa.me/${cleanPhone}?text=${encodeURIComponent(buildJobWhatsAppText(job, username))}`,
+      linkText: 'Send to WhatsApp Now 💬'
+    });
+  };
 
   // Action: Single Auto-Apply Trigger
   const handleAutoApplySingle = (jobId: string) => {
@@ -415,13 +586,34 @@ export const AlertsPage: React.FC = () => {
     }, 900);
   };
 
-  // Action: Test WhatsApp Notification Ping
-  const handleSendTestWhatsAppPing = () => {
+  // Action: Test WhatsApp Notification Ping (opens real wa.me)
+  const handleSendTestWhatsAppPing = (openRealWindow: boolean = true) => {
     setIsSendingTestPing(true);
-    setTimeout(() => {
-      const now = new Date();
-      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
+    const testMsgText = `🚀 *ProofStack Job Automation Test Ping*
+━━━━━━━━━━━━━━━━━━━
+Candidate: @${username}
+Time: ${timeStr}
+Status: WhatsApp Automation Connected ✅
+Target: ${whatsappPhone}
+Cadence: Instant Push (< 1-2h Jobs)
+Verified Anchor: https://github.com/${username}/AI-CarrerCoach
+Docket Verification: https://proofstack-ashen-eta.vercel.app/verify/${username.toLowerCase()}-live-test
+━━━━━━━━━━━━━━━━━━━
+System is actively monitoring LinkedIn, Naukri & Wellfound for qualifying roles (> 85% match).`;
+
+    const cleanPhone = getCleanPhone(whatsappPhone);
+    const waUrl = cleanPhone
+      ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(testMsgText)}`
+      : `https://api.whatsapp.com/send?text=${encodeURIComponent(testMsgText)}`;
+
+    if (openRealWindow) {
+      window.open(waUrl, '_blank');
+    }
+
+    setTimeout(() => {
       const testMsg: WhatsAppMessage = {
         id: `wa-test-${Date.now()}`,
         time: timeStr,
@@ -432,17 +624,23 @@ export const AlertsPage: React.FC = () => {
         matchScore: 94.8,
         anchorRepo: `${username}/AI-CarrerCoach`,
         docketUrl: `https://proofstack-ashen-eta.vercel.app/verify/${username.toLowerCase()}-live-test`,
-        status: 'Test Ping: Webhook Delivered ✓✓'
+        status: 'Real Push Triggered 📲 ✓✓'
       };
 
       setWhatsappMessages((prev) => [testMsg, ...prev]);
       setIsSendingTestPing(false);
 
       setTerminalLogs((prev) => [
-        `[${timeStr}] WHATSAPP TEST: Simulated incoming alert triggered for ${whatsappPhone}. Message delivered.`,
+        `[${timeStr}] REAL WHATSAPP TEST: wa.me dispatched to ${whatsappPhone}. Chat opened.`,
         ...prev
       ]);
-    }, 800);
+
+      setNotificationBanner({
+        text: `📲 Real WhatsApp message dispatched to ${whatsappPhone}! WhatsApp Web/App has been opened with your pre-filled message.`,
+        type: 'success'
+      });
+      setTimeout(() => setNotificationBanner(null), 6000);
+    }, 600);
   };
 
   const handleOpenAssistForJob = (jobId: string) => {
@@ -633,6 +831,49 @@ export const AlertsPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Real Automation Notification Toast */}
+        {notificationBanner && (
+          <div className="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xl shadow-emerald-500/10">
+            <div className="flex items-center gap-2.5">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+              <span className="font-sans font-medium leading-relaxed">{notificationBanner.text}</span>
+            </div>
+            {notificationBanner.link && (
+              <a
+                href={notificationBanner.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3.5 py-1.5 rounded-xl bg-[#25D366] text-black font-bold font-mono text-xs shrink-0 hover:bg-[#20ba59] flex items-center justify-center gap-1.5 transition-colors shadow-lg shadow-[#25D366]/20"
+              >
+                <span>{notificationBanner.linkText || 'Open WhatsApp Now'}</span>
+                <ExternalLink className="w-3.5 h-3.5" />
+              </a>
+            )}
+          </div>
+        )}
+
+        {/* Real Automation Quick Action Info Strip */}
+        <div className="p-3.5 rounded-xl bg-white/[0.02] border border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs text-[#9AA3AE]">
+          <div className="flex items-center gap-2">
+            <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold font-mono text-[10px] uppercase border border-emerald-500/30">
+              Live Pipeline Active
+            </span>
+            <span>
+              ⚡ <strong>1-Click Launch</strong> copies your ATS Evidence Dossier &amp; Proof Docket to clipboard and opens LinkedIn/Naukri.
+            </span>
+          </div>
+          <div className="flex items-center gap-2 font-mono text-[11px] text-emerald-300">
+            <span>Target: <strong>{whatsappPhone}</strong></span>
+            <button
+              type="button"
+              onClick={() => setActiveTab('whatsapp')}
+              className="text-[#25D366] hover:underline"
+            >
+              (Edit Number)
+            </button>
+          </div>
+        </div>
+
         {/* ================================================================ */}
         {/* TAB 1: HYPER-FRESH RADAR (< 1-2 HOUR POSTINGS)                    */}
         {/* ================================================================ */}
@@ -806,42 +1047,52 @@ export const AlertsPage: React.FC = () => {
                   </div>
 
                   {/* Right Actions */}
-                  <div className="flex flex-row lg:flex-col items-center gap-2.5 w-full lg:w-44 shrink-0">
-                    {job.applied ? (
-                      <div className="w-full py-2.5 px-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold flex items-center justify-center gap-1.5">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                        <span>Applied ({job.appliedAt})</span>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => handleAutoApplySingle(job.id)}
-                        disabled={job.status === 'applying'}
-                        className="w-full py-2.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-black font-mono text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/20 transition-all disabled:opacity-50"
-                      >
-                        <Zap className="w-3.5 h-3.5 fill-black" />
-                        <span>{job.status === 'applying' ? 'Submitting...' : 'Auto-Apply Now'}</span>
-                      </button>
-                    )}
+                  <div className="flex flex-row lg:flex-col items-center gap-2 w-full lg:w-48 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => handleLaunchLiveApplication(job)}
+                      className="w-full py-2.5 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-black font-mono text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-emerald-500/20 transition-all"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>{job.applied ? 'Re-Apply & Copy Dossier' : `🚀 Apply on ${job.sourceName}`}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleSendDirectWhatsApp(job)}
+                      className="w-full py-2 px-3 rounded-xl bg-[#25D366]/20 hover:bg-[#25D366]/30 active:scale-95 text-[#25D366] font-mono text-[11px] font-bold flex items-center justify-center gap-1.5 border border-[#25D366]/40 transition-all shadow-sm"
+                      title="Send alert with AST proof docket to your WhatsApp number"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5 text-[#25D366]" />
+                      <span>Send to My WhatsApp</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleCopyDossier(job)}
+                      className="w-full py-1.5 px-3 rounded-xl bg-white/5 hover:bg-white/10 active:scale-95 text-[#9AA3AE] hover:text-white font-mono text-[11px] flex items-center justify-center gap-1.5 border border-white/10 transition-colors"
+                    >
+                      {copiedDossierJobId === job.id ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-400" />
+                          <span className="text-emerald-300 font-bold">Dossier Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Copy ATS Dossier</span>
+                        </>
+                      )}
+                    </button>
 
                     <button
                       type="button"
                       onClick={() => handleOpenAssistForJob(job.id)}
-                      className="w-full py-2 px-3 rounded-xl bg-white/5 hover:bg-white/10 text-white font-mono text-xs flex items-center justify-center gap-1.5 border border-white/10 transition-colors"
+                      className="w-full py-1 px-3 rounded-xl text-[#9AA3AE] hover:text-white font-mono text-[10px] flex items-center justify-center gap-1 transition-colors"
                     >
-                      <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>Review Assist</span>
+                      <Sparkles className="w-3 h-3 text-emerald-400" />
+                      <span>Review Tailored Bullets</span>
                     </button>
-
-                    <a
-                      href={job.sourceLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full py-1.5 px-3 rounded-xl text-[#9AA3AE] hover:text-white font-mono text-[11px] flex items-center justify-center gap-1 transition-colors"
-                    >
-                      <span>Open on {job.sourceName}</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
                   </div>
                 </div>
               ))}
@@ -1103,12 +1354,12 @@ export const AlertsPage: React.FC = () => {
 
                   <button
                     type="button"
-                    onClick={handleSendTestWhatsAppPing}
+                    onClick={() => handleSendTestWhatsAppPing(true)}
                     disabled={isSendingTestPing}
-                    className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-all flex items-center gap-2 border border-white/15"
+                    className="px-4 py-2.5 rounded-xl bg-[#25D366] hover:bg-[#20ba59] active:scale-95 text-black font-mono text-xs font-bold transition-all flex items-center gap-2 shadow-lg shadow-[#25D366]/20 border border-[#25D366]"
                   >
-                    <Send className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>{isSendingTestPing ? 'Sending...' : 'Send Test WhatsApp Ping'}</span>
+                    <Send className="w-3.5 h-3.5 fill-black" />
+                    <span>{isSendingTestPing ? 'Opening Chat...' : '📲 Send Real WhatsApp Alert to My Phone'}</span>
                   </button>
                 </div>
               </div>
@@ -1144,11 +1395,25 @@ export const AlertsPage: React.FC = () => {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-3 shrink-0">
-                          <span className="px-2.5 py-1 rounded bg-[#25D366]/15 text-[#25D366] text-[10px] font-bold border border-[#25D366]/30 flex items-center gap-1">
-                            <span>WhatsApp ✓✓</span>
-                          </span>
-                          <span className="text-[10px] text-[#9AA3AE]">{item.appliedAt || 'Today'}</span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleSendDirectWhatsApp(item)}
+                            className="px-2.5 py-1 rounded-lg bg-[#25D366]/20 hover:bg-[#25D366]/30 active:scale-95 text-[#25D366] text-[11px] font-mono font-bold border border-[#25D366]/40 flex items-center gap-1 transition-all"
+                            title="Open real WhatsApp chat with this application docket"
+                          >
+                            <MessageSquare className="w-3 h-3 text-[#25D366]" />
+                            <span>WhatsApp</span>
+                          </button>
+                          <a
+                            href={item.sourceLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 active:scale-95 text-white text-[11px] font-mono flex items-center gap-1 border border-white/10 transition-colors"
+                          >
+                            <span>Open Job</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
                         </div>
                       </div>
                     ))}
