@@ -15,16 +15,18 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { useProofStack } from '../context/ProofStackContext';
+import { useAuth } from '../context/AuthContext';
 import { AppLayout } from '../components/layout/AppLayout';
 import { ProvenanceStateBadge, HonestyBadge } from '../components/common/ProofBadges';
 import { CommitAuditItem } from '../types/proofstack';
 import { Button } from '../components/ui/Button';
 import { ProvenanceCard } from '../components/provenance/ProvenanceCard';
 import { CommitHistoryAnalysis } from '../components/history/CommitHistoryAnalysis';
-import { RepoProvenanceRecord, CommitHistoryData, ProvenanceCheckItem } from '../types/proofstack';
+import { RepoProvenanceRecord, CommitHistoryData, ProvenanceCheckItem, ContributorMetric } from '../types/proofstack';
 
 export const RepositoryAuditPage: React.FC = () => {
   const { repository, contributors, commits, runAudit, provenanceRecord: contextProvRecord } = useProofStack();
+  const { user } = useAuth();
 
   const [expandedCheckId, setExpandedCheckId] = useState<string | null>('prov-origin');
   const [selectedCommit, setSelectedCommit] = useState<CommitAuditItem | null>(null);
@@ -35,26 +37,64 @@ export const RepositoryAuditPage: React.FC = () => {
   const [isHistoryLoading, setIsHistoryLoading] = useState<boolean>(false);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
 
-  const candidate = contributors.find((c) => c.role === 'candidate') || contributors[0];
+  const candUsername = (
+    user?.login ||
+    (typeof window !== 'undefined' ? localStorage.getItem('ps_github_username') : '') ||
+    repository.owner ||
+    '307vedanttt'
+  ).toLowerCase();
+
+  const candidateContrib = contributors.find(
+    (c) => c.role === 'candidate' || (c.username && c.username.toLowerCase() === candUsername)
+  );
+
+  const candidate: ContributorMetric = candidateContrib || {
+    id: `contrib-${candUsername}`,
+    name: user?.name || user?.login || repository.owner,
+    username: candUsername,
+    email: (user as any)?.email || `${candUsername}@users.noreply.github.com`,
+    avatarUrl: user?.avatarUrl || `https://github.com/${candUsername}.png`,
+    role: 'candidate',
+    commitsCount: 0,
+    percentageOfCommits: 0,
+    filesChangedCount: 0,
+    linesAdded: 0,
+    linesDeleted: 0,
+  };
 
   const buildFallbackProvenance = (): RepoProvenanceRecord => {
-    const candCommits = candidate?.commitsCount || commits.filter((c) => c.author?.isCandidate).length || commits.length;
-    const totalCommits = commits.length || repository.inspectedCommitsCount || 1;
-    const candShare = Math.round((candCommits / (totalCommits || 1)) * 100);
+    const totalCommits = Math.max(1, commits.length);
+    const candLogin = candUsername;
+
+    // Exact count of candidate commits in active commits list
+    const candCommitsInList = commits.filter((c) => {
+      const login = (c.author?.username || c.author?.name || '').toLowerCase();
+      return c.author?.isCandidate || login === candLogin;
+    }).length;
+
+    const candCommits = candidate?.role === 'candidate' && typeof candidate.commitsCount === 'number' && candidate.commitsCount <= totalCommits
+      ? candidate.commitsCount
+      : candCommitsInList;
+    const candShare = Math.min(100, Math.max(0, Math.round((candCommits / totalCommits) * 100)));
     const isFork = Boolean(repository.forkStatus?.isFork);
 
     const verifiedCount = commits.filter((c) => c.signatureStatus === 'verified' || (c as any).hasSignedGpg).length;
     const unsignedCount = Math.max(0, commits.length - verifiedCount);
     const unverifiedCount = commits.filter((c) => c.signatureStatus === 'unverified').length;
-    const pctSigned = Math.round((verifiedCount / (totalCommits || 1)) * 100);
+    const pctSigned = Math.min(100, Math.max(0, Math.round((verifiedCount / totalCommits) * 100)));
 
     const oldestCommit = commits[commits.length - 1]?.timestamp;
     const newestCommit = commits[0]?.timestamp;
-    const createdDate = (repository.createdAt && repository.createdAt !== '2024-01-01T00:00:00Z' && repository.createdAt !== '2026-01-01T00:00:00Z')
-      ? repository.createdAt
-      : (oldestCommit || repository.createdAt || '2024-01-01T00:00:00Z');
+    let createdDate = repository.createdAt || oldestCommit || new Date().toISOString();
+    if (oldestCommit) {
+      const oldestTs = new Date(oldestCommit).getTime();
+      const createdTs = new Date(createdDate).getTime();
+      if (!isNaN(oldestTs) && !isNaN(createdTs) && oldestTs < createdTs) {
+        createdDate = oldestCommit;
+      }
+    }
     const ageDays = Math.max(0, Math.round((Date.now() - new Date(createdDate).getTime()) / (1000 * 3600 * 24)));
-    const pushedDate = repository.lastActivityAt || newestCommit || new Date().toISOString();
+    const pushedDate = newestCommit || repository.lastActivityAt || new Date().toISOString();
 
     // Collect all unique authors by login
     const authorsByLogin: Record<string, number> = {};
@@ -74,6 +114,8 @@ export const RepositoryAuditPage: React.FC = () => {
         });
       }
     });
+
+    const distinctAuthorsCount = Math.max(Object.keys(authorsByLogin).length, contributors.length, 1);
 
     const flags: any[] = [];
     if (isFork && candCommits > 0) {
@@ -159,7 +201,7 @@ export const RepositoryAuditPage: React.FC = () => {
           candidate_username: candidate?.username || repository.owner,
           candidate_commit_count: candCommits,
           candidate_commit_share: candShare,
-          distinct_contributors_count: contributors.length || Object.keys(authorsByLogin).length || 1,
+          distinct_contributors_count: distinctAuthorsCount,
           authors_by_login: authorsByLogin,
           co_authors: Array.from(coAuthorsMap.values())
         },
@@ -305,10 +347,13 @@ export const RepositoryAuditPage: React.FC = () => {
         credentials: 'include'
       });
       if (resp.ok) {
-        const data = await resp.json();
-        if (data && data.signals && data.signals.age) {
-          setLocalProvRecord(data);
-          return;
+        const ct = resp.headers.get('content-type') || '';
+        if (ct.includes('application/json')) {
+          const data = await resp.json();
+          if (data && data.signals && data.signals.age) {
+            setLocalProvRecord(data);
+            return;
+          }
         }
       }
     } catch {
@@ -369,14 +414,18 @@ export const RepositoryAuditPage: React.FC = () => {
     if (diffDays < 30) {
       return `${diffDays} Day${diffDays === 1 ? '' : 's'} (Continuous)`;
     }
-    const months = (diffDays / 30.4).toFixed(1);
-    return `${months} Months (Continuous)`;
+    if (diffDays < 365) {
+      const months = (diffDays / 30.4).toFixed(1);
+      return `${months} Months (Continuous)`;
+    }
+    const years = (diffDays / 365.25).toFixed(1);
+    return `${years} Years (Continuous)`;
   };
 
   const computedProvenance = buildFallbackProvenance();
   const currentProvenanceRecord = (contextProvRecord && contextProvRecord.repo_id === repository.id && contextProvRecord.signals?.analysis_limits?.analyzed_commits_count === commits.length)
     ? contextProvRecord
-    : (localProvRecord && localProvRecord.repo_id === repository.id)
+    : (localProvRecord && localProvRecord.repo_id === repository.id && localProvRecord.signals?.analysis_limits?.analyzed_commits_count === commits.length)
     ? localProvRecord
     : computedProvenance;
 
@@ -389,10 +438,25 @@ export const RepositoryAuditPage: React.FC = () => {
   const upstreamName = repository.forkStatus?.upstreamRepo || currentProvenanceRecord.signals?.fork_and_upstream?.parent_full_name;
   const verifiedSigs = currentProvenanceRecord.signals?.signed_commits?.verified_count ?? 0;
   const pctSigs = currentProvenanceRecord.signals?.signed_commits?.percentage_signed ?? 0;
-  const totalAnalyzed = commits.length || repository.inspectedCommitsCount || 1;
+  const totalAnalyzed = Math.max(1, commits.length);
   const headShaShort = (repository.headSha || commits[0]?.shortHash || 'head').slice(0, 7);
-  const candidateCommits = candidate?.commitsCount || commits.filter((c) => c.author?.isCandidate).length || commits.length;
-  const candShare = Math.round((candidateCommits / totalAnalyzed) * 100);
+  const candLogin = candUsername;
+  const candCommitsInList = commits.filter((c) => {
+    const login = (c.author?.username || c.author?.name || '').toLowerCase();
+    return c.author?.isCandidate || login === candLogin;
+  }).length;
+  const candidateCommits = candidate?.role === 'candidate' && typeof candidate.commitsCount === 'number' && candidate.commitsCount <= totalAnalyzed
+    ? candidate.commitsCount
+    : candCommitsInList;
+  const candShare = Math.min(100, Math.max(0, Math.round((candidateCommits / totalAnalyzed) * 100)));
+  const topMaintainer = contributors.filter((c) => c.commitsCount > 0).sort((a, b) => b.commitsCount - a.commitsCount)[0] || contributors[0];
+  const primaryAuthor = candidate?.role === 'candidate' && candidateCommits > 0
+    ? (candidate?.name || repository.owner)
+    : (topMaintainer?.name || commits[0]?.author?.name || repository.owner);
+  const primaryAuthorCommits = candidate?.role === 'candidate' && candidateCommits > 0
+    ? candidateCommits
+    : (topMaintainer?.commitsCount || commits.length);
+  const primaryAuthorPct = Math.min(100, Math.max(0, Math.round((primaryAuthorCommits / totalAnalyzed) * 100)));
 
   const activeChecks: ProvenanceCheckItem[] = [
     {
@@ -444,8 +508,12 @@ export const RepositoryAuditPage: React.FC = () => {
       name: 'Contributor Attribution & Context',
       category: 'contributors',
       resultState: 'verified',
-      observedValue: `Primary author ${candidate?.name || repository.owner} authored ${candShare}% of commits (${candidateCommits} of ${commits.length})`,
-      explanation: `${candidate?.name || repository.owner} (@${candidate?.username || repository.owner}) is the primary code author in the inspected commit window for ${repository.fullName}.`,
+      observedValue: candidateCommits > 0
+        ? `Primary author ${candidate?.name || repository.owner} authored ${candShare}% of commits (${candidateCommits} of ${commits.length})`
+        : `Primary author ${primaryAuthor} authored ${primaryAuthorPct}% of commits (${primaryAuthorCommits} of ${commits.length}) · Candidate has 0 commits ahead`,
+      explanation: candidateCommits > 0
+        ? `${candidate?.name || repository.owner} (@${candidate?.username || repository.owner}) is the primary code author in the inspected commit window for ${repository.fullName}.`
+        : `${repository.fullName} contains 0 candidate commits authored by ${candidate?.name || repository.owner} in the inspected window. Upstream contributions isolated.`,
       inspectionScope: `Author/committer mailmap normalization across git-shortlog`,
       limitations: `Git author names and emails can be modified in local gitconfig. Author identity is corroborated by GitHub profile and commit trees.`,
       supportingDetails: `Repository contains commits by ${contributors.length} contributor(s). Co-authors identified: ${currentProvenanceRecord.signals?.contributions?.co_authors?.length || 0}.`,
@@ -589,8 +657,8 @@ export const RepositoryAuditPage: React.FC = () => {
                 Candidate Scope Isolation
               </span>
               <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold font-mono text-emerald-400">{candidate?.percentageOfCommits ?? 100}%</span>
-                <span className="text-xs text-[#9AA3AE] font-mono">of all commits authored by {candidate?.name || repository.owner}</span>
+                <span className="text-2xl font-bold font-mono text-emerald-400">{candShare}%</span>
+                <span className="text-xs text-[#9AA3AE] font-mono">of all commits authored by {candidate?.name || candUsername}</span>
               </div>
               <p className="text-[11px] text-[#9AA3AE] font-mono leading-relaxed">
                 Repository contains commits by {contributors.length} contributor{contributors.length === 1 ? '' : 's'}. Evidence engine strictly isolates candidate commits and ignores upstream maintainer or automated bot commits when scoring skills.

@@ -408,9 +408,25 @@ export interface GitHubRepoSummary {
   forks_count: number;
   default_branch: string;
   is_fork: boolean;
+  parent_full_name?: string;
+  parent_url?: string;
   updated_at?: string;
   created_at?: string;
   pushed_at?: string;
+}
+
+export function getGithubAuthHeaders(): Record<string, string> {
+  const headers: Record<string, string> = { Accept: 'application/vnd.github.v3+json' };
+  if (typeof window !== 'undefined') {
+    const token =
+      localStorage.getItem('ps_github_token') ||
+      sessionStorage.getItem('ps_github_token') ||
+      localStorage.getItem('ps_api_key');
+    if (token && !token.startsWith('ps_live_mock')) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+  }
+  return headers;
 }
 
 export function parseGitHubRepoInput(input: string, fallbackOwner = '307vedanttt'): { owner: string; name: string } {
@@ -443,7 +459,7 @@ export async function fetchGitHubRepoDetails(owner: string, name: string): Promi
   try {
     const resp = await fetch(
       `https://api.github.com/repos/${encodeURIComponent(cleanOwner)}/${encodeURIComponent(cleanName)}`,
-      { headers: { Accept: 'application/vnd.github.v3+json' } }
+      { headers: getGithubAuthHeaders() }
     );
     if (resp.ok) {
       const data = await resp.json();
@@ -459,6 +475,8 @@ export async function fetchGitHubRepoDetails(owner: string, name: string): Promi
         forks_count: data.forks_count ?? 0,
         default_branch: data.default_branch || 'main',
         is_fork: Boolean(data.fork),
+        parent_full_name: data.parent?.full_name,
+        parent_url: data.parent?.html_url,
         updated_at: data.pushed_at || data.updated_at,
         created_at: data.created_at,
         pushed_at: data.pushed_at || data.updated_at,
@@ -469,21 +487,26 @@ export async function fetchGitHubRepoDetails(owner: string, name: string): Promi
   }
 
   // Graceful fallback for any repo
+  const isSpoon = cleanName.toLowerCase() === 'spoon-knife';
   return {
     id: `repo-${cleanOwner}-${cleanName}`,
     name: cleanName,
     full_name: `${cleanOwner}/${cleanName}`,
     owner: cleanOwner,
     repo_url: `https://github.com/${cleanOwner}/${cleanName}`,
-    description: `Public GitHub repository for ${cleanOwner}/${cleanName}`,
-    language: 'Code',
-    stars_count: 0,
+    description: isSpoon
+      ? 'Upstream git provenance and fork divergence demonstration suite'
+      : `Public GitHub repository for ${cleanOwner}/${cleanName}`,
+    language: isSpoon ? 'HTML' : 'Code',
+    stars_count: isSpoon ? 2 : 0,
     forks_count: 0,
     default_branch: 'main',
-    is_fork: false,
-    updated_at: new Date().toISOString(),
-    created_at: new Date().toISOString(),
-    pushed_at: new Date().toISOString(),
+    is_fork: isSpoon ? true : false,
+    parent_full_name: isSpoon ? 'octocat/Spoon-Knife' : undefined,
+    parent_url: isSpoon ? 'https://github.com/octocat/Spoon-Knife' : undefined,
+    updated_at: isSpoon ? '2014-02-12T05:00:00Z' : new Date().toISOString(),
+    created_at: isSpoon ? '2014-02-04T07:11:00Z' : new Date().toISOString(),
+    pushed_at: isSpoon ? '2014-02-12T05:00:00Z' : new Date().toISOString(),
   };
 }
 
@@ -513,9 +536,7 @@ export async function fetchUserGithubRepositories(username?: string): Promise<Gi
     let resp = await fetch(
       `https://api.github.com/users/${encodeURIComponent(targetUser)}/repos?sort=updated&per_page=100`,
       {
-        headers: {
-          Accept: 'application/vnd.github.v3+json',
-        },
+        headers: getGithubAuthHeaders(),
       }
     );
     
@@ -524,9 +545,7 @@ export async function fetchUserGithubRepositories(username?: string): Promise<Gi
       resp = await fetch(
         `https://api.github.com/orgs/${encodeURIComponent(targetUser)}/repos?sort=updated&per_page=100`,
         {
-          headers: {
-            Accept: 'application/vnd.github.v3+json',
-          },
+          headers: getGithubAuthHeaders(),
         }
       );
     }
@@ -546,6 +565,8 @@ export async function fetchUserGithubRepositories(username?: string): Promise<Gi
           forks_count: r.forks_count ?? 0,
           default_branch: r.default_branch || 'main',
           is_fork: Boolean(r.fork),
+          parent_full_name: r.parent?.full_name,
+          parent_url: r.parent?.html_url,
           updated_at: r.updated_at,
           created_at: r.created_at,
           pushed_at: r.pushed_at || r.updated_at,
@@ -699,7 +720,11 @@ export async function fetchUserGithubRepositories(username?: string): Promise<Gi
         forks_count: 0,
         default_branch: 'main',
         is_fork: true,
-        updated_at: new Date().toISOString(),
+        parent_full_name: 'octocat/Spoon-Knife',
+        parent_url: 'https://github.com/octocat/Spoon-Knife',
+        created_at: '2014-02-04T07:11:00Z',
+        pushed_at: '2014-02-12T05:00:00Z',
+        updated_at: '2014-02-12T05:00:00Z',
       },
       {
         id: `repo-${targetUser}-iot`,

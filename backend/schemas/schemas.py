@@ -63,8 +63,10 @@ class RepoResponse(BaseModel):
     default_branch: str
     last_commit_sha: Optional[str] = None
     last_synced_at: Optional[datetime.datetime] = None
-    last_sync_trigger: Optional[str] = "check-now"
     created_at: datetime.datetime
+    is_fork: Optional[bool] = False
+    parent_full_name: Optional[str] = None
+    parent_url: Optional[str] = None
 
 # --- Evidence & Assessment ---
 class EvidenceResponse(BaseModel):

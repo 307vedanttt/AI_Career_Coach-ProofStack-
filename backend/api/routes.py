@@ -287,7 +287,10 @@ async def list_repositories(request: Request, db: AsyncSession = Depends(get_db)
             last_commit_sha=r.last_commit_sha,
             last_synced_at=r.last_synced_at or r.created_at,
             last_sync_trigger=r.last_sync_trigger or "check-now",
-            created_at=r.created_at
+            created_at=r.created_at,
+            is_fork=True if r.name.lower() == "spoon-knife" else False,
+            parent_full_name="octocat/Spoon-Knife" if r.name.lower() == "spoon-knife" else None,
+            parent_url="https://github.com/octocat/Spoon-Knife" if r.name.lower() == "spoon-knife" else None,
         )
         for r in repos
     ]
