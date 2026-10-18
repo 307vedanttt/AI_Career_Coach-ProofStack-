@@ -316,10 +316,13 @@ export const RepositorySelectorModal: React.FC<RepositorySelectorModalProps> = (
                 {[
                   { slug: 'facebook/react', label: 'facebook/react', stars: '251k★', lang: 'React' },
                   { slug: 'vercel/next.js', label: 'vercel/next.js', stars: '143k★', lang: 'Next.js' },
-                  { slug: 'fastapi/fastapi', label: 'fastapi/fastapi', stars: '85k★', lang: 'Python' },
+                  { slug: 'microsoft/TypeScript', label: 'microsoft/TypeScript', stars: '104k★', lang: 'TypeScript' },
                   { slug: 'torvalds/linux', label: 'torvalds/linux', stars: '252k★', lang: 'C Kernel' },
-                  { slug: 'shadcn-ui/ui', label: 'shadcn-ui/ui', stars: '80k★', lang: 'Tailwind' },
-                  { slug: '307vedanttt/MedNav-Ai', label: '307vedanttt/MedNav-Ai', stars: 'Featured', lang: 'Full-Stack' },
+                  { slug: 'pallets/flask', label: 'pallets/flask', stars: '72k★', lang: 'Python' },
+                  { slug: 'python/cpython', label: 'python/cpython', stars: '71k★', lang: 'Python' },
+                  { slug: 'octocat/Spoon-Knife', label: 'octocat/Spoon-Knife', stars: 'Fork Demo', lang: 'HTML' },
+                  { slug: 'fastapi/fastapi', label: 'fastapi/fastapi', stars: '85k★', lang: 'Python' },
+                  { slug: '307vedanttt/MedNav-Ai', label: '307vedanttt/MedNav-Ai', stars: 'Candidate', lang: 'Full-Stack' },
                 ].map((bench) => (
                   <button
                     key={bench.slug}

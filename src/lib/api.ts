@@ -402,7 +402,7 @@ export interface GitHubRepoSummary {
   full_name: string;
   owner: string;
   repo_url: string;
-  description: string;
+  description?: string;
   language: string;
   stars_count: number;
   forks_count: number;
@@ -452,9 +452,240 @@ export function parseGitHubRepoInput(input: string, fallbackOwner = '307vedanttt
   };
 }
 
+export interface ConnectedRepoItem {
+  id: string;
+  owner: string;
+  name: string;
+  url: string;
+  defaultBranch?: string;
+  isFork?: boolean;
+  is_fork?: boolean;
+  upstreamRepo?: string;
+  upstreamUrl?: string;
+  createdAt?: string;
+  created_at?: string;
+  lastActivityAt?: string;
+  pushed_at?: string;
+  primaryLanguage?: string;
+  language?: string;
+  starsCount?: number;
+  description?: string;
+  isWorldRepo?: boolean;
+}
+
+export const GLOBAL_WORLD_REPOSITORIES: ConnectedRepoItem[] = [
+  {
+    id: 'repo-torvalds-linux',
+    owner: 'torvalds',
+    name: 'linux',
+    url: 'https://github.com/torvalds/linux',
+    defaultBranch: 'master',
+    primaryLanguage: 'C',
+    language: 'C',
+    starsCount: 252000,
+    description: 'Linux kernel source tree by Linus Torvalds, Greg Kroah-Hartman & global community',
+    createdAt: '2005-04-16T22:13:00Z',
+    created_at: '2005-04-16T22:13:00Z',
+    lastActivityAt: '2026-10-18T05:00:00Z',
+    pushed_at: '2026-10-18T05:00:00Z',
+    isFork: false,
+    is_fork: false,
+    isWorldRepo: true,
+  },
+  {
+    id: 'repo-facebook-react',
+    owner: 'facebook',
+    name: 'react',
+    url: 'https://github.com/facebook/react',
+    defaultBranch: 'main',
+    primaryLanguage: 'JavaScript',
+    language: 'JavaScript',
+    starsCount: 251000,
+    description: 'The library for web and native user interfaces by Dan Abramov & Meta',
+    createdAt: '2013-05-24T16:15:54Z',
+    created_at: '2013-05-24T16:15:54Z',
+    lastActivityAt: '2026-10-17T20:30:00Z',
+    pushed_at: '2026-10-17T20:30:00Z',
+    isFork: false,
+    is_fork: false,
+    isWorldRepo: true,
+  },
+  {
+    id: 'repo-vercel-nextjs',
+    owner: 'vercel',
+    name: 'next.js',
+    url: 'https://github.com/vercel/next.js',
+    defaultBranch: 'canary',
+    primaryLanguage: 'TypeScript',
+    language: 'TypeScript',
+    starsCount: 143000,
+    description: 'The React Framework for the Web by Tim Neutkens, Shu Ding & Vercel',
+    createdAt: '2016-10-05T23:32:51Z',
+    created_at: '2016-10-05T23:32:51Z',
+    lastActivityAt: '2026-10-18T04:15:00Z',
+    pushed_at: '2026-10-18T04:15:00Z',
+    isFork: false,
+    is_fork: false,
+    isWorldRepo: true,
+  },
+  {
+    id: 'repo-microsoft-typescript',
+    owner: 'microsoft',
+    name: 'TypeScript',
+    url: 'https://github.com/microsoft/TypeScript',
+    defaultBranch: 'main',
+    primaryLanguage: 'TypeScript',
+    language: 'TypeScript',
+    starsCount: 104000,
+    description: 'TypeScript language compiler by Anders Hejlsberg & Microsoft',
+    createdAt: '2014-06-10T15:28:55Z',
+    created_at: '2014-06-10T15:28:55Z',
+    lastActivityAt: '2026-10-18T01:40:00Z',
+    pushed_at: '2026-10-18T01:40:00Z',
+    isFork: false,
+    is_fork: false,
+    isWorldRepo: true,
+  },
+  {
+    id: 'repo-pallets-flask',
+    owner: 'pallets',
+    name: 'flask',
+    url: 'https://github.com/pallets/flask',
+    defaultBranch: 'main',
+    primaryLanguage: 'Python',
+    language: 'Python',
+    starsCount: 72000,
+    description: 'The Python micro framework for web development by Armin Ronacher & David Lord',
+    createdAt: '2010-04-06T11:11:59Z',
+    created_at: '2010-04-06T11:11:59Z',
+    lastActivityAt: '2026-10-16T18:20:00Z',
+    pushed_at: '2026-10-16T18:20:00Z',
+    isFork: false,
+    is_fork: false,
+    isWorldRepo: true,
+  },
+  {
+    id: 'repo-octocat-spoon-knife',
+    owner: 'octocat',
+    name: 'Spoon-Knife',
+    url: 'https://github.com/octocat/Spoon-Knife',
+    defaultBranch: 'main',
+    primaryLanguage: 'HTML',
+    language: 'HTML',
+    starsCount: 14000,
+    description: 'The quintessential open-source git fork demo by The Octocat',
+    createdAt: '2011-01-27T19:30:43Z',
+    created_at: '2011-01-27T19:30:43Z',
+    lastActivityAt: '2014-02-12T05:00:00Z',
+    pushed_at: '2014-02-12T05:00:00Z',
+    isFork: false,
+    is_fork: false,
+    isWorldRepo: true,
+  },
+  {
+    id: 'repo-python-cpython',
+    owner: 'python',
+    name: 'cpython',
+    url: 'https://github.com/python/cpython',
+    defaultBranch: 'main',
+    primaryLanguage: 'Python',
+    language: 'Python',
+    starsCount: 71000,
+    description: 'The Python programming language reference runtime by Guido van Rossum',
+    createdAt: '2017-02-10T19:23:51Z',
+    created_at: '2017-02-10T19:23:51Z',
+    lastActivityAt: '2026-10-18T06:00:00Z',
+    pushed_at: '2026-10-18T06:00:00Z',
+    isFork: false,
+    is_fork: false,
+    isWorldRepo: true,
+  },
+  {
+    id: 'repo-tailwindlabs-tailwindcss',
+    owner: 'tailwindlabs',
+    name: 'tailwindcss',
+    url: 'https://github.com/tailwindlabs/tailwindcss',
+    defaultBranch: 'main',
+    primaryLanguage: 'TypeScript',
+    language: 'TypeScript',
+    starsCount: 88000,
+    description: 'A utility-first CSS framework by Adam Wathan',
+    createdAt: '2017-10-31T15:20:00Z',
+    created_at: '2017-10-31T15:20:00Z',
+    lastActivityAt: '2026-10-17T22:10:00Z',
+    pushed_at: '2026-10-17T22:10:00Z',
+    isFork: false,
+    is_fork: false,
+    isWorldRepo: true,
+  },
+  {
+    id: 'repo-rust-lang-rust',
+    owner: 'rust-lang',
+    name: 'rust',
+    url: 'https://github.com/rust-lang/rust',
+    defaultBranch: 'master',
+    primaryLanguage: 'Rust',
+    language: 'Rust',
+    starsCount: 110000,
+    description: 'Empowering everyone to build reliable and efficient software by Graydon Hoare & community',
+    createdAt: '2010-06-16T20:39:03Z',
+    created_at: '2010-06-16T20:39:03Z',
+    lastActivityAt: '2026-10-18T07:15:00Z',
+    pushed_at: '2026-10-18T07:15:00Z',
+    isFork: false,
+    is_fork: false,
+    isWorldRepo: true,
+  },
+  {
+    id: 'repo-golang-go',
+    owner: 'golang',
+    name: 'go',
+    url: 'https://github.com/golang/go',
+    defaultBranch: 'master',
+    primaryLanguage: 'Go',
+    language: 'Go',
+    starsCount: 135000,
+    description: 'The Go open source programming language by Rob Pike, Ken Thompson & Robert Griesemer',
+    createdAt: '2014-08-19T04:33:40Z',
+    created_at: '2014-08-19T04:33:40Z',
+    lastActivityAt: '2026-10-18T05:45:00Z',
+    pushed_at: '2026-10-18T05:45:00Z',
+    isFork: false,
+    is_fork: false,
+    isWorldRepo: true,
+  },
+];
+
 export async function fetchGitHubRepoDetails(owner: string, name: string): Promise<GitHubRepoSummary> {
   const cleanOwner = owner.trim().replace(/^@/, '');
   const cleanName = name.trim().replace(/\.git$/, '');
+
+  // 1. Check known world repositories catalog for instant precision
+  const matchedWorld = GLOBAL_WORLD_REPOSITORIES.find(
+    (wr) =>
+      wr.owner.toLowerCase() === cleanOwner.toLowerCase() &&
+      wr.name.toLowerCase() === cleanName.toLowerCase()
+  );
+  if (matchedWorld) {
+    return {
+      id: matchedWorld.id,
+      name: matchedWorld.name,
+      full_name: `${matchedWorld.owner}/${matchedWorld.name}`,
+      owner: matchedWorld.owner,
+      repo_url: matchedWorld.url,
+      description: matchedWorld.description || '',
+      language: matchedWorld.primaryLanguage || matchedWorld.language || 'Code',
+      stars_count: matchedWorld.starsCount ?? 100000,
+      forks_count: Math.round((matchedWorld.starsCount ?? 100000) * 0.2),
+      default_branch: matchedWorld.defaultBranch || 'main',
+      is_fork: Boolean(matchedWorld.isFork),
+      parent_full_name: matchedWorld.upstreamRepo,
+      parent_url: matchedWorld.upstreamUrl,
+      updated_at: matchedWorld.lastActivityAt || new Date().toISOString(),
+      created_at: matchedWorld.createdAt || new Date().toISOString(),
+      pushed_at: matchedWorld.pushed_at || matchedWorld.lastActivityAt || new Date().toISOString(),
+    };
+  }
 
   try {
     const resp = await fetch(
@@ -577,91 +808,32 @@ export async function fetchUserGithubRepositories(username?: string): Promise<Gi
     // Network fallback
   }
 
-  // 3. Fallback default repositories
+  // 3. Fallback default repositories matching world creators or candidates
   const lowerUser = targetUser.toLowerCase();
-  if (lowerUser === 'facebook') {
-    return [
-      {
-        id: `repo-facebook-react`,
-        name: 'react',
-        full_name: 'facebook/react',
-        owner: 'facebook',
-        repo_url: 'https://github.com/facebook/react',
-        description: 'The library for web and native user interfaces',
-        language: 'JavaScript',
-        stars_count: 251000,
-        forks_count: 51000,
-        default_branch: 'main',
-        is_fork: false,
-        updated_at: new Date().toISOString(),
-      },
-      {
-        id: `repo-facebook-react-native`,
-        name: 'react-native',
-        full_name: 'facebook/react-native',
-        owner: 'facebook',
-        repo_url: 'https://github.com/facebook/react-native',
-        description: 'A framework for building native applications using React',
-        language: 'TypeScript',
-        stars_count: 119000,
-        forks_count: 24000,
-        default_branch: 'main',
-        is_fork: false,
-        updated_at: new Date().toISOString(),
-      },
-    ];
-  }
 
-  if (lowerUser === 'vercel') {
-    return [
-      {
-        id: `repo-vercel-nextjs`,
-        name: 'next.js',
-        full_name: 'vercel/next.js',
-        owner: 'vercel',
-        repo_url: 'https://github.com/vercel/next.js',
-        description: 'The React Framework for the Web',
-        language: 'JavaScript',
-        stars_count: 143000,
-        forks_count: 28000,
-        default_branch: 'canary',
-        is_fork: false,
-        updated_at: new Date().toISOString(),
-      },
-      {
-        id: `repo-vercel-turborepo`,
-        name: 'turborepo',
-        full_name: 'vercel/turborepo',
-        owner: 'vercel',
-        repo_url: 'https://github.com/vercel/turborepo',
-        description: 'High-performance build system for JavaScript and TypeScript codebases',
-        language: 'Rust',
-        stars_count: 26000,
-        forks_count: 2100,
-        default_branch: 'main',
-        is_fork: false,
-        updated_at: new Date().toISOString(),
-      },
-    ];
-  }
-
-  if (lowerUser === 'torvalds') {
-    return [
-      {
-        id: `repo-torvalds-linux`,
-        name: 'linux',
-        full_name: 'torvalds/linux',
-        owner: 'torvalds',
-        repo_url: 'https://github.com/torvalds/linux',
-        description: 'Linux kernel source tree',
-        language: 'C',
-        stars_count: 252000,
-        forks_count: 55000,
-        default_branch: 'master',
-        is_fork: false,
-        updated_at: new Date().toISOString(),
-      },
-    ];
+  // Match from GLOBAL_WORLD_REPOSITORIES if owner matches
+  const matchingWorldRepos = GLOBAL_WORLD_REPOSITORIES.filter(
+    (wr) => wr.owner.toLowerCase() === lowerUser
+  );
+  if (matchingWorldRepos.length > 0) {
+    return matchingWorldRepos.map((wr) => ({
+      id: wr.id,
+      name: wr.name,
+      full_name: `${wr.owner}/${wr.name}`,
+      owner: wr.owner,
+      repo_url: wr.url,
+      description: wr.description || '',
+      language: wr.primaryLanguage || wr.language || 'Code',
+      stars_count: wr.starsCount ?? 100000,
+      forks_count: Math.round((wr.starsCount ?? 100000) * 0.2),
+      default_branch: wr.defaultBranch || 'main',
+      is_fork: Boolean(wr.isFork),
+      parent_full_name: wr.upstreamRepo,
+      parent_url: wr.upstreamUrl,
+      updated_at: wr.lastActivityAt || new Date().toISOString(),
+      created_at: wr.createdAt || new Date().toISOString(),
+      pushed_at: wr.pushed_at || wr.lastActivityAt || new Date().toISOString(),
+    }));
   }
 
   if (lowerUser === '307vedanttt') {
