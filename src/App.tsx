@@ -262,6 +262,9 @@ export const App: React.FC = () => {
             <Route path="/verify" element={<VerifyPage />} />
             <Route path="/scan" element={<ScannerPage />} />
             <Route path="/alerts" element={<AlertsPage />} />
+            <Route path="/app/alerts" element={<AlertsPage />} />
+            <Route path="/radar" element={<AlertsPage />} />
+            <Route path="/auto-apply" element={<AlertsPage />} />
             <Route path="/how-we-judge" element={<HowWeJudgePage />} />
             <Route path="/styleguide" element={<StyleguidePage />} />
 

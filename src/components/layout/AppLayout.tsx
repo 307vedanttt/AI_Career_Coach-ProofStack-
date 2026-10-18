@@ -280,6 +280,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
     { to: '/resume', label: 'Resume', icon: FileUp },
     { to: '/app/skill-tests', label: 'Skill Tests', icon: Award },
     { to: '/app/enterprise', label: 'Recruiter', icon: Building2 },
+    { to: '/alerts', label: 'Auto-Apply', icon: Zap },
   ];
 
   // Mobile 5-Tab Bar items (4 primary + More sheet)
