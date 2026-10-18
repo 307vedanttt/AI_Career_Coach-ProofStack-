@@ -400,6 +400,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             <div className="flex items-center gap-1.5 bg-[#0B1020] border border-[#25324A] rounded-lg px-2.5 py-1 shadow-inner hover:border-cyan-500/50 transition-colors">
               <GitFork className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
               <select
+                id="global-repo-selector"
+                aria-label="Repository Selector"
                 value={repository.id}
                 onChange={(e) => {
                   const val = e.target.value;
