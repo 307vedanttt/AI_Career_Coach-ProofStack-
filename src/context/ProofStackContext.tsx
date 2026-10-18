@@ -27,7 +27,6 @@ import {
   fetchUserGithubRepositories,
   parseGitHubRepoInput,
   fetchGitHubRepoDetails,
-  GLOBAL_WORLD_REPOSITORIES,
   ConnectedRepoItem,
 } from '../lib/api';
 
@@ -2168,18 +2167,10 @@ export const ProofStackProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     // 3. Merge candidate repos with GLOBAL_WORLD_REPOSITORIES
     const mergedMap = new Map<string, ConnectedRepoItem>();
 
-    // User/candidate repos first
+    // User/candidate repos
     for (const r of reposList) {
       const key = `${r.owner.toLowerCase()}/${r.name.toLowerCase()}`;
       mergedMap.set(key, { ...r, isWorldRepo: false });
-    }
-
-    // World open-source creators repositories
-    for (const wr of GLOBAL_WORLD_REPOSITORIES) {
-      const key = `${wr.owner.toLowerCase()}/${wr.name.toLowerCase()}`;
-      if (!mergedMap.has(key)) {
-        mergedMap.set(key, wr);
-      }
     }
 
     const fullConnectedList = Array.from(mergedMap.values());

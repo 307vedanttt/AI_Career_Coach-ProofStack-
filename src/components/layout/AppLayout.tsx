@@ -72,24 +72,6 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
 
   const { repository, resetDemoData, connectedRepos, switchRepository } = useProofStack();
 
-  const targetUsername = (
-    user?.login ||
-    (typeof window !== 'undefined' ? localStorage.getItem('ps_github_username') : '') ||
-    '307vedanttt'
-  ).toLowerCase();
-
-  const candidateRepos = useMemo(() => {
-    return (connectedRepos || []).filter(
-      (r) => !r.isWorldRepo && r.owner.toLowerCase() === targetUsername
-    );
-  }, [connectedRepos, targetUsername]);
-
-  const worldRepos = useMemo(() => {
-    return (connectedRepos || []).filter(
-      (r) => r.isWorldRepo || r.owner.toLowerCase() !== targetUsername
-    );
-  }, [connectedRepos, targetUsername]);
-
   useEffect(() => {
     let isMounted = true;
     const fetchRefusals = async () => {
@@ -397,56 +379,30 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             )}
           </div>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 bg-[#0B1020] border border-[#25324A] rounded-lg px-2.5 py-1 shadow-inner hover:border-cyan-500/50 transition-colors">
-              <GitFork className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-              <select
-                id="global-repo-selector"
-                aria-label="Repository Selector"
-                value={repository.id}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  if (val === '__ANALYZE_ANY_REPO__') {
-                    setConnectModalOpen(true);
-                  } else {
-                    switchRepository(val);
-                  }
-                }}
-                className="bg-transparent text-emerald-400 font-mono text-xs focus:outline-none cursor-pointer max-w-[210px] sm:max-w-[320px] truncate"
-                title="Switch repository or inspect any public repo in the world"
-              >
-                {candidateRepos.length > 0 && (
-                  <optgroup label={`Candidate Repositories (@${targetUsername})`} className="bg-[#0A0C0F] text-[#9AA3AE] font-semibold">
-                    {candidateRepos.map((r) => (
-                      <option key={r.id} value={r.id} className="bg-[#0B1020] text-emerald-300 font-mono">
-                        {r.owner}/{r.name} {r.isFork ? '(Fork)' : ''} — {r.primaryLanguage || r.language || 'Code'}
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
-
-                {worldRepos.length > 0 && (
-                  <optgroup label="World Open-Source Repositories & Creators" className="bg-[#0A0C0F] text-violet-400 font-semibold">
-                    {worldRepos.map((r) => (
-                      <option key={r.id} value={r.id} className="bg-[#0B1020] text-cyan-300 font-mono">
-                        {r.owner}/{r.name} — {r.primaryLanguage || r.language || 'Code'}
-                      </option>
-                    ))}
-                  </optgroup>
-                )}
-
-                {!connectedRepos.some((r) => r.id === repository.id) && (
-                  <option value={repository.id} className="bg-[#0B1020] text-emerald-300 font-mono">
-                    {repository.fullName} — {repository.primaryLanguage || 'Code'}
-                  </option>
-                )}
-
-                <optgroup label="Global GitHub Explorer" className="bg-[#0A0C0F] text-amber-400 font-semibold">
-                  <option value="__ANALYZE_ANY_REPO__" className="bg-[#121927] text-amber-300 font-bold">
-                    + Analyze Any Public GitHub Repo in the World...
-                  </option>
-                </optgroup>
-              </select>
-            </div>
+            {connectedRepos && connectedRepos.length > 0 && (
+              <div className="flex items-center gap-1.5 bg-[#0B1020] border border-[#25324A] rounded-lg px-2.5 py-1 shadow-inner hover:border-cyan-500/50 transition-colors">
+                <GitFork className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                <select
+                  id="global-repo-selector"
+                  aria-label="Repository Selector"
+                  value={repository.id}
+                  onChange={(e) => switchRepository(e.target.value)}
+                  className="bg-transparent text-emerald-400 font-mono text-xs focus:outline-none cursor-pointer max-w-[210px] sm:max-w-[320px] truncate"
+                  title="Switch active repository"
+                >
+                  {connectedRepos.map((r) => (
+                    <option key={r.id} value={r.id} className="bg-[#0B1020] text-emerald-300 font-mono">
+                      {r.owner}/{r.name} {r.isFork ? '(Fork)' : ''}
+                    </option>
+                  ))}
+                  {!connectedRepos.some((r) => r.id === repository.id) && (
+                    <option value={repository.id} className="bg-[#0B1020] text-emerald-300 font-mono">
+                      {repository.fullName}
+                    </option>
+                  )}
+                </select>
+              </div>
+            )}
             <button
               onClick={() => setConnectModalOpen(true)}
               className="hover:text-white text-emerald-300 hover:text-emerald-200 underline flex items-center gap-1 font-mono text-xs transition-colors"
