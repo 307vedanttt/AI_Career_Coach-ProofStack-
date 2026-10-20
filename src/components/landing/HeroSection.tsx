@@ -6,7 +6,7 @@ import { Stamp } from '../stamps/Stamp';
 import { ReceiptCard } from '../receipt/ReceiptCard';
 import { CodeBlock } from '../ui/CodeBlock';
 import { Button } from '../ui/Button';
-import { Shield, ArrowRight, GitCommit, Play, Sparkles, FileText } from 'lucide-react';
+import { ArrowRight, GitCommit, Play, Sparkles, FileText, CheckCircle2 } from 'lucide-react';
 import { JobPostingIntakeModal } from '../posting/JobPostingIntakeModal';
 
 export const HeroSection: React.FC = () => {
@@ -17,6 +17,41 @@ export const HeroSection: React.FC = () => {
   const [stampLanded, setStampLanded] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
   const [isIntakeOpen, setIsIntakeOpen] = useState(false);
+  const [isSimulatingCommit, setIsSimulatingCommit] = useState(false);
+  const [highlightedLine, setHighlightedLine] = useState(8);
+
+  // Trigger tactile commit verification on the physical receipt
+  const handleVerifyReceipt = () => {
+    if (isSimulatingCommit) return;
+    setIsSimulatingCommit(true);
+    setStampLanded(false);
+
+    // Step 1: Scan and trace AST line
+    setTimeout(() => {
+      setHighlightedLine(8);
+      setIsShaking(true);
+      setStampLanded(true);
+
+      if (heroRef.current && !shouldReduceMotion) {
+        gsap.to(heroRef.current, {
+          x: '+=3',
+          y: '-=3',
+          yoyo: true,
+          repeat: 3,
+          duration: 0.04,
+          ease: 'power2.inOut',
+          onComplete: () => {
+            gsap.set(heroRef.current, { x: 0, y: 0 });
+            setIsShaking(false);
+            setIsSimulatingCommit(false);
+          },
+        });
+      } else {
+        setIsShaking(false);
+        setIsSimulatingCommit(false);
+      }
+    }, 450);
+  };
 
   // Headline words for word-by-word reveal (blur 8px -> 0, translateY 20 -> 0, 60ms stagger)
   const headlineWords = [
@@ -47,9 +82,9 @@ export const HeroSection: React.FC = () => {
       const x = (e.clientX / innerWidth - 0.5) * 2; // -1 to 1
       const y = (e.clientY / innerHeight - 0.5) * 2; // -1 to 1
 
-      // Rotate 1 to 2 degrees following mouse
-      targetRotX = -y * 2; // slight tilt on X axis
-      targetRotY = x * 2.5; // slight tilt on Y axis
+      // Rotate 1 to 2.5 degrees following mouse with realistic perspective
+      targetRotX = -y * 2.2;
+      targetRotY = x * 2.8;
     };
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
@@ -72,8 +107,7 @@ export const HeroSection: React.FC = () => {
     };
   }, [shouldReduceMotion]);
 
-  // PROVEN stamp slam effect:
-  // scale 2.2 to 1, opacity 0 to 1, rotation -12 to -4 degrees, a 4px screen shake, and an ink ring that expands (350ms).
+  // Initial PROVEN stamp slam effect on mount
   useEffect(() => {
     if (shouldReduceMotion) {
       setStampLanded(true);
@@ -82,16 +116,14 @@ export const HeroSection: React.FC = () => {
 
     const timer = setTimeout(() => {
       setStampLanded(true);
-
-      // Trigger 4px screen shake
       setIsShaking(true);
       if (heroRef.current) {
         gsap.to(heroRef.current, {
-          x: '+=4',
-          y: '-=4',
+          x: '+=3',
+          y: '-=3',
           yoyo: true,
           repeat: 3,
-          duration: 0.05,
+          duration: 0.04,
           ease: 'power2.inOut',
           onComplete: () => {
             gsap.set(heroRef.current, { x: 0, y: 0 });
@@ -137,8 +169,8 @@ async def create_order(payload: OrderPayload):
               transition={{ duration: 0.4 }}
               className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 font-mono text-xs font-semibold tracking-wider uppercase"
             >
-              <Shield className="w-3.5 h-3.5" />
-              <span>DETERMINISTIC EVIDENCE LEDGER</span>
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+              <span>DETERMINISTIC EVIDENCE LEDGER // ZERO RESUME INFLATION</span>
             </motion.div>
 
             {/* Word-by-word Headline Reveal */}
@@ -185,8 +217,8 @@ async def create_order(payload: OrderPayload):
               transition={{ duration: 0.45, delay: shouldReduceMotion ? 0 : 0.4 }}
               className="text-base sm:text-lg text-[#9AA3AE] max-w-xl leading-relaxed"
             >
-              ProofStack monitors your repository commits and generates physical, tamper-evident proof
-              receipts. No inflated keyword resume bullet points — only irrefutable code evidence.
+              ProofStack reads your real repository commits and verifies function call-graphs against job requirements.
+              No keyword-stuffed claims — only deterministic code receipts you can click and verify.
             </motion.p>
 
             {/* Action Buttons */}
@@ -194,7 +226,7 @@ async def create_order(payload: OrderPayload):
               initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, delay: shouldReduceMotion ? 0 : 0.5 }}
-              className="flex flex-wrap items-center gap-4 pt-2"
+              className="flex flex-wrap items-center gap-3 pt-2"
             >
               <Button
                 variant="solid_paper"
@@ -224,6 +256,7 @@ async def create_order(payload: OrderPayload):
                   el?.scrollIntoView({ behavior: 'smooth' });
                 }}
                 icon={<Play className="w-3.5 h-3.5" />}
+                aria-label="See How It Proves It"
               >
                 See How It Proves It
               </Button>
@@ -234,7 +267,6 @@ async def create_order(payload: OrderPayload):
               isOpen={isIntakeOpen}
               onClose={() => setIsIntakeOpen(false)}
             />
-
 
             {/* Quick Proof Metrics Micro-Strip */}
             <motion.div
@@ -254,14 +286,14 @@ async def create_order(payload: OrderPayload):
             </motion.div>
           </div>
 
-          {/* Right Column: Hero Physical Receipt Cards with Mouse Parallax & Stamp Slam */}
+          {/* Right Column: Physical Receipt Card with Tactile Parallax & Interactive Verification */}
           <div className="lg:col-span-6 relative flex justify-center lg:justify-end">
             <div
               ref={cardsContainerRef}
-              className="relative w-full max-w-[480px] transition-transform duration-100 ease-out will-change-transform"
+              className="relative w-full max-w-[490px] transition-transform duration-100 ease-out will-change-transform"
               style={{ transformStyle: 'preserve-3d' }}
             >
-              {/* Secondary background card for physical stacking illusion */}
+              {/* Secondary background card for authentic physical stacking illusion */}
               <div
                 className="absolute inset-0 bg-[#EFECE6] rounded-xl transform rotate-3 translate-x-4 translate-y-3 shadow-2xl opacity-70 pointer-events-none -z-10"
                 aria-hidden="true"
@@ -273,23 +305,36 @@ async def create_order(payload: OrderPayload):
                 timestamp="2026-10-16 14:02:18 UTC"
                 tilt={false}
                 showBarcode={true}
-                className="relative overflow-visible"
+                className="relative overflow-visible shadow-[0_35px_70px_-15px_rgba(0,0,0,0.65)]"
               >
                 <div className="space-y-4">
-                  <div>
-                    <h3 className="font-display text-2xl text-[#14171A] font-bold tracking-tight">
-                      Order Pipeline Verification
-                    </h3>
-                    <p className="text-xs font-mono text-[#6B7280] mt-0.5">
-                      Checked against 3 invariant test assertions
-                    </p>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <h3 className="font-display text-2xl text-[#14171A] font-bold tracking-tight">
+                        Order Pipeline Verification
+                      </h3>
+                      <p className="text-xs font-mono text-[#6B7280] mt-0.5">
+                        Checked against 3 invariant test assertions
+                      </p>
+                    </div>
+
+                    {/* Interactive Verification Trigger Button */}
+                    <button
+                      onClick={handleVerifyReceipt}
+                      disabled={isSimulatingCommit}
+                      className="px-2.5 py-1 rounded bg-[#14171A]/5 hover:bg-emerald-500/15 border border-[#14171A]/10 hover:border-emerald-600/30 text-[11px] font-mono text-[#14171A] transition-colors flex items-center gap-1.5"
+                      title="Simulate AST verification scan"
+                    >
+                      <Sparkles className={`w-3 h-3 text-emerald-600 ${isSimulatingCommit ? 'animate-spin' : ''}`} />
+                      <span>{isSimulatingCommit ? 'Checking...' : 'Verify Now'}</span>
+                    </button>
                   </div>
 
                   {/* Clean Code Preview */}
                   <CodeBlock
                     code={sampleSnippet}
                     fileName="api/routes/orders.py"
-                    highlightLines={[8]}
+                    highlightLines={[highlightedLine]}
                     highlightType="emerald"
                   />
 

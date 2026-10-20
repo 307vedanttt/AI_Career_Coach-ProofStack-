@@ -28,11 +28,11 @@ export const LandingPage: React.FC = () => {
       {/* Ambient Radial Vignette & Atmospheric Glows */}
       <div className="fixed inset-0 pointer-events-none desk-vignette z-0" aria-hidden="true" />
       <div
-        className="fixed -top-40 -left-40 w-[750px] h-[750px] bg-[#1F8A5B] opacity-[0.10] rounded-full blur-[140px] pointer-events-none z-0"
+        className="fixed -top-40 -left-40 w-[750px] h-[750px] bg-[#1F8A5B] opacity-[0.08] rounded-full blur-[140px] pointer-events-none z-0"
         aria-hidden="true"
       />
       <div
-        className="fixed bottom-0 right-0 w-[800px] h-[800px] bg-[#6D5BD0] opacity-[0.08] rounded-full blur-[160px] pointer-events-none z-0"
+        className="fixed bottom-0 right-0 w-[800px] h-[800px] bg-[#6D5BD0] opacity-[0.06] rounded-full blur-[160px] pointer-events-none z-0"
         aria-hidden="true"
       />
 

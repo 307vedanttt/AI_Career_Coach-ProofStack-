@@ -13,10 +13,12 @@ import {
   Clock,
   Sparkles,
   Lock,
-  ChevronDown
+  ChevronDown,
+  Box
 } from 'lucide-react';
 import { AppLayout } from '../components/layout/AppLayout';
 import { apiClient } from '../lib/api/client';
+import { CandidateIntegrityMatrix, CandidateNodeData } from '../components/charts/CandidateIntegrityMatrix';
 
 interface Organization {
   id: string;
@@ -221,6 +223,8 @@ export const EnterpriseRecruiterPage: React.FC = () => {
   const [isNewCandidateModalOpen, setIsNewCandidateModalOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isNewOrgModalOpen, setIsNewOrgModalOpen] = useState(false);
+  const [show3DRadar, setShow3DRadar] = useState(true);
+  const [selectedCandidateId, setSelectedCandidateId] = useState<string | null>(null);
 
   // New Candidate Form State
   const [newCandidateName, setNewCandidateName] = useState('');
@@ -461,6 +465,21 @@ export const EnterpriseRecruiterPage: React.FC = () => {
     return matchesSearch && matchesStatus;
   });
 
+  const candidateNodes: CandidateNodeData[] = candidateList.map((c) => ({
+    id: c.id,
+    name: c.candidate_name,
+    role: c.job_title || 'Software Engineer',
+    matchScore: c.match_score || 90,
+    verifiedClaims: c.verified_claims_count || 12,
+    hollowClaims: c.hollow_claims_count || 0,
+    status: (c.evaluation_status === 'verified'
+      ? 'verified'
+      : c.evaluation_status === 'needs_review'
+      ? 'needs_review'
+      : 'flagged') as any,
+    githubHandle: c.github_handle,
+  }));
+
   return (
     <AppLayout>
       <div className="max-w-7xl mx-auto space-y-6 pb-12">
@@ -643,6 +662,20 @@ export const EnterpriseRecruiterPage: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => setShow3DRadar((prev) => !prev)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all flex items-center gap-1.5 shadow-sm ${
+                    show3DRadar
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold'
+                      : 'bg-white/[0.03] text-[#9AA3AE] hover:text-white border border-white/5'
+                  }`}
+                  aria-label="Toggle Candidate Code Integrity Matrix"
+                >
+                  <Box className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>{show3DRadar ? 'Hide Matrix' : 'Show Integrity Matrix'}</span>
+                </button>
+
                 {['all', 'verified', 'needs_review', 'rejected'].map((st) => (
                   <button
                     key={st}
@@ -660,6 +693,37 @@ export const EnterpriseRecruiterPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Candidate Integrity Matrix */}
+            {show3DRadar && (
+              <div className="rounded-2xl bg-[#0A0C0F]/90 border border-emerald-500/30 p-4 shadow-2xl relative overflow-hidden backdrop-blur-xl animate-in fade-in duration-300">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3 pb-2.5 border-b border-white/10">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-emerald-400" />
+                    <span className="font-display text-base font-bold text-white tracking-wide">
+                      Candidate Code Integrity Matrix
+                    </span>
+                    <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
+                      AST REACHABILITY
+                    </span>
+                  </div>
+                  <div className="text-[11px] font-mono text-[#9AA3AE]">
+                    Interactive scatter matrix: verified AST claims vs candidate match score · Click node to inspect dossier
+                  </div>
+                </div>
+                <div className="w-full">
+                  <CandidateIntegrityMatrix
+                    candidates={candidateNodes}
+                    selectedCandidateId={selectedCandidateId || undefined}
+                    onSelectCandidate={(cand) => {
+                      setSelectedCandidateId(cand.id);
+                      const el = document.getElementById(`cand-row-${cand.id}`);
+                      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Candidates Table */}
             <div className="bg-[#12161B] border border-white/10 rounded-2xl overflow-hidden shadow-xl">
               <table className="w-full text-left font-mono text-xs">
@@ -675,7 +739,15 @@ export const EnterpriseRecruiterPage: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-white/5 text-white/90">
                   {(Array.isArray(filteredCandidates) ? filteredCandidates : []).map((cand) => (
-                    <tr key={cand.id} className="hover:bg-white/[0.02] transition-colors">
+                    <tr
+                      key={cand.id}
+                      id={`cand-row-${cand.id}`}
+                      className={`transition-colors ${
+                        selectedCandidateId === cand.id
+                          ? 'bg-emerald-500/15 ring-1 ring-emerald-500/40'
+                          : 'hover:bg-white/[0.02]'
+                      }`}
+                    >
                       <td className="py-4 px-4">
                         <div className="font-bold text-white text-sm">{cand.candidate_name}</div>
                         <div className="text-[11px] text-[#9AA3AE] flex items-center gap-2 mt-0.5">

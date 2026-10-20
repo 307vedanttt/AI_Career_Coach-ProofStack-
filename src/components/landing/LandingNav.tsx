@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { HealthChip, CounterChip } from '../ui/Chips';
 import { Button } from '../ui/Button';
-import { ArrowRight, Terminal } from 'lucide-react';
+import { ArrowRight, Terminal, Building2 } from 'lucide-react';
 
 export const LandingNav: React.FC = () => {
   const navigate = useNavigate();
@@ -71,12 +71,13 @@ export const LandingNav: React.FC = () => {
           >
             Capabilities
           </a>
-          <a
-            href="#metrics"
-            className="hover:text-white transition-colors focus:outline-none focus:text-white"
+          <Link
+            to="/enterprise?demo=1"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-semibold hover:bg-emerald-500/20 transition-all focus:outline-none"
           >
-            Metrics
-          </a>
+            <Building2 className="w-3.5 h-3.5" />
+            <span>Recruiter Portal</span>
+          </Link>
           <Link
             to="/styleguide"
             className="hover:text-emerald-400 transition-colors focus:outline-none focus:text-emerald-400"
