@@ -25,7 +25,6 @@ export const HeroSection = () => {
     const [isIntakeOpen, setIsIntakeOpen] = useState(false);
     const [isSimulatingCommit, setIsSimulatingCommit] = useState(false);
     const [activeClaimIndex, setActiveClaimIndex] = useState(null);
-    const [heroView, setHeroView] = useState('receipt');
     // Trigger tactile resume verification on the physical receipt
     const handleVerifyReceipt = () => {
         if (isSimulatingCommit)
@@ -273,60 +272,9 @@ export const HeroSection = () => {
 
           {/* Right Column: Physical Receipt Card with Tactile Parallax & Interactive Verification */}
           <div ref={cardsScrollWrapperRef} className="lg:col-span-6 relative flex flex-col items-center lg:items-end will-change-transform w-full max-w-full" style={{ perspective: '1200px' }}>
-            {/* View Switcher Controls */}
-            <div className="flex items-center gap-1.5 p-1 mb-4 rounded-xl bg-[#090C12]/90 backdrop-blur-xl border border-white/[0.1] shadow-xl z-20">
-              <button
-                type="button"
-                onClick={() => setHeroView('receipt')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all flex items-center gap-1.5 ${
-                  heroView === 'receipt'
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm font-semibold'
-                    : 'text-neutral-400 hover:text-white'
-                }`}
-              >
-                <span>📄</span> Physical Docket
-              </button>
-              <button
-                type="button"
-                onClick={() => setHeroView('creative_3d')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all flex items-center gap-1.5 ${
-                  heroView === 'creative_3d'
-                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm font-semibold'
-                    : 'text-neutral-400 hover:text-white'
-                }`}
-              >
-                <span>💎</span> 3D Proof Core
-              </button>
-            </div>
-
             {/* Dynamic Ambient Holographic Glow behind Receipt */}
             <div className="absolute -inset-6 bg-gradient-to-b from-white/[0.04] to-transparent rounded-3xl blur-3xl opacity-60 pointer-events-none -z-20"/>
 
-            {heroView === 'creative_3d' ? (
-              <div className="relative w-full max-w-[490px] rounded-2xl overflow-hidden border border-emerald-500/40 bg-[#0A0D15]/95 p-2 shadow-[0_35px_70px_-15px_rgba(0,0,0,0.8)] backdrop-blur-2xl group transition-all duration-300">
-                <div className="relative rounded-xl overflow-hidden aspect-[16/10] bg-black">
-                  <img 
-                    src="/proofstack_3d_core.jpg" 
-                    alt="ProofStack Holographic Proof Prism Monolith" 
-                    className="w-full h-full object-cover rounded-xl transform transition-transform duration-700 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0A0D15] via-transparent to-transparent opacity-80" />
-                  <div className="absolute top-3 left-3 flex items-center gap-2">
-                    <span className="px-2.5 py-1 rounded-full bg-emerald-500/25 border border-emerald-500/50 text-emerald-300 font-mono text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-lg backdrop-blur-md">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      Holographic Proof Prism
-                    </span>
-                  </div>
-                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between text-xs font-mono text-neutral-300 bg-[#090C12]/80 backdrop-blur-md p-2.5 rounded-lg border border-white/[0.08]">
-                    <span className="font-semibold text-white flex items-center gap-1.5">
-                      <span className="text-emerald-400 font-mono">&lt; ↗ &gt;</span>
-                      Prism AST Ledger
-                    </span>
-                    <span className="text-emerald-400 font-bold">100% Deterministic</span>
-                  </div>
-                </div>
-              </div>
-            ) : (
             <div ref={cardsContainerRef} className="relative w-full max-w-[490px] transition-transform duration-100 ease-out will-change-transform" style={{ transformStyle: 'preserve-3d' }}>
               {/* Secondary background card for authentic physical stacking illusion */}
               <div className="absolute inset-0 bg-[#F1F5F9] border border-[#CBD5E1] rounded-xl transform rotate-1 sm:rotate-3 translate-x-1 sm:translate-x-4 translate-y-1 sm:translate-y-3 shadow-2xl opacity-80 pointer-events-none -z-10" aria-hidden="true"/>
@@ -443,7 +391,6 @@ export const HeroSection = () => {
               </ReceiptCard>
             </div>
           </div>
-        )}
         </div>
       </div>
     </div>
