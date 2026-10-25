@@ -110,6 +110,50 @@
         }
       }
     },
+    "machine_learning_ai": {
+      "display_name": "Machine Learning & AI",
+      "detector": "generic_detector",
+      "assessable": "code_assessable",
+      "skills": {
+        "machine_learning": {
+          "canonical_id": "ml_core",
+          "label": "Machine Learning & Supervised Learning",
+          "aliases": ["machine learning", "ml", "supervised learning", "unsupervised learning", "model evaluation", "hyperparameter tuning", "feature engineering"]
+        },
+        "scikit_learn": {
+          "canonical_id": "ml_scikit",
+          "label": "Scikit-Learn",
+          "aliases": ["scikit-learn", "scikit learn", "sklearn"]
+        },
+        "regression_classification": {
+          "canonical_id": "ml_regression",
+          "label": "Regression & Classification Models",
+          "aliases": ["regression", "linear regression", "logistic regression", "classification", "confusion matrix", "rmse"]
+        },
+        "deep_learning": {
+          "canonical_id": "ml_deep_learning",
+          "label": "Deep Learning & Frameworks",
+          "aliases": ["deep learning", "pytorch", "tensorflow", "keras", "neural networks"]
+        }
+      }
+    },
+    "frontend_web": {
+      "display_name": "Frontend & Modern Web",
+      "detector": "generic_detector",
+      "assessable": "code_assessable",
+      "skills": {
+        "react": {
+          "canonical_id": "web_react",
+          "label": "React",
+          "aliases": ["react", "react.js", "reactjs", "react 18"]
+        },
+        "html_css": {
+          "canonical_id": "web_html_css",
+          "label": "HTML & CSS",
+          "aliases": ["html", "html5", "css", "css3", "tailwind", "responsive design"]
+        }
+      }
+    },
     "soft_skills_and_non_code": {
       "display_name": "Non-Code & Interpersonal Skills",
       "detector": null,

@@ -5,43 +5,63 @@
 @tailwind utilities;
 
 :root {
-  --canvas-bg: #0A0C0F;
-  --panel-bg: #12161B;
-  --panel-glass: rgba(255, 255, 255, 0.035);
+  --canvas-bg: #08090C;
+  --panel-bg: #0E1117;
+  --panel-glass: rgba(255, 255, 255, 0.03);
   --panel-border: rgba(255, 255, 255, 0.08);
 
-  --paper-bg: #F7F5F0;
-  --paper-sub: #F2EFE9;
-  --paper-ink: #14171A;
-  --paper-muted: #6B7280;
-  --paper-border: #E6E1D6;
+  /* Architectural Alpine Cardstock - Crisp, clean, Swiss-engineered */
+  --paper-bg: #F8FAFC;
+  --paper-sub: #F1F5F9;
+  --paper-ink: #0F172A;
+  --paper-muted: #475569;
+  --paper-border: #E2E8F0;
 
-  --proven-ink: #1F8A5B;
-  --proven-glow: #34D399;
-  --proven-wash: #E7F4EE;
+  /* Verifiable Proof: Electric Mint / Jade */
+  --proven-ink: #047857;
+  --proven-glow: #10B981;
+  --proven-wash: #ECFDF5;
 
-  --basic-ink: #B7791F;
-  --basic-glow: #F5A524;
-  --basic-wash: #FBF1DC;
+  /* Basic / Baseline: Warm Amber Topaz */
+  --basic-ink: #B45309;
+  --basic-glow: #F59E0B;
+  --basic-wash: #FFFBEB;
 
-  --notshown-ink: #64748B;
-  --notshown-glow: #7C8CA8;
-  --notshown-wash: #EEF1F5;
+  /* Not Shown: Technical Cold Slate */
+  --notshown-ink: #475569;
+  --notshown-glow: #64748B;
+  --notshown-wash: #F1F5F9;
 
-  --unclear-ink: #6D5BD0;
-  --unclear-glow: #8B7CFF;
-  --unclear-wash: #EFECFB;
+  /* Unclear: Electric Indigo / Periwinkle */
+  --unclear-ink: #4F46E5;
+  --unclear-glow: #6366F1;
+  --unclear-wash: #EEF2FF;
 
-  --attack-ink: #C2362B;
-  --attack-glow: #FF5C4D;
-  --attack-wash: #FBE9E7;
+  /* Attack / Refused: Coral Rose Vermilion */
+  --attack-ink: #E11D48;
+  --attack-glow: #F43F5E;
+  --attack-wash: #FFF1F2;
 }
 
 @layer base {
+  html {
+    scroll-behavior: auto !important;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
   body {
     background-color: var(--canvas-bg);
-    color: #F4F2EC;
+    color: #F8FAFC;
     font-family: 'Inter', system-ui, sans-serif;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+  }
+  #root {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
   }
 }
 
@@ -70,12 +90,12 @@
   );
 }
 
-/* Paper grain simulation: ultra-subtle warm archival cardstock */
+/* Architectural paper micro-grain simulation */
 .paper-grain {
   background-color: var(--paper-bg);
   background-image: 
-    radial-gradient(rgba(20, 23, 26, 0.025) 1px, transparent 1px),
-    linear-gradient(to bottom, #FAF8F3, #F2EFE9);
+    radial-gradient(rgba(15, 23, 42, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, #FFFFFF 0%, #F8FAFC 60%, #F1F5F9 100%);
   background-size: 8px 8px, 100% 100%;
 }
 
@@ -169,4 +189,100 @@ html.demo-mode .glass-panel,
   border-color: rgba(255, 255, 255, 0.16) !important;
   background: rgba(18, 22, 27, 0.88) !important;
 }
+
+/* ReactBits Border Beam Animation */
+@keyframes border-beam {
+  100% {
+    offset-distance: 100%;
+  }
+}
+
+.animate-border-beam {
+  animation: border-beam var(--duration) infinite linear;
+}
+
+/* ReactBits Shiny Text Animation */
+@keyframes shine {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.animate-shine {
+  animation: shine var(--shine-duration, 4s) linear infinite;
+}
+
+/* Linear/Hardware Card Surface with crisp 1px inset bevel */
+.hardware-card {
+  position: relative;
+  background: radial-gradient(120% 120% at 50% 0%, rgba(25, 28, 35, 0.7) 0%, rgba(12, 14, 18, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 
+    0 1px 0 0 rgba(255, 255, 255, 0.06) inset,
+    0 20px 40px -15px rgba(0, 0, 0, 0.7);
+}
+
+/* Obsidian Executive Surface Tokens (Linear & Vercel Grade) */
+.obsidian-card {
+  background-color: #0D0F14;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8), 0 1px 0 0 rgba(255, 255, 255, 0.05) inset;
+}
+
+.obsidian-subcard {
+  background-color: #12151C;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.obsidian-inset {
+  background-color: #08090C;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Authentic Paper Cardstock with subtle depth */
+.paper-cardstock {
+  background-color: #F8FAFC;
+  background-image: 
+    radial-gradient(rgba(15, 23, 42, 0.03) 1px, transparent 1px),
+    linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 70%, #F1F5F9 100%);
+  background-size: 12px 12px, 100% 100%;
+  box-shadow: 
+    0 1px 1px rgba(0, 0, 0, 0.05),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05),
+    0 24px 38px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Sweeping laser scanline */
+@keyframes laser-sweep {
+  0% {
+    top: 0%;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+.laser-scanline {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, #34D399 50%, transparent 100%);
+  box-shadow: 0 0 12px #34D399, 0 0 4px #10B981;
+  animation: laser-sweep 3s ease-in-out infinite;
+}
+
+
+
 

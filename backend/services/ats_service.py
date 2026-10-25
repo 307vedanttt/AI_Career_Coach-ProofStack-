@@ -34,7 +34,10 @@ ACTION_VERBS = {
     "executed", "formulated", "initiated", "launched", "migrated", "produced",
     "resolved", "scaled", "streamlined", "transformed", "orchestrated", "authored",
     "delivered", "analyzed", "configured", "maintained", "mentored", "reduced",
-    "increased", "accelerated", "standardized", "generated", "programmed"
+    "increased", "accelerated", "standardized", "generated", "programmed",
+    "trained", "evaluated", "improved", "performed", "applied", "achieved",
+    "modeled", "tested", "collaborated", "researched", "visualized", "secured",
+    "tuned", "cleaned", "presented", "published", "discovered", "quantified"
 }
 
 
@@ -1674,7 +1677,7 @@ class AtsService:
                     "skill": skill.capitalize(),
                     "status": "VERIFIED_PROOF",
                     "evidence_file": sample_ev.file_path,
-                    "line_range": f"L{sample_ev.line_start or 1}–L{sample_ev.line_end or 20}",
+                    "line_range": f"L{getattr(sample_ev, 'start_line', 1) or 1}–L{getattr(sample_ev, 'end_line', 20) or 20}",
                     "confidence": "HIGH",
                     "provenance_summary": f"Backed by {len(evidence_by_tech[matching_key])} verified AST signals in connected repositories."
                 })

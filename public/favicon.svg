@@ -1,3 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <defs>
+    <linearGradient id="ps-vec-fav" x1="18" y1="26" x2="33" y2="13" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stopColor="#34D399" />
+      <stop offset="100%" stopColor="#10B981" />
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="44" height="44" rx="12" fill="#0A0D14" stroke="rgba(255, 255, 255, 0.14)" stroke-width="1.5" />
+  <!-- Left Bracket '<' -->
+  <path d="M 17 15 L 10 24 L 17 33" stroke="#94A3B8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+  <!-- Right Bracket '>' -->
+  <path d="M 31 15 L 38 24 L 31 33" stroke="#94A3B8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+  <!-- Stepping Ledger Proof Lines -->
+  <line x1="16" y1="29" x2="24" y2="29" stroke="#64748B" stroke-width="2.5" stroke-linecap="round" />
+  <line x1="18" y1="23.5" x2="27" y2="23.5" stroke="#94A3B8" stroke-width="2.5" stroke-linecap="round" />
+  <!-- Upward Career Trajectory Vector -->
+  <path d="M 19 25.5 L 25.5 19 L 32.5 12" stroke="url(#ps-vec-fav)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
+  <path d="M 26 12 H 32.5 V 18.5" stroke="url(#ps-vec-fav)" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" />
 </svg>

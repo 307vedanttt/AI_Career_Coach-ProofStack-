@@ -47,9 +47,10 @@ export default {
         },
       },
       fontFamily: {
-        display: ['"Instrument Serif"', 'Georgia', 'serif'],
+        display: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
         sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['"JetBrains Mono"', 'monospace'],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+        editorial: ['"Instrument Serif"', 'Georgia', 'serif'],
       },
       borderRadius: {
         receipt: '6px',
