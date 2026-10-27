@@ -80,11 +80,17 @@ export const LandingNav = () => {
             <span>GitHub</span>
           </a>
 
+          <Link to="/login" className="hidden md:inline-flex items-center text-xs font-mono text-[#C4C9D2] hover:text-white transition-colors">
+            Sign In
+          </Link>
+
           <Button variant="solid_paper" size="sm" onClick={() => {
-            if (typeof sessionStorage !== 'undefined') {
-                sessionStorage.setItem('ps_demo_mode', 'true');
+            const storedUser = typeof window !== 'undefined' ? localStorage.getItem('ps_github_username') : null;
+            if (storedUser) {
+                navigate('/app');
+            } else {
+                navigate('/login');
             }
-            navigate('/app?demo=1');
         }} aria-label="Analyze my repository" icon={<ArrowRight className="w-3.5 h-3.5 text-[#14171A]"/>}>
             <span className="hidden xs:inline">Analyze Repo</span>
             <span className="xs:hidden">Audit</span>
@@ -173,10 +179,12 @@ export const LandingNav = () => {
               size="sm" 
               onClick={() => {
                 setIsMobileMenuOpen(false);
-                if (typeof sessionStorage !== 'undefined') {
-                  sessionStorage.setItem('ps_demo_mode', 'true');
+                const storedUser = typeof window !== 'undefined' ? localStorage.getItem('ps_github_username') : null;
+                if (storedUser) {
+                  navigate('/app');
+                } else {
+                  navigate('/login');
                 }
-                navigate('/app?demo=1');
               }}
               icon={<ArrowRight className="w-3.5 h-3.5 text-[#14171A]" />}
               className="flex-1 justify-center"

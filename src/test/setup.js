@@ -19,6 +19,31 @@ if (typeof window !== 'undefined') {
             }),
         });
     }
+    if (!window.IntersectionObserver) {
+        class MockIntersectionObserver {
+            constructor(callback) {
+                this.callback = callback;
+            }
+            observe() {}
+            unobserve() {}
+            disconnect() {}
+        }
+        Object.defineProperty(window, 'IntersectionObserver', {
+            writable: true,
+            value: MockIntersectionObserver,
+        });
+    }
+    if (!window.ResizeObserver) {
+        class MockResizeObserver {
+            observe() {}
+            unobserve() {}
+            disconnect() {}
+        }
+        Object.defineProperty(window, 'ResizeObserver', {
+            writable: true,
+            value: MockResizeObserver,
+        });
+    }
     if (!window.localStorage) {
         const store = {};
         const mockStorage = {

@@ -91,11 +91,7 @@ export const FinalCtaSection = () => {
           {/* Action Controls */}
           <div className="pt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-6 border-t border-[#E2E8F0]">
             {/* Primary Action Button */}
-            <Link to="/app?demo=1" onClick={() => {
-            if (typeof sessionStorage !== 'undefined') {
-                sessionStorage.setItem('ps_demo_mode', 'true');
-            }
-        }} className="h-12 px-7 rounded-xl bg-[#0F172A] text-[#F8FAFC] hover:bg-black font-sans text-sm font-semibold flex items-center justify-center gap-2 shadow-xl hover:scale-102 transition-transform focus:outline-none focus:ring-2 focus:ring-emerald-500 hover:ring-2 hover:ring-emerald-400/60 hover:shadow-[0_0_30px_rgba(16,185,129,0.35)]" aria-label="Launch interactive demo in styleguide">
+            <Link to={typeof window !== 'undefined' && localStorage.getItem('ps_github_username') ? '/app' : '/login'} className="h-12 px-7 rounded-xl bg-[#0F172A] text-[#F8FAFC] hover:bg-black font-sans text-sm font-semibold flex items-center justify-center gap-2 shadow-xl hover:scale-102 transition-transform focus:outline-none focus:ring-2 focus:ring-emerald-500 hover:ring-2 hover:ring-emerald-400/60 hover:shadow-[0_0_30px_rgba(16,185,129,0.35)]" aria-label="Launch interactive demo in styleguide">
               <span>Analyze My Repository</span>
               <ArrowRight className="w-4 h-4 text-emerald-400"/>
             </Link>

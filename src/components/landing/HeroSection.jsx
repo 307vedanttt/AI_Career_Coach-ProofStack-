@@ -6,7 +6,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Stamp } from '../stamps/Stamp';
 import { ReceiptCard } from '../receipt/ReceiptCard';
 import { Button } from '../ui/Button';
-import { ArrowRight, GitCommit, Play, Sparkles, FileText, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, GitCommit, Play, Sparkles, FileText, CheckCircle2, Zap } from 'lucide-react';
 import { JobPostingIntakeModal } from '../posting/JobPostingIntakeModal';
 import { DecryptedText } from '../ui/motion/DecryptedText';
 import { BorderBeam } from '../ui/motion/BorderBeam';
@@ -229,12 +229,24 @@ export const HeroSection = () => {
             {/* Action Buttons */}
             <motion.div initial={shouldReduceMotion ? { opacity: 1 } : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: shouldReduceMotion ? 0 : 0.3 }} className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 pt-2">
               <Button variant="solid_paper" size="lg" onClick={() => {
-            if (typeof sessionStorage !== 'undefined') {
-                sessionStorage.setItem('ps_demo_mode', 'true');
+            const storedUser = typeof window !== 'undefined' ? localStorage.getItem('ps_github_username') : null;
+            if (storedUser) {
+                navigate('/app');
+            } else {
+                navigate('/login');
             }
-            navigate('/app?demo=1');
         }} icon={<ArrowRight className="w-4 h-4 text-[#14171A]"/>} aria-label="Analyze my repository now">
                 Analyze My Repo
+              </Button>
+
+              <Button variant="outline" size="lg" onClick={() => {
+            if (typeof sessionStorage !== 'undefined') {
+                sessionStorage.setItem('ps_demo_mode', 'true');
+                localStorage.setItem('ps_github_username', '307vedanttt');
+            }
+            navigate('/app?demo=1');
+        }} icon={<Zap className="w-4 h-4 text-emerald-400"/>} aria-label="Explore demo candidate dossier">
+                Explore Demo Profile
               </Button>
 
               <Button variant="ghost" size="lg" onClick={() => setIsIntakeOpen(true)} icon={<FileText className="w-4 h-4"/>} aria-label="Paste job posting to intake">

@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Globe, Eye, Trash2, ShieldCheck, Info, Check, AlertCircle, FileText, Upload, ArrowRight, RefreshCw, X, Key, Zap, } from 'lucide-react';
+import { Globe, Eye, Trash2, ShieldCheck, Info, Check, AlertCircle, FileText, Upload, ArrowRight, RefreshCw, X, Key, Zap, Github, } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { devLoginBackend } from '../../lib/api';
 export const AuthReceiptCard = ({ onSuccess, initialMode = 'signin', }) => {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const { refreshUser, loginWithApiKey } = useAuth();
-    const [authMethod, setAuthMethod] = useState('apikey');
+    const [authMethod, setAuthMethod] = useState('github');
     const [apiKeyInput, setApiKeyInput] = useState('');
     const [githubHandleInput, setGithubHandleInput] = useState(() => {
-        return typeof window !== 'undefined' ? (localStorage.getItem('ps_github_username') || '307vedanttt') : '307vedanttt';
+        return typeof window !== 'undefined' ? (localStorage.getItem('ps_github_username') || '') : '';
     });
     const [isSubmittingKey, setIsSubmittingKey] = useState(false);
     const [loadingProvider, setLoadingProvider] = useState(null);
@@ -28,6 +28,81 @@ export const AuthReceiptCard = ({ onSuccess, initialMode = 'signin', }) => {
         return null;
     });
     const [showWelcome, setShowWelcome] = useState(initialMode === 'welcome');
+
+    // Handle Direct GitHub Username Submit
+    const handleGithubUsernameSubmit = async (e) => {
+        if (e) e.preventDefault();
+        const targetUser = (githubHandleInput || '').trim().replace(/^@/, '');
+        if (!targetUser) {
+            setErrorMessage('Please enter your GitHub username to discover your repositories.');
+            return;
+        }
+        if (!agreedPrivacy) {
+            alert('Please agree to the privacy notice before continuing.');
+            return;
+        }
+        setIsSubmittingKey(true);
+        setErrorMessage(null);
+        if (typeof window !== 'undefined') {
+            const prevUser = localStorage.getItem('ps_github_username');
+            if (prevUser && prevUser.toLowerCase() !== targetUser.toLowerCase()) {
+                localStorage.removeItem('ps_active_repo_id');
+                localStorage.removeItem('ps_active_repo_owner');
+                localStorage.removeItem('ps_active_repo_name');
+                const keysToRemove = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const k = localStorage.key(i);
+                    if (k && k.startsWith('proofstack_demo_state_v2')) {
+                        keysToRemove.push(k);
+                    }
+                }
+                keysToRemove.forEach((k) => localStorage.removeItem(k));
+            }
+            localStorage.setItem('ps_github_username', targetUser);
+            sessionStorage.removeItem('ps_demo_mode');
+        }
+        try {
+            await loginWithApiKey('ps_live_' + targetUser, targetUser);
+            await refreshUser();
+            setTimeout(() => {
+                setIsSubmittingKey(false);
+                if (onSuccess) {
+                    onSuccess();
+                } else {
+                    navigate('/app', { replace: true });
+                }
+            }, 300);
+        } catch (err) {
+            setIsSubmittingKey(false);
+            setErrorMessage(err?.message || 'Authentication failed. Please verify the GitHub username.');
+        }
+    };
+
+    // Handle Quick 1-Click Demo Login
+    const handleDemoLogin = async () => {
+        setIsSubmittingKey(true);
+        setErrorMessage(null);
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('ps_github_username', '307vedanttt');
+            sessionStorage.setItem('ps_demo_mode', 'true');
+        }
+        try {
+            await loginWithApiKey('ps_live_demo', '307vedanttt');
+            await refreshUser();
+            setTimeout(() => {
+                setIsSubmittingKey(false);
+                if (onSuccess) {
+                    onSuccess();
+                } else {
+                    navigate('/app?demo=1', { replace: true });
+                }
+            }, 300);
+        } catch (err) {
+            setIsSubmittingKey(false);
+            setErrorMessage(err?.message || 'Failed to initialize demo mode.');
+        }
+    };
+
     // Handle API Key Login
     const handleApiKeySubmit = async (customKey) => {
         if (!agreedPrivacy) {
@@ -195,32 +270,27 @@ export const AuthReceiptCard = ({ onSuccess, initialMode = 'signin', }) => {
 
               {/* Title & Subtitle */}
               <h1 className="font-display text-2xl sm:text-3xl font-extrabold text-[#14171A] tracking-tight mb-1.5">
-                Sign in to analyze
+                Connect GitHub to Inspect
               </h1>
               <p className="text-xs text-[#575D65] mb-4 leading-relaxed">
-                Connect your account or use an instant API key to inspect repositories and establish skill proof.
+                Enter your GitHub username to discover your repositories, analyze physical AST proofs, and generate your skill verification dossier.
               </p>
 
-              {/* GitHub Handle Input Strip */}
-              <div className="mb-4">
-                <label htmlFor="github-handle-input" className="block font-mono text-[11px] font-bold text-[#14171A] mb-1.5 flex items-center justify-between">
-                  <span>GitHub Username</span>
-                  <span className="text-[10px] text-[#1F8A5B] font-normal">Discovers your repos</span>
-                </label>
-                <div className="relative">
-                  <input id="github-handle-input" name="githubHandle" type="text" value={githubHandleInput} onChange={(e) => setGithubHandleInput(e.target.value)} placeholder="e.g. 307vedanttt or your username" className="w-full h-10 px-3 rounded-xl border border-[#D3CDBD] bg-white text-[#14171A] font-mono text-xs placeholder:text-[#9AA3AE] focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all shadow-inner"/>
-                </div>
-              </div>
-
               {/* AUTH METHOD SELECTOR TABS */}
-              <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#E2E8F0] mb-5 font-mono text-xs">
-                <button type="button" onClick={() => setAuthMethod('apikey')} className={`flex-1 py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 font-semibold transition-all ${authMethod === 'apikey'
+              <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#E2E8F0] mb-4 font-mono text-xs">
+                <button type="button" onClick={() => setAuthMethod('github')} className={`flex-1 py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 font-semibold transition-all ${authMethod === 'github'
+                ? 'bg-white text-[#14171A] shadow-sm'
+                : 'text-[#575D65] hover:text-[#14171A]'}`}>
+                  <Github className="w-3.5 h-3.5 text-[#1F8A5B]"/>
+                  <span>GitHub</span>
+                </button>
+                <button type="button" onClick={() => setAuthMethod('apikey')} aria-label="API Key / Token" className={`flex-1 py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 font-semibold transition-all ${authMethod === 'apikey'
                 ? 'bg-white text-[#14171A] shadow-sm'
                 : 'text-[#575D65] hover:text-[#14171A]'}`}>
                   <Key className="w-3.5 h-3.5 text-[#1F8A5B]"/>
                   <span>API Key / Token</span>
                 </button>
-                <button type="button" onClick={() => setAuthMethod('oauth')} className={`flex-1 py-1.5 px-3 rounded-lg flex items-center justify-center gap-1.5 font-semibold transition-all ${authMethod === 'oauth'
+                <button type="button" onClick={() => setAuthMethod('oauth')} className={`flex-1 py-1.5 px-2 rounded-lg flex items-center justify-center gap-1.5 font-semibold transition-all ${authMethod === 'oauth'
                 ? 'bg-white text-[#14171A] shadow-sm'
                 : 'text-[#575D65] hover:text-[#14171A]'}`}>
                   <ShieldCheck className="w-3.5 h-3.5 text-[#1F8A5B]"/>
@@ -244,13 +314,90 @@ export const AuthReceiptCard = ({ onSuccess, initialMode = 'signin', }) => {
                   <RefreshCw className="w-4 h-4 animate-spin text-emerald-600"/>
                   <span className="font-bold">
                     {loadingProvider
-                    ? `Redirecting to ${loadingProvider === 'github' ? 'GitHub' : 'Google'}...`
-                    : 'Authenticating with API token...'}
+                    ? `Connecting to ${loadingProvider === 'github' ? 'GitHub' : 'Google'}...`
+                    : 'Discovering GitHub repositories & building dossier...'}
                   </span>
                 </div>)}
 
-              {/* TAB CONTENT: API KEY OR OAUTH */}
-              {authMethod === 'apikey' ? (<div className="space-y-3.5 w-full">
+              {/* TAB CONTENT: GITHUB USERNAME | API KEY | OAUTH */}
+              {authMethod === 'github' ? (
+                <div className="space-y-3.5 w-full">
+                  <form onSubmit={handleGithubUsernameSubmit} className="space-y-3">
+                    <div>
+                      <label htmlFor="github-handle-input" className="block font-mono text-[11px] font-bold text-[#14171A] mb-1.5 flex items-center justify-between">
+                        <span>Your GitHub Username</span>
+                        <span className="text-[10px] text-[#1F8A5B] font-normal">Discovers your public repos</span>
+                      </label>
+                      <div className="relative flex items-center">
+                        <span className="absolute left-3.5 text-neutral-400 font-mono text-sm select-none">@</span>
+                        <input
+                          id="github-handle-input"
+                          name="githubHandle"
+                          type="text"
+                          value={githubHandleInput}
+                          onChange={(e) => setGithubHandleInput(e.target.value)}
+                          placeholder="e.g. torvalds or yourhandle"
+                          autoFocus
+                          className="w-full h-11 pl-8 pr-3.5 rounded-xl border border-[#D3CDBD] bg-white text-[#14171A] font-mono text-xs placeholder:text-[#9AA3AE] focus:ring-2 focus:ring-emerald-500 focus:outline-none transition-all shadow-inner"
+                        />
+                      </div>
+
+                      {githubHandleInput.trim().length >= 2 && (
+                        <div className="mt-2 flex items-center gap-2 p-2 rounded-lg bg-emerald-50 border border-emerald-200/80">
+                          <img
+                            src={`https://github.com/${githubHandleInput.trim().replace(/^@/, '')}.png`}
+                            alt="Avatar preview"
+                            onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                            className="w-5 h-5 rounded-full border border-emerald-500/60 object-cover"
+                          />
+                          <span className="font-mono text-[11px] text-emerald-800 font-bold truncate">
+                            Ready to inspect @{githubHandleInput.trim().replace(/^@/, '')}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isSubmittingKey || !githubHandleInput.trim()}
+                      className="w-full h-12 rounded-xl bg-gradient-to-r from-emerald-600 via-[#1F8A5B] to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 active:scale-[0.99] text-white shadow-lg flex items-center justify-center gap-2.5 font-bold text-xs transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-50"
+                    >
+                      {isSubmittingKey ? (
+                        <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                      ) : (
+                        <Github className="w-4 h-4 text-white" />
+                      )}
+                      <span>{isSubmittingKey ? 'Discovering Repositories...' : 'Analyze My Repositories & Launch'}</span>
+                      <ArrowRight className="w-4 h-4 text-emerald-200" />
+                    </button>
+                  </form>
+
+                  <div className="flex items-center gap-2 my-2 font-mono text-[10px] text-[#575D65] uppercase">
+                    <div className="h-px bg-[#D3CDBD] flex-1"/>
+                    <span>or explore with demo profile</span>
+                    <div className="h-px bg-[#D3CDBD] flex-1"/>
+                  </div>
+
+                  {/* 1-Click Demo Option */}
+                  <button
+                    type="button"
+                    onClick={handleDemoLogin}
+                    disabled={isSubmittingKey}
+                    className="w-full p-2.5 rounded-xl bg-white hover:bg-[#FAF9F5] border border-[#CBD5E1] hover:border-emerald-500/60 shadow-sm flex items-center justify-between text-xs font-semibold transition-all group focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <img src="https://github.com/307vedanttt.png" alt="Vedant Patke" className="w-7 h-7 rounded-full border border-emerald-500/40" />
+                      <div className="text-left">
+                        <div className="font-bold text-[#14171A]">Explore Demo Profile</div>
+                        <div className="text-[10px] font-mono text-[#575D65]">Vedant Patke · MedNav-Ai</div>
+                      </div>
+                    </div>
+                    <span className="px-2.5 py-1 rounded-md bg-emerald-100 text-emerald-800 font-mono text-[10px] font-bold group-hover:bg-emerald-200 transition-colors">
+                      1-Click Demo →
+                    </span>
+                  </button>
+                </div>
+              ) : authMethod === 'apikey' ? (<div className="space-y-3.5 w-full">
                   {/* 1-Click Instant Access Banner Button */}
                   <button type="button" onClick={() => handleApiKeySubmit('ps_live_instant_dev_key')} disabled={isSubmittingKey} className="w-full p-3.5 rounded-xl bg-gradient-to-r from-emerald-600 via-[#1F8A5B] to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 active:scale-[0.99] text-white shadow-md flex items-center justify-between transition-all group focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     <div className="text-left">

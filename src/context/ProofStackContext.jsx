@@ -103,9 +103,10 @@ export const ProofStackProvider = ({ children }) => {
         };
         const hasAuthToken = Boolean(ghHeaders && ghHeaders.Authorization);
         const isDemoSeed = repo.owner?.toLowerCase() === '307vedanttt' || repo.id?.includes('mednav');
-        if (hasAuthToken && !isDemoSeed) {
+        if (!isDemoSeed) {
             try {
-                const ghResp = await fetch(`https://api.github.com/repos/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}`, { headers: ghHeaders });
+                const reqHeaders = ghHeaders && Object.keys(ghHeaders).length > 0 ? ghHeaders : { 'Accept': 'application/vnd.github.v3+json' };
+                const ghResp = await fetch(`https://api.github.com/repos/${encodeURIComponent(repo.owner)}/${encodeURIComponent(repo.name)}`, { headers: reqHeaders });
                 if (ghResp.ok) {
                     const d = await ghResp.json();
                     details = {
@@ -155,9 +156,10 @@ export const ProofStackProvider = ({ children }) => {
             // offline fallback
         }
         // Direct GitHub REST API fallback for live commits on any repository in the world
-        if (hasAuthToken && !isDemoSeed && liveCommits.length === 0 && details.owner && details.name) {
+        if (!isDemoSeed && liveCommits.length === 0 && details.owner && details.name) {
             try {
-                const ghCommitsResp = await fetch(`https://api.github.com/repos/${encodeURIComponent(details.owner)}/${encodeURIComponent(details.name)}/commits?per_page=50`, { headers: ghHeaders });
+                const reqHeaders = ghHeaders && Object.keys(ghHeaders).length > 0 ? ghHeaders : { 'Accept': 'application/vnd.github.v3+json' };
+                const ghCommitsResp = await fetch(`https://api.github.com/repos/${encodeURIComponent(details.owner)}/${encodeURIComponent(details.name)}/commits?per_page=50`, { headers: reqHeaders });
                 if (ghCommitsResp.ok) {
                     const ghData = await ghCommitsResp.json();
                     if (Array.isArray(ghData) && ghData.length > 0) {

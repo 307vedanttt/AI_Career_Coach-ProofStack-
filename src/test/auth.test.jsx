@@ -160,8 +160,9 @@ describe('Auth Screens Component & Security Tests', () => {
           <Route path="/login" element={<LoginPage />}/>
         </Routes>
       </MemoryRouter>);
-        // Verify API Key tab is rendered and active by default
-        expect(screen.getByRole('button', { name: /API Key \/ Token/i })).toBeInTheDocument();
+        const apiKeyTab = screen.getByRole('button', { name: /API Key \/ Token/i });
+        expect(apiKeyTab).toBeInTheDocument();
+        fireEvent.click(apiKeyTab);
         expect(screen.getByText(/Instant 1-Click Access/i)).toBeInTheDocument();
         expect(screen.getByPlaceholderText(/ps_live_... or GitHub Personal Token/i)).toBeInTheDocument();
     });

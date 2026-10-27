@@ -947,7 +947,18 @@ export async function getCurrentUser() {
     const isMockSignedIn = typeof window !== 'undefined' && sessionStorage.getItem('ps_mock_signed_in') === 'true';
     const isDemo = typeof window !== 'undefined' && (sessionStorage.getItem('ps_demo_mode') === 'true' || window.location.search.includes('demo=1'));
     const storedUser = typeof window !== 'undefined' ? localStorage.getItem('ps_github_username') : null;
-    const username = storedUser || '307vedanttt';
+
+    // Strict authentication check: visitors who have not entered their GitHub handle,
+    // not provided an API key, and not chosen demo mode MUST be prompted to log in first.
+    if (!storedUser && !storedKey && !isMockSignedIn && !isDemo) {
+        return null;
+    }
+
+    const username = storedUser || (isDemo ? '307vedanttt' : null);
+    if (!username) {
+        return null;
+    }
+
     const userFallback = {
         id: `usr-${username}`,
         login: username,
@@ -979,17 +990,26 @@ export async function getCurrentUser() {
         }
     }
 
-    if (storedKey || isMockSignedIn || isDemo || (typeof window !== 'undefined' && localStorage.getItem('ps_github_username'))) {
-        return userFallback;
-    }
-    return null;
+    return userFallback;
 }
 export async function logoutUser() {
     if (typeof window !== 'undefined') {
         localStorage.removeItem('ps_api_key');
         localStorage.removeItem('ps_github_username');
+        localStorage.removeItem('ps_active_repo_id');
+        localStorage.removeItem('ps_active_repo_owner');
+        localStorage.removeItem('ps_active_repo_name');
         sessionStorage.removeItem('ps_mock_signed_in');
         sessionStorage.removeItem('ps_demo_mode');
+        // Clear cached demo state keys
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && k.startsWith('proofstack_demo_state_v2')) {
+                keysToRemove.push(k);
+            }
+        }
+        keysToRemove.forEach((k) => localStorage.removeItem(k));
     }
     try {
         await apiClient('/api/auth/logout', { method: 'POST' });
@@ -1001,6 +1021,10 @@ export async function logoutUser() {
 export async function deleteMyData() {
     if (typeof window !== 'undefined') {
         localStorage.removeItem('ps_api_key');
+        localStorage.removeItem('ps_github_username');
+        localStorage.removeItem('ps_active_repo_id');
+        localStorage.removeItem('ps_active_repo_owner');
+        localStorage.removeItem('ps_active_repo_name');
         sessionStorage.removeItem('ps_mock_signed_in');
         sessionStorage.removeItem('ps_demo_mode');
     }
