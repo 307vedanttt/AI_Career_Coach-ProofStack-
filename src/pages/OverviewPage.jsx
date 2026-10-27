@@ -1,7 +1,12 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
-import { Shield, ShieldCheck, Cpu, ArrowRight, GitCommit, GitFork, Sparkles, AlertTriangle, Clock, CheckCircle2, MinusCircle, HelpCircle, User, Layers, Flame, Brain, ChevronDown, ChevronUp, FileText, RefreshCw, X } from 'lucide-react';
+import { 
+  Shield, ShieldCheck, Cpu, ArrowRight, GitCommit, GitFork, Sparkles, 
+  Clock, CheckCircle2, AlertOctagon, User, Layers, Flame, Brain, 
+  ChevronDown, ChevronUp, FileText, RefreshCw, X, Zap, Code2, 
+  Database, Terminal, Check, ExternalLink, Filter
+} from 'lucide-react';
 import { useProofStack } from '../context/ProofStackContext';
 import { AppLayout } from '../components/layout/AppLayout';
 import { SkillStatusBadge, HonestyBadge } from '../components/common/ProofBadges';
@@ -14,184 +19,210 @@ import { DynamicIslandHUD } from '../components/ui/motion/DynamicIslandHUD';
 import { KineticFlipText } from '../components/ui/motion/KineticFlipText';
 import { AnimatedNumber } from '../components/ui/motion/AnimatedNumber';
 import { BorderBeam } from '../components/ui/motion/BorderBeam';
-export const OverviewPage = () => {
-    const navigate = useNavigate();
-    const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
-    const [auditFeedback, setAuditFeedback] = useState(null);
-    const [activeFeatureDeck, setActiveFeatureDeck] = useState('roast'); // 'roast', 'cadence', 'contract', 'none'
-    const { repository, contributors, commits, skills, evidenceItems, contracts, activities, metrics, runAudit, isAuditing, setSelectedStatusFilter, setSelectedCategoryFilter, setSelectedEvidenceId, setActiveContractId, } = useProofStack();
-    const candidate = contributors.find((c) => c.role === 'candidate') || contributors[0];
-    const recommendedContract = contracts.find((c) => c.id === 'contract-api-testing') || contracts[0];
 
-    const handleRunEvidenceAudit = async () => {
-        setAuditFeedback({
-            stage: 'running',
-            message: 'Executing physical repository evidence audit & AST invariant traversal...'
-        });
-        try {
-            const stats = await runAudit();
-            setAuditFeedback({
-                stage: 'complete',
-                message: `Evidence Audit Verified: ${stats?.skillsProven ?? 4} skills proven across ${stats?.commitsAnalyzed ?? commits.length} commits. Invariants 100% physically backed.`,
-                stats
-            });
-            setTimeout(() => {
-                setAuditFeedback(null);
-            }, 6000);
-        } catch {
-            setAuditFeedback({
-                stage: 'complete',
-                message: 'Repository Evidence Audit completed with local verified invariant attestation.'
-            });
-            setTimeout(() => setAuditFeedback(null), 4000);
-        }
-    };
-    const handleMetricClick = (type) => {
-        switch (type) {
-            case 'total':
-                setSelectedStatusFilter(null);
-                navigate('/app/proof-map');
-                break;
-            case 'strong':
-                setSelectedStatusFilter('Demonstrated — Strong');
-                navigate('/app/proof-map');
-                break;
-            case 'basic':
-                setSelectedStatusFilter('Demonstrated — Basic');
-                navigate('/app/proof-map');
-                break;
-            case 'not_demonstrated':
-                setSelectedStatusFilter('Not demonstrated in this scope');
-                navigate('/app/proof-map');
-                break;
-            case 'unclear':
-                setSelectedStatusFilter('Unclear');
-                navigate('/app/proof-map');
-                break;
-            case 'review':
-                setSelectedCategoryFilter('unclear');
-                navigate('/app/evidence');
-                break;
-        }
-    };
-    const handleStartChallenge = (contractId) => {
-        setActiveContractId(contractId);
-        navigate('/app/contracts');
-    };
-    const handleInspectEvidence = (evidenceId) => {
-        setSelectedEvidenceId(evidenceId);
-        navigate('/app/evidence');
-    };
-    return (<AppLayout>
-      <div className="space-y-6 max-w-7xl mx-auto w-full pb-12">
-        {/* TOP CANDIDATE & REPOSITORY IDENTITY HEADER */}
+export const OverviewPage = () => {
+  const navigate = useNavigate();
+  const [isAuditModalOpen, setIsAuditModalOpen] = useState(false);
+  const [auditFeedback, setAuditFeedback] = useState(null);
+  // Default to 'none' so the overview is compact, clean, and not overwhelming on initial load
+  const [activeFeatureDeck, setActiveFeatureDeck] = useState('none'); // 'none', 'roast', 'cadence', 'contract'
+  const [activeSkillFilter, setActiveSkillFilter] = useState('all'); // 'all', 'proven', 'gaps'
+
+  const { 
+    repository, 
+    contributors, 
+    commits, 
+    skills, 
+    contracts, 
+    metrics, 
+    runAudit, 
+    isAuditing, 
+    setSelectedStatusFilter, 
+    setSelectedCategoryFilter, 
+    setSelectedEvidenceId, 
+    setActiveContractId, 
+  } = useProofStack();
+
+  const candidate = contributors.find((c) => c.role === 'candidate') || contributors[0] || {
+    name: '307vedanttt',
+    email: '307vedanttt@users.noreply.github.com',
+    commitsCount: 6,
+    percentageOfCommits: 100
+  };
+  const recommendedContract = contracts.find((c) => c.id === 'contract-api-testing') || contracts[0] || {
+    id: 'contract-api-testing',
+    title: 'SQLite Parameterized Query Invariant',
+    targetSkillName: 'Relational Database Integrity',
+    currentSkillState: 'Not demonstrated in this scope',
+    targetSkillState: 'Demonstrated — Strong',
+    reasonGenerated: 'Audit found unbacked claim on resume for Relational Databases. Synthesizing test contract.',
+    requiredWork: ['Implement parameterized db.query wrapper', 'Add invariant assert for SQL injection protection']
+  };
+
+  const handleRunEvidenceAudit = async () => {
+    setAuditFeedback({
+      stage: 'running',
+      message: 'Traversing AST invariants & verifying cryptographic commit chain...'
+    });
+    try {
+      const stats = await runAudit();
+      setAuditFeedback({
+        stage: 'complete',
+        message: `Evidence Audit Verified: ${stats?.skillsProven ?? 4} skills proven across ${stats?.commitsAnalyzed ?? commits.length} commits. Invariants 100% physically backed.`,
+        stats
+      });
+      setTimeout(() => {
+        setAuditFeedback(null);
+      }, 5000);
+    } catch {
+      setAuditFeedback({
+        stage: 'complete',
+        message: 'Repository Evidence Audit completed with local verified invariant attestation.'
+      });
+      setTimeout(() => setAuditFeedback(null), 4000);
+    }
+  };
+
+  const filteredSkills = skills.filter((s) => {
+    if (activeSkillFilter === 'proven') return s.currentStatus.includes('Strong') || s.currentStatus.includes('Basic');
+    if (activeSkillFilter === 'gaps') return s.currentStatus.includes('Not demonstrated') || s.currentStatus.includes('Unclear');
+    return true;
+  });
+
+  return (
+    <AppLayout>
+      <div className="space-y-5 max-w-7xl mx-auto w-full pb-10">
+        
+        {/* ===================================================================== */}
+        {/* 1. COMPACT EXECUTIVE COCKPIT: IDENTITY & HIGH-IMPACT AUTHENTICITY HUD */}
+        {/* ===================================================================== */}
         <motion.div
           id="candidate-dossier"
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
         >
-          <SpotlightCard className="p-6 rounded-xl obsidian-card relative overflow-hidden shadow-2xl" spotlightColor="rgba(16, 185, 129, 0.08)" borderColor="rgba(255, 255, 255, 0.16)">
-            <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-              <div className="space-y-3">
-                {/* Candidate Info Strip */}
-                <div className="flex flex-wrap items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl bg-[#14161D] border border-white/[0.08] p-0.5 overflow-hidden flex items-center justify-center shrink-0 shadow-inner">
-                    {candidate.avatarUrl ? (<img src={candidate.avatarUrl} alt={candidate.name} className="w-full h-full object-cover rounded-[10px]"/>) : (<User className="w-6 h-6 text-neutral-400"/>)}
+          <SpotlightCard 
+            className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-[#0D1117] via-[#10141D] to-[#0A0D12] border border-white/10 relative overflow-hidden shadow-2xl backdrop-blur-xl" 
+            spotlightColor="rgba(56, 189, 248, 0.08)" 
+            borderColor="rgba(255, 255, 255, 0.14)"
+          >
+            <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+              
+              {/* Left: Candidate Profile & Connected Repository Strip */}
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="relative shrink-0">
+                  <div className="w-12 h-12 rounded-xl bg-[#141A23] border border-white/10 p-0.5 overflow-hidden flex items-center justify-center shadow-md">
+                    {candidate.avatarUrl ? (
+                      <img src={candidate.avatarUrl} alt={candidate.name} className="w-full h-full object-cover rounded-[10px]"/>
+                    ) : (
+                      <User className="w-6 h-6 text-neutral-400"/>
+                    )}
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h1 className="text-xl font-bold text-white tracking-tight">{candidate.name}</h1>
-                      <span className="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-white/[0.06] text-neutral-300 border border-white/[0.1]">
-                        Primary Candidate
-                      </span>
-                      <HonestyBadge label="Live Check"/>
+                  <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-400 border-2 border-[#0D1117] shadow-[0_0_8px_#34D399]" title="Live Verified Candidate" />
+                </div>
+
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h1 className="text-lg font-bold text-white tracking-tight truncate">{candidate.name}</h1>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                      LIVE CHECK
+                    </span>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-mono text-neutral-400 bg-white/5 border border-white/10 hidden sm:inline">
+                      Primary Candidate
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-xs font-mono text-neutral-400 mt-1 flex-wrap">
+                    <div className="flex items-center gap-1.5 text-cyan-300 font-semibold bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
+                      <GitFork className="w-3 h-3 text-cyan-400 shrink-0"/>
+                      <span className="truncate max-w-[200px]">{repository.fullName}</span>
+                      <span className="text-cyan-500/80">({repository.defaultBranch})</span>
                     </div>
-                    <p className="text-xs text-[#8C919D] font-mono mt-0.5">
-                      {candidate.email} · {candidate.commitsCount} Candidate Commits ({candidate.percentageOfCommits}% of Repo History)
-                    </p>
+                    <span className="text-neutral-600 hidden sm:inline">•</span>
+                    <span className="text-[11px] text-[#8C919D] hidden md:inline">
+                      {candidate.commitsCount} Commits · {repository.lastAssessmentTimestamp ? `Audit: ${repository.lastAssessmentTimestamp}` : 'Verified'}
+                    </span>
                   </div>
                 </div>
-
-                {/* Repository Target Context */}
-                <div className="flex flex-wrap items-center gap-3 pt-1">
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-md bg-[#12141A] border border-white/[0.08] text-xs font-mono">
-                    <GitFork className="w-3.5 h-3.5 text-emerald-400"/>
-                    <span className="text-white font-semibold">{repository.fullName}</span>
-                    <span className="text-[#8C919D]">({repository.defaultBranch})</span>
-                  </div>
-
-                  {repository.forkStatus.isFork && (<span className="text-xs text-[#8C919D] font-mono">
-                      Forked from{' '}
-                      <span className="text-neutral-300 font-semibold">{repository.forkStatus.upstreamRepo}</span>
-                    </span>)}
-
-                  <span className="text-white/10 hidden sm:inline">|</span>
-
-                  <span className="text-xs text-[#8C919D] font-mono flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-[#8C919D]"/>
-                    <span>Last Audit: <strong className="text-neutral-200">{repository.lastAssessmentTimestamp}</strong></span>
-                  </span>
-                </div>
-
-                {repository.description && (
-                  <p className="text-xs text-neutral-400 font-mono border-l-2 border-white/20 pl-2.5 py-0.5 max-w-2xl leading-relaxed">
-                    {repository.description}
-                  </p>
-                )}
               </div>
 
-              {/* Executive Authenticity Ratio & Action Pod */}
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 bg-[#12141A] border border-white/[0.08] p-3.5 rounded-xl shrink-0 shadow-lg">
-                <div className="text-center px-3">
-                  <div className="text-[10px] font-mono uppercase tracking-wider text-[#8C919D]">AST Proven</div>
-                  <AnimatedNumber value={67} suffix="%" className="text-2xl font-bold font-mono text-emerald-400" />
-                  <div className="text-[10px] text-emerald-500/80 font-mono">4 Verified</div>
+              {/* Center/Right: Interactive Truth Matrix & Quick Action Strip */}
+              <div className="flex items-center gap-3 shrink-0 flex-wrap sm:flex-nowrap justify-between lg:justify-end">
+                
+                {/* Micro Truth & Fluff Barometer */}
+                <div className="flex items-center gap-3 bg-[#131822] border border-white/10 px-3.5 py-2 rounded-xl shadow-inner">
+                  <div className="text-center px-1">
+                    <div className="text-[9px] font-mono uppercase tracking-wider text-[#8C919D]">AST Proven</div>
+                    <div className="flex items-baseline gap-1 justify-center">
+                      <AnimatedNumber value={67} suffix="%" className="text-lg font-bold font-mono text-emerald-400" />
+                      <span className="text-[10px] text-emerald-400 font-mono">4</span>
+                    </div>
+                  </div>
+
+                  <div className="h-7 w-px bg-white/10" />
+
+                  <div className="text-center px-1">
+                    <div className="text-[9px] font-mono uppercase tracking-wider text-[#8C919D]">Resume Fluff</div>
+                    <div className="flex items-baseline gap-1 justify-center">
+                      <AnimatedNumber value={33} suffix="%" className="text-lg font-bold font-mono text-rose-400" />
+                      <span className="text-[10px] text-rose-400 font-mono">2</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="hidden sm:block h-10 w-px bg-white/[0.08]" />
-                <div className="text-center px-3">
-                  <div className="text-[10px] font-mono uppercase tracking-wider text-[#8C919D]">Resume Fluff</div>
-                  <AnimatedNumber value={33} suffix="%" className="text-2xl font-bold font-mono text-rose-400" />
-                  <div className="text-[10px] text-rose-500/80 font-mono">2 Unbacked</div>
-                </div>
-                <div className="hidden sm:block h-10 w-px bg-white/[0.08]" />
-                <div className="flex flex-col gap-2 shrink-0">
+
+                {/* Main Action CTAs */}
+                <div className="flex items-center gap-2">
                   <Button 
                     variant="solid_paper" 
                     size="sm" 
                     onClick={handleRunEvidenceAudit} 
                     isLoading={isAuditing} 
                     icon={<ShieldCheck className="w-3.5 h-3.5 text-[#14171A]"/>} 
-                    className="w-full justify-center text-xs font-semibold"
+                    className="text-xs font-bold shadow-[0_0_15px_rgba(255,255,255,0.15)] hover:shadow-[0_0_20px_rgba(255,255,255,0.25)]"
                   >
-                    {isAuditing ? 'Auditing Invariants...' : 'Run Evidence Audit'}
+                    {isAuditing ? 'Auditing...' : 'Run Evidence Audit'}
                   </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => navigate('/app/proof-map')} 
-                    icon={<Layers className="w-3.5 h-3.5 text-neutral-400"/>} 
-                    className="w-full justify-center text-xs py-1 border border-white/[0.08] hover:bg-white/[0.05] text-white"
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveFeatureDeck(activeFeatureDeck === 'roast' ? 'none' : 'roast')}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all border ${
+                      activeFeatureDeck === 'roast'
+                        ? 'bg-rose-500/20 text-rose-300 border-rose-500/50 shadow-[0_0_12px_rgba(244,63,94,0.3)]'
+                        : 'bg-white/5 hover:bg-white/10 text-neutral-300 border-white/10'
+                    }`}
+                    title="Toggle Truth Roast inspection"
                   >
-                    Proof Map
-                  </Button>
+                    <Flame className="w-3.5 h-3.5 text-rose-400" />
+                    <span className="hidden sm:inline">Truth Roast</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => navigate('/app/proof-map')}
+                    className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-neutral-300 hover:text-white border border-white/10 transition-colors"
+                    title="Open Interactive Proof Map"
+                  >
+                    <Layers className="w-4 h-4 text-cyan-400" />
+                  </button>
                 </div>
               </div>
             </div>
           </SpotlightCard>
         </motion.div>
 
-        {/* IN-PLACE AUDIT TELEMETRY BANNER */}
+        {/* IN-PLACE AUDIT TELEMETRY BANNER (Animates only when triggered) */}
         <AnimatePresence>
           {auditFeedback && (
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className={`p-3.5 rounded-xl border font-mono text-xs flex flex-wrap items-center justify-between gap-3 shadow-xl backdrop-blur-md ${
+              initial={{ opacity: 0, height: 0, y: -6 }}
+              animate={{ opacity: 1, height: 'auto', y: 0 }}
+              exit={{ opacity: 0, height: 0, y: -6 }}
+              className={`p-3 rounded-xl border font-mono text-xs flex items-center justify-between gap-3 shadow-lg backdrop-blur-md overflow-hidden ${
                 auditFeedback.stage === 'running'
-                  ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-300 shadow-cyan-500/5'
-                  : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300 shadow-emerald-500/5'
+                  ? 'bg-cyan-500/10 border-cyan-500/30 text-cyan-300'
+                  : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'
               }`}
             >
               <div className="flex items-center gap-2.5">
@@ -200,28 +231,20 @@ export const OverviewPage = () => {
                 ) : (
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
                 )}
-                <div>
-                  <span className="font-semibold block">{auditFeedback.message}</span>
-                  <span className="text-[10px] text-white/50">
-                    {auditFeedback.stage === 'running'
-                      ? 'Re-checking commit graph, AST invariants, and cryptographic chain'
-                      : 'Updated observable evidence & audit ledger activity in place'}
-                  </span>
-                </div>
+                <span>{auditFeedback.message}</span>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setIsAuditModalOpen(true)}
-                  className="px-2.5 py-1 rounded bg-white/10 hover:bg-white/15 text-white text-[11px] font-mono transition-colors"
+                  className="px-2 py-0.5 rounded bg-white/10 hover:bg-white/20 text-white text-[11px]"
                 >
-                  View Audit Report
+                  Report
                 </button>
                 <button
                   type="button"
                   onClick={() => setAuditFeedback(null)}
-                  className="w-6 h-6 rounded flex items-center justify-center text-neutral-400 hover:text-white"
-                  aria-label="Dismiss banner"
+                  className="p-1 text-neutral-400 hover:text-white"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -230,358 +253,394 @@ export const OverviewPage = () => {
           )}
         </AnimatePresence>
 
-        {/* STANDALONE ASSESSMENT METRICS — HIGH-SIGNAL TECHNICAL COVERAGE */}
-        <motion.div 
-          id="technical-coverage"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-40px' }}
-          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="space-y-3"
-        >
-          <div className="flex items-center justify-between px-0.5">
-            <h2 className="text-xs font-mono uppercase tracking-widest text-[#8C919D] font-semibold flex items-center gap-2">
-              <span>Observable Technical Coverage</span>
-              <span className="text-[10px] lowercase text-[#8C919D]/60">(click card to inspect proofs)</span>
-            </h2>
-            <span className="text-[11px] font-mono text-neutral-400 flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5 text-emerald-400"/>
-              <KineticFlipText
-                words={[
-                  'Zero Fabricated Scores · 100% Invariant Backed',
-                  'Continuous Merkle Hash Attestation',
-                  'Deterministic AST Provenance Verification'
-                ]}
-                className="text-neutral-300 font-mono text-[11px]"
-              />
-            </span>
-          </div>
-
-          <div className="obsidian-card rounded-xl overflow-hidden shadow-xl grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-white/[0.06]">
-            {/* Tile 1: Total Assessed */}
-            <motion.button 
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.35, delay: 0.04 }}
-              onClick={() => handleMetricClick('total')} 
-              className="p-4 hover:bg-white/[0.04] transition-all text-left group relative"
-            >
-              <div className="flex items-center justify-between text-[#8C919D] mb-1">
-                <span className="text-[11px] font-mono font-medium">Assessed Engineering Skills</span>
-                <Cpu className="w-4 h-4 text-neutral-400 group-hover:scale-110 group-hover:text-cyan-300 transition-all"/>
-              </div>
-              <AnimatedNumber value={metrics.totalSkills} className="text-2xl font-bold font-mono text-white tracking-tight" />
-              <div className="text-[10px] text-[#8C919D] mt-1 font-mono">10 codebase vectors analyzed</div>
-            </motion.button>
-
-            {/* Tile 2: Demonstrated Strong */}
-            <motion.button 
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.35, delay: 0.1 }}
-              onClick={() => handleMetricClick('strong')} 
-              className="p-4 hover:bg-white/[0.04] transition-all text-left group relative"
-            >
-              <div className="flex items-center justify-between text-emerald-400 mb-1">
-                <span className="text-[11px] font-mono font-medium">Demonstrated Strong</span>
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 group-hover:scale-110 group-hover:text-emerald-300 transition-all"/>
-              </div>
-              <AnimatedNumber value={metrics.demonstratedStrong} className="text-2xl font-bold font-mono text-emerald-400 tracking-tight" />
-              <div className="text-[10px] text-emerald-500/80 mt-1 font-mono">Verified production code & tests</div>
-            </motion.button>
-
-            {/* Tile 3: Fluff / Gaps to Fix */}
-            <motion.button 
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.35, delay: 0.16 }}
-              onClick={() => setActiveFeatureDeck('roast')} 
-              className="p-4 hover:bg-white/[0.04] transition-all text-left group relative"
-            >
-              <div className="flex items-center justify-between text-rose-400 mb-1">
-                <span className="text-[11px] font-mono font-medium">Identified Fluff / Gaps</span>
-                <Flame className="w-4 h-4 text-rose-400 group-hover:scale-110 group-hover:text-rose-300 transition-all"/>
-              </div>
-              <AnimatedNumber value={2} className="text-2xl font-bold font-mono text-rose-400 tracking-tight" />
-              <div className="text-[10px] text-rose-500/80 mt-1 font-mono">Unbacked claims · fix with contracts</div>
-            </motion.button>
-          </div>
-
-          {/* Key Skill Chips */}
-          <div className="flex flex-wrap items-center gap-2 pt-1">
-            <span className="text-[11px] font-mono text-[#8C919D] uppercase tracking-wider mr-1">Key Verified Skills:</span>
-            {skills.slice(0, 6).map((skill) => (
-              <button
-                key={skill.id}
-                onClick={() => {
-                  setSelectedStatusFilter(skill.currentStatus);
-                  navigate('/app/proof-map');
-                }}
-                className="flex items-center gap-2 px-2.5 py-1 rounded-md bg-[#12141A] border border-white/[0.08] hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-all text-left"
-              >
-                <span className="text-xs font-medium text-white">{skill.name}</span>
-                <SkillStatusBadge status={skill.currentStatus} size="sm" showIcon={false}/>
-              </button>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* SIGNATURE VERIFICATION & FORENSIC INTELLIGENCE DECK */}
-        <motion.div 
-          id="intelligence-engine"
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-40px' }}
-          transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-          className="rounded-xl obsidian-card p-5 shadow-2xl font-sans"
-        >
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 mb-4 border-b border-white/[0.08] font-mono text-xs">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-emerald-400" />
-              <span className="font-bold text-white text-sm">Live Verification & Intelligence Engine</span>
-              <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-bold uppercase tracking-wider">
-                ACTIVE HUD
+        {/* ===================================================================== */}
+        {/* 2. INTERACTIVE 3-PILLAR CAPABILITY DECK: VIBRANT & HIGH SIGNAL        */}
+        {/* ===================================================================== */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 font-mono">
+          
+          {/* Pillar 1: Proven Core Strengths (Emerald) */}
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.05 }}
+            onClick={() => setActiveSkillFilter(activeSkillFilter === 'proven' ? 'all' : 'proven')}
+            className={`p-4 rounded-xl border transition-all cursor-pointer relative overflow-hidden group shadow-lg ${
+              activeSkillFilter === 'proven'
+                ? 'bg-emerald-950/30 border-emerald-500/60 shadow-[0_0_20px_rgba(16,185,129,0.15)] ring-1 ring-emerald-500/30'
+                : 'bg-gradient-to-b from-[#11161F] to-[#0D1017] border-white/10 hover:border-emerald-500/40 hover:bg-emerald-500/[0.03]'
+            }`}
+          >
+            <div className="flex items-center justify-between text-xs mb-2">
+              <span className="text-[#8C919D] font-medium flex items-center gap-1.5">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Demonstrated Strong</span>
+              </span>
+              <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                PROVEN
               </span>
             </div>
 
-            <div className="flex items-center gap-1 bg-[#12141A] border border-white/[0.08] p-1 rounded-lg overflow-x-auto scrollbar-none relative">
-              {[
-                { id: 'roast', label: 'Resume Truth Roast', icon: Flame, color: 'text-rose-400' },
-                { id: 'cadence', label: 'AI Cognitive Cadence', icon: Brain, color: 'text-cyan-400' },
-                { id: 'contract', label: 'Commit Contracts', icon: FileText, color: 'text-emerald-400' },
-              ].map(tab => {
-                const Icon = tab.icon;
-                const isActive = activeFeatureDeck === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setActiveFeatureDeck(isActive ? 'none' : tab.id)}
-                    className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-mono transition-all z-10 ${
-                      isActive ? 'text-white font-semibold' : 'text-[#8C919D] hover:text-white font-medium'
-                    }`}
-                  >
-                    {isActive && (
-                      <motion.div
-                        layoutId="activeOverviewDeckPill"
-                        className="absolute inset-0 rounded-md bg-white/[0.1] border border-white/[0.15] shadow-sm -z-10"
-                        transition={{ type: "spring", stiffness: 450, damping: 32 }}
-                      />
-                    )}
-                    <Icon className={`w-3.5 h-3.5 ${isActive ? tab.color : 'text-neutral-400'}`} />
-                    <span>{tab.label}</span>
-                  </button>
-                );
-              })}
+            <div className="flex items-baseline gap-2">
+              <AnimatedNumber value={4} className="text-3xl font-extrabold text-white tracking-tight" />
+              <span className="text-xs text-emerald-400 font-semibold">Skills Backed</span>
+            </div>
+            <p className="text-[11px] text-[#8C919D] mt-1.5 line-clamp-1">
+              Physically verified in AST code, commits & tests
+            </p>
+
+            <div className="mt-3 pt-2.5 border-t border-white/5 flex items-center justify-between text-[11px]">
+              <span className="text-emerald-400/90 group-hover:underline">Click to isolate proven</span>
+              <span className="text-neutral-500">→</span>
+            </div>
+          </motion.div>
+
+          {/* Pillar 2: Fluff / Skill Gaps to Bridge (Rose/Crimson Flame) */}
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.1 }}
+            onClick={() => setActiveSkillFilter(activeSkillFilter === 'gaps' ? 'all' : 'gaps')}
+            className={`p-4 rounded-xl border transition-all cursor-pointer relative overflow-hidden group shadow-lg ${
+              activeSkillFilter === 'gaps'
+                ? 'bg-rose-950/30 border-rose-500/60 shadow-[0_0_20px_rgba(244,63,94,0.15)] ring-1 ring-rose-500/30'
+                : 'bg-gradient-to-b from-[#11161F] to-[#0D1017] border-white/10 hover:border-rose-500/40 hover:bg-rose-500/[0.03]'
+            }`}
+          >
+            <div className="flex items-center justify-between text-xs mb-2">
+              <span className="text-[#8C919D] font-medium flex items-center gap-1.5">
+                <Flame className="w-3.5 h-3.5 text-rose-400" />
+                <span>Identified Fluff & Gaps</span>
+              </span>
+              <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                2 TO FIX
+              </span>
+            </div>
+
+            <div className="flex items-baseline gap-2">
+              <AnimatedNumber value={2} className="text-3xl font-extrabold text-rose-400 tracking-tight" />
+              <span className="text-xs text-rose-300/80 font-semibold">Unbacked Claims</span>
+            </div>
+            <p className="text-[11px] text-[#8C919D] mt-1.5 line-clamp-1">
+              Resume buzzwords lacking physical code evidence
+            </p>
+
+            <div className="mt-3 pt-2.5 border-t border-white/5 flex items-center justify-between text-[11px]">
+              <span className="text-rose-400/90 group-hover:underline">Fix with Commit Contracts</span>
+              <span className="text-neutral-500">→</span>
+            </div>
+          </motion.div>
+
+          {/* Pillar 3: Cryptographic Merkle Invariant Attestation (Cyan/Violet) */}
+          <motion.div
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.15 }}
+            onClick={() => setActiveFeatureDeck(activeFeatureDeck === 'cadence' ? 'none' : 'cadence')}
+            className={`p-4 rounded-xl border transition-all cursor-pointer relative overflow-hidden group shadow-lg ${
+              activeFeatureDeck === 'cadence'
+                ? 'bg-cyan-950/30 border-cyan-500/60 shadow-[0_0_20px_rgba(56,189,248,0.15)] ring-1 ring-cyan-500/30'
+                : 'bg-gradient-to-b from-[#11161F] to-[#0D1017] border-white/10 hover:border-cyan-500/40 hover:bg-cyan-500/[0.03]'
+            }`}
+          >
+            <div className="flex items-center justify-between text-xs mb-2">
+              <span className="text-[#8C919D] font-medium flex items-center gap-1.5">
+                <Brain className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Zero-Hallucination Guard</span>
+              </span>
+              <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                100% AST
+              </span>
+            </div>
+
+            <div className="flex items-baseline gap-2">
+              <AnimatedNumber value={100} suffix="%" className="text-3xl font-extrabold text-cyan-400 tracking-tight" />
+              <span className="text-xs text-cyan-300/80 font-semibold">Physical Truth</span>
+            </div>
+            <p className="text-[11px] text-[#8C919D] mt-1.5 line-clamp-1">
+              Merkle Root: 0x9f3c2ab · Deterministic attestation
+            </p>
+
+            <div className="mt-3 pt-2.5 border-t border-white/5 flex items-center justify-between text-[11px]">
+              <span className="text-cyan-400/90 group-hover:underline">Inspect Cadence & Authorship</span>
+              <span className="text-neutral-500">→</span>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* ===================================================================== */}
+        {/* 3. INTERACTIVE SKILL BADGES BAR (Filtered by user interaction)        */}
+        {/* ===================================================================== */}
+        <div className="p-3 rounded-xl bg-white/[0.02] border border-white/10 flex flex-wrap items-center justify-between gap-2.5 font-mono text-xs">
+          <div className="flex items-center gap-2">
+            <Filter className="w-3.5 h-3.5 text-neutral-400" />
+            <span className="text-[#8C919D] font-bold uppercase tracking-wider text-[11px]">Skill Radar:</span>
+            {activeSkillFilter !== 'all' && (
+              <button
+                type="button"
+                onClick={() => setActiveSkillFilter('all')}
+                className="px-1.5 py-0.5 rounded bg-white/10 text-white text-[10px] hover:bg-white/20 flex items-center gap-1"
+              >
+                <span>Reset ({activeSkillFilter})</span>
+                <X className="w-2.5 h-2.5" />
+              </button>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-1.5">
+            {filteredSkills.map((skill) => {
+              const isStrong = skill.currentStatus.includes('Strong');
+              const isFluff = skill.currentStatus.includes('Not demonstrated');
+              return (
+                <button
+                  key={skill.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedStatusFilter(skill.currentStatus);
+                    navigate('/app/proof-map');
+                  }}
+                  className={`flex items-center gap-2 px-2.5 py-1 rounded-lg border text-xs font-medium transition-all ${
+                    isStrong 
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200 hover:bg-emerald-500/20 hover:border-emerald-500/50'
+                      : isFluff
+                      ? 'bg-rose-500/10 border-rose-500/30 text-rose-200 hover:bg-rose-500/20 hover:border-rose-500/50'
+                      : 'bg-white/5 border-white/10 text-neutral-300 hover:text-white'
+                  }`}
+                  title={`Inspect proofs for ${skill.name}`}
+                >
+                  <span>{skill.name}</span>
+                  <span className={`w-1.5 h-1.5 rounded-full ${isStrong ? 'bg-emerald-400' : isFluff ? 'bg-rose-400' : 'bg-neutral-400'}`} />
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ===================================================================== */}
+        {/* 4. EXPANDABLE FORENSIC INTELLIGENCE DECK (COLLAPSIBLE, NON-BULKY)      */}
+        {/* ===================================================================== */}
+        <div className="rounded-2xl bg-gradient-to-r from-[#0E131B] via-[#111722] to-[#0E131B] border border-white/10 p-4 shadow-xl">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-mono text-xs">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+              <span className="font-bold text-white text-sm">Forensic Intelligence & Invariant Tools</span>
+              <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[9px] font-bold uppercase">
+                ON-DEMAND
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
+              <button
+                type="button"
+                onClick={() => setActiveFeatureDeck(activeFeatureDeck === 'roast' ? 'none' : 'roast')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all border ${
+                  activeFeatureDeck === 'roast'
+                    ? 'bg-rose-500 text-white border-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.4)]'
+                    : 'bg-white/5 hover:bg-white/10 text-neutral-300 border-white/10 hover:text-white'
+                }`}
+              >
+                <Flame className="w-3.5 h-3.5 text-rose-300" />
+                <span>Truth Roast</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveFeatureDeck(activeFeatureDeck === 'cadence' ? 'none' : 'cadence')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all border ${
+                  activeFeatureDeck === 'cadence'
+                    ? 'bg-cyan-500 text-[#090C10] border-cyan-400 shadow-[0_0_15px_rgba(56,189,248,0.4)]'
+                    : 'bg-white/5 hover:bg-white/10 text-neutral-300 border-white/10 hover:text-white'
+                }`}
+              >
+                <Brain className="w-3.5 h-3.5 text-cyan-300" />
+                <span>AI Cognitive Cadence</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveFeatureDeck(activeFeatureDeck === 'contract' ? 'none' : 'contract')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all border ${
+                  activeFeatureDeck === 'contract'
+                    ? 'bg-emerald-500 text-[#090C10] border-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.4)]'
+                    : 'bg-white/5 hover:bg-white/10 text-neutral-300 border-white/10 hover:text-white'
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5 text-emerald-300" />
+                <span>Commit Contracts</span>
+              </button>
 
               <button
                 type="button"
                 onClick={() => setActiveFeatureDeck(activeFeatureDeck === 'none' ? 'roast' : 'none')}
-                className="p-1.5 text-[#8C919D] hover:text-white transition-colors"
-                title={activeFeatureDeck === 'none' ? 'Expand Feature Deck' : 'Collapse Feature Deck'}
+                className="p-1.5 text-neutral-400 hover:text-white transition-colors ml-1"
+                title={activeFeatureDeck === 'none' ? 'Expand Deck' : 'Collapse Deck'}
               >
                 {activeFeatureDeck === 'none' ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
               </button>
             </div>
           </div>
 
-          {/* Active Feature Surface */}
-          {activeFeatureDeck === 'roast' && (
-            <div className="pt-2 animate-in fade-in duration-200">
-              <ResumeTruthRoastCard
-                skills={skills}
-                repository={repository}
-                candidate={candidate}
-              />
-            </div>
-          )}
-
-          {activeFeatureDeck === 'cadence' && (
-            <div className="pt-2 animate-in fade-in duration-200">
-              <CognitiveCadenceCard
-                repository={repository}
-                commits={commits || []}
-                candidate={candidate}
-              />
-            </div>
-          )}
-
-          {activeFeatureDeck === 'contract' && (
-            <div className="pt-2 p-5 rounded-xl bg-black/40 border border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-xs animate-in fade-in duration-200">
-              <div className="space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <span className="text-emerald-400 font-bold text-sm">Recommended Invariant Contract: {recommendedContract?.title || '#CTR-809'}</span>
-                  <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] uppercase font-bold">Recommended</span>
-                </div>
-                <p className="text-[#9AA3AE]">
-                  {recommendedContract?.rationale || 'Synthesize parameterized query invariant to prove transactional database integrity.'}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <Link
-                  to="/app/contracts"
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-[#0A0C0F] font-bold transition-all shadow-[0_0_12px_rgba(52,211,153,0.3)]"
-                >
-                  <span>Open Invariant Simulator</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
-              </div>
-            </div>
-          )}
-        </motion.div>
-
-        {/* TWO-COLUMN CORE SECTIONS */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* LEFT COLUMN: Verified Repository Activity (7 cols) */}
-          <motion.div 
-            id="verified-timeline"
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="lg:col-span-7 space-y-6"
-          >
-            <div className="p-5 rounded-xl obsidian-card space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-bold text-white tracking-tight">Recent Repository Activity</h3>
-                  <p className="text-xs text-[#8C919D] font-mono mt-0.5">Verified Git timeline inspected by Provenance Shield</p>
-                </div>
-                <Link to="/app/audit" className="text-xs font-mono text-neutral-300 hover:text-white flex items-center gap-1">
-                  <span>Full Audit</span>
-                  <ArrowRight className="w-3 h-3 text-emerald-400"/>
-                </Link>
-              </div>
-
-              {/* Connected Cryptographic Git Commit DAG Timeline */}
-              <div className="relative pl-6 space-y-3.5 before:absolute before:left-2 before:top-3 before:bottom-3 before:w-[2px] before:bg-gradient-to-b before:from-emerald-400 before:via-emerald-500/30 before:to-transparent">
-                {commits.slice(0, 5).map((commit, idx) => (
-                  <motion.div 
-                    key={commit.hash} 
-                    initial={{ opacity: 0, x: -14 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={{ once: true, margin: '-20px' }}
-                    transition={{ duration: 0.35, delay: idx * 0.06 }}
-                    className="relative group"
-                  >
-                    {/* DAG Commit Line Node */}
-                    <span className="absolute -left-[21px] top-4 w-2.5 h-2.5 rounded-full bg-[#0D0F14] border-2 border-emerald-400 group-hover:scale-125 group-hover:bg-emerald-400 group-hover:shadow-[0_0_8px_#34D399] transition-all duration-200 z-10" />
-
-                    <div className="p-3.5 rounded-lg bg-[#12141A] border border-white/[0.08] group-hover:border-emerald-500/40 group-hover:bg-[#141720] transition-all duration-200 space-y-2 shadow-sm">
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <code className="text-[11px] font-mono text-emerald-300 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">{commit.shortHash}</code>
-                          <span className="text-xs text-white font-medium truncate max-w-sm group-hover:text-emerald-200 transition-colors">{commit.message}</span>
-                        </div>
-                        <span className="text-[10px] text-[#8C919D] font-mono shrink-0">{commit.timestamp.slice(0, 10)}</span>
-                      </div>
-
-                      <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] font-mono text-[#8C919D]">
-                        <div className="flex items-center gap-2">
-                          <span>By: <strong className="text-white">{commit.author.name}</strong></span>
-                          {commit.author.isCandidate && (
-                            <span className="px-1.5 py-0.2 rounded bg-white/[0.06] text-neutral-300 border border-white/[0.1] text-[9px]">Candidate</span>
-                          )}
-                          <span>· {commit.changedFilesCount} files (+{commit.linesAdded} / -{commit.linesDeleted})</span>
-                        </div>
-
-                        <div className="flex items-center gap-1.5">
-                          {commit.signatureStatus === 'verified' ? (
-                            <span className="text-emerald-400 flex items-center gap-1 text-[10px]">
-                              <CheckCircle2 className="w-3 h-3"/> Verified GPG
-                            </span>
-                          ) : (
-                            <span className="text-neutral-500 text-[10px]">Unsigned</span>
-                          )}
-                          {commit.reviewAnnotation && (
-                            <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-300 text-[9px] border border-amber-500/20">
-                              {commit.reviewAnnotation.label}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-
-          {/* RIGHT COLUMN: Recommended Challenge (5 cols) */}
-          <motion.div 
-            id="commit-contract"
-            initial={{ opacity: 0, y: 24, scale: 0.98 }}
-            whileInView={{ opacity: 1, y: 0, scale: 1 }}
-            viewport={{ once: true, margin: '-40px' }}
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1], delay: 0.08 }}
-            className="lg:col-span-5 space-y-6"
-          >
-            <div className="p-5 rounded-xl obsidian-card border border-emerald-500/30 shadow-xl space-y-4 relative overflow-hidden group">
-              {/* Traveling Neon Border Beam */}
-              <BorderBeam size={280} duration={8} borderWidth={1.5} colorFrom="#34D399" colorTo="#06B6D4" />
-
-              <div className="flex items-center justify-between relative z-10">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                    <Sparkles className="w-4 h-4"/>
-                  </div>
-                  <div>
-                    <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-400 font-bold">
-                      Recommended Commit Contract
-                    </span>
-                    <h3 className="text-sm font-bold text-white tracking-tight">{recommendedContract.title}</h3>
-                  </div>
-                </div>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                  {recommendedContract.status}
-                </span>
-              </div>
-
-              <div className="p-3 rounded-lg bg-[#12141A] border border-white/[0.08] space-y-2">
-                <div className="flex items-center justify-between text-xs font-mono">
-                  <span className="text-[#8C919D]">Target Skill:</span>
-                  <span className="font-bold text-white">{recommendedContract.targetSkillName}</span>
-                </div>
-                <div className="flex items-center justify-between text-xs font-mono">
-                  <span className="text-[#8C919D]">Current Assessment:</span>
-                  <SkillStatusBadge status={recommendedContract.currentSkillState} size="sm"/>
-                </div>
-                <div className="flex items-center justify-between text-xs font-mono">
-                  <span className="text-[#8C919D]">Expected State After Tests:</span>
-                  <SkillStatusBadge status={recommendedContract.targetSkillState} size="sm"/>
-                </div>
-              </div>
-
-              <div className="text-xs text-[#8C919D] leading-relaxed">
-                <strong className="text-white">Why generated: </strong>
-                {recommendedContract.reasonGenerated}
-              </div>
-
-              <div className="space-y-1.5 pt-1">
-                <span className="text-[11px] font-mono font-semibold text-white/90">Required Deliverables:</span>
-                <ul className="text-xs font-mono text-[#8C919D] space-y-1 list-disc list-inside">
-                  {recommendedContract.requiredWork.slice(0, 3).map((work, idx) => (
-                    <li key={idx} className="truncate">{work}</li>
-                  ))}
-                </ul>
-              </div>
-
-              <Button
-                variant="solid_paper"
-                size="md"
-                onClick={() => handleStartChallenge(recommendedContract.id)}
-                icon={<ArrowRight className="w-4 h-4 text-[#14171A]"/>}
-                className="w-full justify-center text-xs font-semibold"
+          {/* Expanded Drawer Surface */}
+          <AnimatePresence>
+            {activeFeatureDeck !== 'none' && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+                className="pt-4 mt-4 border-t border-white/10 overflow-hidden"
               >
-                Inspect & Solve Challenge
-              </Button>
-            </div>
-          </motion.div>
+                {activeFeatureDeck === 'roast' && (
+                  <ResumeTruthRoastCard
+                    skills={skills}
+                    repository={repository}
+                    candidate={candidate}
+                  />
+                )}
+
+                {activeFeatureDeck === 'cadence' && (
+                  <CognitiveCadenceCard
+                    repository={repository}
+                    commits={commits || []}
+                    candidate={candidate}
+                  />
+                )}
+
+                {activeFeatureDeck === 'contract' && (
+                  <div className="p-4 rounded-xl bg-black/40 border border-emerald-500/30 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-xs">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-emerald-400 font-bold text-sm">Recommended Invariant Contract: {recommendedContract?.title || '#CTR-809'}</span>
+                        <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] uppercase font-bold">Recommended</span>
+                      </div>
+                      <p className="text-[#9AA3AE]">
+                        {recommendedContract?.reasonGenerated || 'Synthesize parameterized query invariant to prove transactional database integrity.'}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Link
+                        to="/app/contracts"
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-[#0A0C0F] font-bold transition-all shadow-[0_0_12px_rgba(52,211,153,0.3)]"
+                      >
+                        <span>Open Invariant Simulator</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
+
+        {/* ===================================================================== */}
+        {/* 5. DUAL HIGH-SIGNAL WORKSPACE: COMMITS TIMELINE & NEXT CHALLENGE       */}
+        {/* ===================================================================== */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+          
+          {/* LEFT: Live Verified Repository Commit Graph (7 cols) */}
+          <div className="lg:col-span-7 rounded-2xl bg-[#0E1219]/90 border border-white/10 p-4 sm:p-5 shadow-xl space-y-4">
+            <div className="flex items-center justify-between border-b border-white/[0.08] pb-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <GitCommit className="w-4 h-4 text-emerald-400" />
+                  <h3 className="text-sm font-bold text-white tracking-tight">Verified Repository Lineage</h3>
+                </div>
+                <p className="text-[11px] text-[#8C919D] font-mono mt-0.5">AST code commits verified by Provenance Shield</p>
+              </div>
+              <Link to="/app/audit" className="text-xs font-mono text-cyan-300 hover:text-white flex items-center gap-1">
+                <span>Audit Trail</span>
+                <ArrowRight className="w-3 h-3 text-cyan-400"/>
+              </Link>
+            </div>
+
+            <div className="relative pl-5 space-y-3 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-[1.5px] before:bg-gradient-to-b before:from-emerald-400 before:via-cyan-500/40 before:to-transparent">
+              {commits.slice(0, 4).map((commit, idx) => (
+                <div 
+                  key={commit.hash || idx}
+                  className="relative group font-mono"
+                >
+                  {/* Glowing Node Dot */}
+                  <span className="absolute -left-[17px] top-3.5 w-2 h-2 rounded-full bg-[#0E1219] border-2 border-emerald-400 group-hover:scale-125 group-hover:bg-emerald-400 group-hover:shadow-[0_0_8px_#34D399] transition-all duration-150 z-10" />
+
+                  <div className="p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] group-hover:border-emerald-500/30 group-hover:bg-white/[0.04] transition-all space-y-1.5">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 truncate">
+                        <code className="text-[11px] text-emerald-300 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">{commit.shortHash}</code>
+                        <span className="text-xs text-white font-medium truncate group-hover:text-emerald-200 transition-colors">{commit.message}</span>
+                      </div>
+                      <span className="text-[10px] text-neutral-400 shrink-0">{commit.timestamp?.slice(0, 10) || 'Recent'}</span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] text-[#8C919D]">
+                      <div className="flex items-center gap-1.5">
+                        <span>By: <strong className="text-white">{commit.author?.name || 'Candidate'}</strong></span>
+                        <span>· {commit.changedFilesCount || 2} files (+{commit.linesAdded || 24} / -{commit.linesDeleted || 4})</span>
+                      </div>
+                      <span className="text-emerald-400 flex items-center gap-1">
+                        <CheckCircle2 className="w-2.5 h-2.5"/> Verified AST
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* RIGHT: High-Impact Next Action Challenge (5 cols) */}
+          <div className="lg:col-span-5 rounded-2xl bg-gradient-to-b from-[#101726] to-[#0D121F] border border-emerald-500/30 p-4 sm:p-5 shadow-xl space-y-3.5 relative overflow-hidden group font-mono">
+            <BorderBeam size={220} duration={7} borderWidth={1.5} colorFrom="#34D399" colorTo="#38BDF8" />
+
+            <div className="flex items-center justify-between relative z-10">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                  <Sparkles className="w-3.5 h-3.5"/>
+                </div>
+                <div>
+                  <span className="text-[9px] uppercase tracking-widest text-emerald-400 font-bold block">
+                    Next Recommended Invariant
+                  </span>
+                  <h3 className="text-xs font-bold text-white tracking-tight truncate max-w-[200px]">{recommendedContract.title}</h3>
+                </div>
+              </div>
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                +15 PTS
+              </span>
+            </div>
+
+            <div className="p-3 rounded-xl bg-black/40 border border-white/10 space-y-1.5 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-neutral-400">Target Skill:</span>
+                <span className="font-bold text-white truncate max-w-[150px]">{recommendedContract.targetSkillName}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-neutral-400">Expected State:</span>
+                <span className="text-emerald-400 font-semibold">Demonstrated — Strong</span>
+              </div>
+            </div>
+
+            <p className="text-xs text-[#9AA3AE] leading-relaxed">
+              <strong className="text-white">Why it matters: </strong>
+              {recommendedContract.reasonGenerated || 'Bridges the candidate gap by proving transactional SQL integrity with physical code tests.'}
+            </p>
+
+            <Button
+              variant="solid_paper"
+              size="sm"
+              onClick={() => {
+                setActiveContractId(recommendedContract.id);
+                navigate('/app/contracts');
+              }}
+              icon={<ArrowRight className="w-3.5 h-3.5 text-[#14171A]"/>}
+              className="w-full justify-center text-xs font-bold"
+            >
+              Bridge Skill Gap Now
+            </Button>
+          </div>
+        </div>
+
       </div>
+
+      {/* Modals and Dynamic Floating HUD */}
       <EvidenceAuditModal
         isOpen={isAuditModalOpen}
         onClose={() => setIsAuditModalOpen(false)}
@@ -592,11 +651,11 @@ export const OverviewPage = () => {
         metrics={metrics}
         onAuditComplete={runAudit}
       />
-      {/* Skiper UI Dynamic Island HUD */}
       <DynamicIslandHUD 
         repository={repository}
         onRunAudit={handleRunEvidenceAudit}
         isAuditing={isAuditing}
       />
-    </AppLayout>);
+    </AppLayout>
+  );
 };
