@@ -222,10 +222,9 @@ Inspect my proof: http://localhost:5173/p/${candidateHandle}`;
               {provenSkills.map((item, idx) => (
                 <motion.div 
                   key={idx} 
-                  initial={{ opacity: 0, y: 14 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-20px' }}
-                  transition={{ duration: 0.35, delay: idx * 0.06 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25, delay: idx * 0.05 }}
                   className="p-4 rounded-xl bg-[#12151C] border border-emerald-500/20 hover:border-emerald-500/40 transition-all space-y-2 group"
                 >
                   <div className="flex items-center justify-between">
@@ -261,10 +260,9 @@ Inspect my proof: http://localhost:5173/p/${candidateHandle}`;
               {hollowClaims.map((item, idx) => (
                 <motion.div 
                   key={idx} 
-                  initial={{ opacity: 0, y: 16 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, margin: '-20px' }}
-                  transition={{ duration: 0.35, delay: idx * 0.08 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25, delay: idx * 0.05 }}
                   className="p-4 rounded-xl bg-[#141216] border border-rose-500/20 hover:border-rose-500/40 transition-all space-y-3"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">

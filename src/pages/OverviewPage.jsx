@@ -480,56 +480,48 @@ export const OverviewPage = () => {
           </div>
 
           {/* Expanded Drawer Surface */}
-          <AnimatePresence>
-            {activeFeatureDeck !== 'none' && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
-                className="pt-4 mt-4 border-t border-white/10 overflow-hidden"
-              >
-                {activeFeatureDeck === 'roast' && (
-                  <ResumeTruthRoastCard
-                    skills={skills}
-                    repository={repository}
-                    candidate={candidate}
-                  />
-                )}
+          {activeFeatureDeck === 'roast' && (
+            <div className="pt-4 mt-4 border-t border-white/10 animate-in fade-in duration-200">
+              <ResumeTruthRoastCard
+                skills={skills}
+                repository={repository}
+                candidate={candidate}
+              />
+            </div>
+          )}
 
-                {activeFeatureDeck === 'cadence' && (
-                  <CognitiveCadenceCard
-                    repository={repository}
-                    commits={commits || []}
-                    candidate={candidate}
-                  />
-                )}
+          {activeFeatureDeck === 'cadence' && (
+            <div className="pt-4 mt-4 border-t border-white/10 animate-in fade-in duration-200">
+              <CognitiveCadenceCard
+                repository={repository}
+                commits={commits || []}
+                candidate={candidate}
+              />
+            </div>
+          )}
 
-                {activeFeatureDeck === 'contract' && (
-                  <div className="p-4 rounded-xl bg-black/40 border border-emerald-500/30 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-xs">
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-emerald-400 font-bold text-sm">Recommended Invariant Contract: {recommendedContract?.title || '#CTR-809'}</span>
-                        <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] uppercase font-bold">Recommended</span>
-                      </div>
-                      <p className="text-[#9AA3AE]">
-                        {recommendedContract?.reasonGenerated || 'Synthesize parameterized query invariant to prove transactional database integrity.'}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <Link
-                        to="/app/contracts"
-                        className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-[#0A0C0F] font-bold transition-all shadow-[0_0_12px_rgba(52,211,153,0.3)]"
-                      >
-                        <span>Open Invariant Simulator</span>
-                        <ArrowRight className="w-3.5 h-3.5" />
-                      </Link>
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
+          {activeFeatureDeck === 'contract' && (
+            <div className="pt-4 mt-4 border-t border-white/10 p-4 rounded-xl bg-black/40 border border-emerald-500/30 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-xs animate-in fade-in duration-200">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-emerald-400 font-bold text-sm">Recommended Invariant Contract: {recommendedContract?.title || '#CTR-809'}</span>
+                  <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] uppercase font-bold">Recommended</span>
+                </div>
+                <p className="text-[#9AA3AE]">
+                  {recommendedContract?.reasonGenerated || 'Synthesize parameterized query invariant to prove transactional database integrity.'}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <Link
+                  to="/app/contracts"
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-[#0A0C0F] font-bold transition-all shadow-[0_0_12px_rgba(52,211,153,0.3)]"
+                >
+                  <span>Open Invariant Simulator</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* ===================================================================== */}
