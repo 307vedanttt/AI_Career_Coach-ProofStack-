@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { AppLayout } from '../components/layout/AppLayout';
 import { Button } from '../components/ui/Button';
 import { getResumeAttestation } from '../lib/api';
-import { Download, Check, ShieldCheck, Share2, FileUp, FileText, FileCheck2, Sparkles, Flame, } from 'lucide-react';
+import { Download, Check, ShieldCheck, Share2, FileUp, FileText, FileCheck2, Sparkles, Flame, Eye } from 'lucide-react';
+import { ResumeInteractiveOverview } from '../components/resume/ResumeInteractiveOverview';
 import { ResumeUploadAnalysis } from '../components/resume/ResumeUploadAnalysis';
 import { AtsReadabilityPanel } from '../components/resume/AtsReadabilityPanel';
 import { DeepResumeAuditPanel } from '../components/resume/DeepResumeAuditPanel';
@@ -13,7 +15,7 @@ export const ResumePage = () => {
     const [data, setData] = useState(null);
     const [copiedLink, setCopiedLink] = useState(false);
     const [activeFootnote, setActiveFootnote] = useState(null);
-    const [activeView, setActiveView] = useState('all');
+    const [activeView, setActiveView] = useState('overview');
     const [uploadRefreshKey, setUploadRefreshKey] = useState(0);
     const [uploadedBanner, setUploadedBanner] = useState(null);
 
@@ -63,49 +65,106 @@ export const ResumePage = () => {
         window.print();
     };
     return (<AppLayout>
-      {/* Top View Selector: All Views vs Upload Engine vs Attested Dossier */}
-      <div className="max-w-[1360px] w-full mx-auto px-4 pt-4 pb-2 flex flex-wrap items-center justify-between border-b border-white/10 mb-6 font-mono text-xs gap-3">
-        <div className="flex items-center gap-2">
-          <button type="button" onClick={() => setActiveView('all')} className={`px-3 py-1.5 rounded-lg flex items-center gap-2 font-semibold transition-all ${activeView === 'all'
-            ? 'bg-emerald-500 text-[#0A0C0F] shadow-[0_0_12px_rgba(52,211,153,0.3)]'
-            : 'text-[#9AA3AE] hover:text-white bg-white/5'}`}>
-            <span>All Workspace</span>
-          </button>
-          <button type="button" onClick={() => setActiveView('forensic')} className={`px-3 py-1.5 rounded-lg flex items-center gap-2 font-semibold transition-all ${activeView === 'forensic'
-            ? 'bg-emerald-500 text-[#0A0C0F] shadow-[0_0_12px_rgba(52,211,153,0.3)]'
-            : 'text-[#9AA3AE] hover:text-white bg-white/5'}`}>
-            <Sparkles className="w-3.5 h-3.5 text-emerald-400"/>
-            <span>Deep Forensic Audit</span>
-          </button>
-          <button type="button" onClick={() => setActiveView('roast')} className={`px-3 py-1.5 rounded-lg flex items-center gap-2 font-semibold transition-all ${activeView === 'roast'
-            ? 'bg-rose-500 text-white shadow-[0_0_12px_rgba(244,63,94,0.4)]'
-            : 'text-[#9AA3AE] hover:text-white bg-white/5'}`}>
-            <Flame className="w-3.5 h-3.5 text-rose-400"/>
-            <span>Truth Roast</span>
-          </button>
-          <button type="button" onClick={() => setActiveView('ats')} className={`px-3 py-1.5 rounded-lg flex items-center gap-2 font-semibold transition-all ${activeView === 'ats'
-            ? 'bg-emerald-500 text-[#0A0C0F] shadow-[0_0_12px_rgba(52,211,153,0.3)]'
-            : 'text-[#9AA3AE] hover:text-white bg-white/5'}`}>
-            <FileCheck2 className="w-3.5 h-3.5"/>
-            <span>ATS Readability</span>
-          </button>
-          <button type="button" onClick={() => setActiveView('upload')} className={`px-3 py-1.5 rounded-lg flex items-center gap-2 font-semibold transition-all ${activeView === 'upload'
-            ? 'bg-emerald-500 text-[#0A0C0F] shadow-[0_0_12px_rgba(52,211,153,0.3)]'
-            : 'text-[#9AA3AE] hover:text-white bg-white/5'}`}>
-            <FileUp className="w-3.5 h-3.5"/>
-            <span>Upload & Analysis</span>
-          </button>
-          <button type="button" onClick={() => setActiveView('dossier')} className={`px-3 py-1.5 rounded-lg flex items-center gap-2 font-semibold transition-all ${activeView === 'dossier'
-            ? 'bg-emerald-500 text-[#0A0C0F] shadow-[0_0_12px_rgba(52,211,153,0.3)]'
-            : 'text-[#9AA3AE] hover:text-white bg-white/5'}`}>
-            <FileText className="w-3.5 h-3.5"/>
-            <span>Attested Dossier</span>
-          </button>
-        </div>
+      {/* Sleek Floating Pill View Navigation Bar */}
+      <div className="max-w-[1360px] w-full mx-auto px-4 pt-4 pb-2 mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 p-1.5 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-xl">
+          <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none w-full sm:w-auto">
+            <button
+              type="button"
+              onClick={() => setActiveView('overview')}
+              className={`px-3.5 py-2 rounded-xl flex items-center gap-2 font-mono text-xs font-bold transition-all ${
+                activeView === 'overview'
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-[#0A0C0F] shadow-[0_0_15px_rgba(52,211,153,0.35)]'
+                  : 'text-[#9AA3AE] hover:text-white bg-transparent hover:bg-white/5'
+              }`}
+            >
+              <Sparkles className="w-3.5 h-3.5 text-current" />
+              <span>Interactive Overview</span>
+              <span className="px-1.5 py-0.2 rounded text-[10px] bg-black/20 font-mono">Cockpit</span>
+            </button>
 
-        <span className="text-[#9AA3AE] text-[11px] hidden sm:inline">
-          Deterministic Claim Verification
-        </span>
+            <button
+              type="button"
+              onClick={() => setActiveView('upload')}
+              className={`px-3.5 py-2 rounded-xl flex items-center gap-2 font-mono text-xs font-bold transition-all ${
+                activeView === 'upload'
+                  ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-[#0A0C0F] shadow-[0_0_15px_rgba(52,211,153,0.35)]'
+                  : 'text-[#9AA3AE] hover:text-white bg-transparent hover:bg-white/5'
+              }`}
+            >
+              <FileUp className="w-3.5 h-3.5" />
+              <span>Upload & Skills</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveView('ats')}
+              className={`px-3.5 py-2 rounded-xl flex items-center gap-2 font-mono text-xs font-bold transition-all ${
+                activeView === 'ats'
+                  ? 'bg-gradient-to-r from-cyan-500 to-sky-500 text-[#0A0C0F] shadow-[0_0_15px_rgba(6,182,212,0.35)]'
+                  : 'text-[#9AA3AE] hover:text-white bg-transparent hover:bg-white/5'
+              }`}
+            >
+              <FileCheck2 className="w-3.5 h-3.5" />
+              <span>ATS Readability</span>
+              <span className="px-1.5 py-0.2 rounded text-[10px] bg-cyan-400/20 text-cyan-300 font-mono">91%</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveView('forensic')}
+              className={`px-3.5 py-2 rounded-xl flex items-center gap-2 font-mono text-xs font-bold transition-all ${
+                activeView === 'forensic'
+                  ? 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-[0_0_15px_rgba(168,85,247,0.35)]'
+                  : 'text-[#9AA3AE] hover:text-white bg-transparent hover:bg-white/5'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5 text-current" />
+              <span>Deep Forensic Audit</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveView('roast')}
+              className={`px-3.5 py-2 rounded-xl flex items-center gap-2 font-mono text-xs font-bold transition-all ${
+                activeView === 'roast'
+                  ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white shadow-[0_0_15px_rgba(244,63,94,0.35)]'
+                  : 'text-[#9AA3AE] hover:text-white bg-transparent hover:bg-white/5'
+              }`}
+            >
+              <Flame className="w-3.5 h-3.5 text-current" />
+              <span>Truth Roast</span>
+              <span className="px-1.5 py-0.2 rounded text-[10px] bg-rose-400/20 text-rose-300 font-mono">1 Flag</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveView('dossier')}
+              className={`px-3.5 py-2 rounded-xl flex items-center gap-2 font-mono text-xs font-bold transition-all ${
+                activeView === 'dossier'
+                  ? 'bg-white text-[#0A0C0F] shadow-[0_0_15px_rgba(255,255,255,0.4)]'
+                  : 'text-[#9AA3AE] hover:text-white bg-transparent hover:bg-white/5'
+              }`}
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>A4 Physical Dossier</span>
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setActiveView(activeView === 'all' ? 'overview' : 'all')}
+              className={`px-2.5 py-1.5 rounded-lg text-[11px] font-mono transition-all ${
+                activeView === 'all'
+                  ? 'bg-white/20 text-white font-bold'
+                  : 'text-[#9AA3AE] hover:text-white bg-white/5'
+              }`}
+            >
+              {activeView === 'all' ? 'Collapse All' : 'Expanded View'}
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Upload Notification Banner */}
@@ -127,7 +186,23 @@ export const ResumePage = () => {
         </div>
       )}
 
-            {/* Resume Truth Roast & Reality Card Section */}
+      {/* Interactive Command Overview Hub (Default Clean View) */}
+      {activeView === 'overview' && (
+        <div className="max-w-[1360px] w-full mx-auto px-4 mb-12">
+          <ResumeInteractiveOverview
+            data={data}
+            repository={repository}
+            footnoteDetails={footnoteDetails}
+            onNavigateTab={(tab) => setActiveView(tab)}
+            onCopyProofLink={handleCopyProofLink}
+            onExportPdf={handleExportPdf}
+            copiedLink={copiedLink}
+            onUploadClick={() => setActiveView('upload')}
+          />
+        </div>
+      )}
+
+      {/* Resume Truth Roast & Reality Card Section */}
       {(activeView === 'all' || activeView === 'roast') && (
         <div className="max-w-[1360px] w-full mx-auto px-4 mb-12">
           <ResumeTruthRoastCard 
