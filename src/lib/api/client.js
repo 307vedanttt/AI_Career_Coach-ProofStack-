@@ -519,12 +519,26 @@ function getDeterministicFallback(endpoint, options = {}) {
             },
             excluded_checks: [],
             layout_metadata: {
+                columns_detected: 1,
                 column_count: 1,
+                tables_count: 0,
+                text_boxes_count: 0,
+                headers_footers_content: [],
+                hidden_or_white_text: [],
                 detected_sections: ['Contact Info', 'Professional Summary', 'Technical Skills', 'Experience', 'Education'],
                 has_tables: false,
                 has_images: false
             },
-            extraction_preview: `CANDIDATE RESUME DOSSIER (${targetUser})\n\nSUMMARY:\nSenior Distributed Systems and Backend Engineer with focus on high-throughput REST APIs, automated testing invariants, and verifiable code provenance.\n\nTECHNICAL SKILLS:\n• Languages: Python, Go, TypeScript, SQL\n• Frameworks: FastAPI, React, Node.js\n• Infrastructure: Docker, SQLite, PostgreSQL, Git\n• Verification: Pytest, AST analysis, Merkle DAG cryptographic attestations`,
+            extraction_preview: {
+                plain_text: `CANDIDATE RESUME DOSSIER (${targetUser})\n\nSUMMARY:\nSenior Distributed Systems and Backend Engineer with focus on high-throughput REST APIs, automated testing invariants, and verifiable code provenance.\n\nTECHNICAL SKILLS:\n• Languages: Python, Go, TypeScript, SQL\n• Frameworks: FastAPI, React, Node.js\n• Infrastructure: Docker, SQLite, PostgreSQL, Git\n• Verification: Pytest, AST analysis, Merkle DAG cryptographic attestations`,
+                detected_sections: [
+                    { heading: 'Contact Info', standard_name: 'contact' },
+                    { heading: 'Professional Summary', standard_name: 'summary' },
+                    { heading: 'Technical Skills', standard_name: 'skills' },
+                    { heading: 'Experience', standard_name: 'experience' },
+                    { heading: 'Education', standard_name: 'education' }
+                ]
+            },
             suggestions: [
                 { id: 'sug-1', section: 'Skills', title: 'Add Orchestration Artifacts', recommendation: 'Include Kubernetes or container orchestration manifests in your GitHub repository to convert unverified claims into cryptographic proof.', impact: '+4 ATS Match Score' },
                 { id: 'sug-2', section: 'Experience', title: 'Highlight Metric Outcomes', recommendation: 'Quantify query latency gains in database optimization bullet points (e.g. "achieving 40% reduction in p99 latency").', impact: '+3 ATS Recruiter Score' }
