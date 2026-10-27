@@ -37,7 +37,7 @@ export const DashboardPage = () => {
     const { repository, skills, commits } = useProofStack();
     const [metrics] = useState(initialMetrics);
     const [requirements, setRequirements] = useState([]);
-    const [dashboardDeckTab, setDashboardDeckTab] = useState('roast'); // 'roast', 'cadence', 'contracts', 'none'
+    const [dashboardDeckTab, setDashboardDeckTab] = useState('none'); // 'none', 'roast', 'cadence', 'contracts'
     const [snapshots, setSnapshots] = useState([]);
     const [activeSnapshotIndex, setActiveSnapshotIndex] = useState(0);
     const [activeRequirementId, setActiveRequirementId] = useState('');
@@ -323,34 +323,41 @@ export const DashboardPage = () => {
         setDrawerOpen(true);
     };
     return (<AppLayout metrics={metrics} isLoading={viewState === 'loading'} appState={viewState} onResetState={loadDashboardData}>
-      {/* Judge Inspection State Switcher Bar */}
-      <div className="flex items-center gap-2 p-2 mb-4 bg-white/[0.03] border border-white/10 rounded-lg text-xs font-mono">
-        <span className="text-[#9AA3AE] text-[10px] font-bold uppercase tracking-wider mr-1">Inspect State:</span>
-        <button type="button" onClick={() => {
-            setRateLimitBanner(null);
-            setViewState('normal');
-        }} className={`px-2 py-0.5 rounded transition-colors ${viewState === 'normal' && !rateLimitBanner?.visible ? 'bg-emerald-500/20 text-emerald-300 font-bold' : 'text-[#9AA3AE] hover:text-white'}`}>
-          Normal
-        </button>
-        <button type="button" onClick={() => setViewState('empty')} className={`px-2 py-0.5 rounded transition-colors ${viewState === 'empty' ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-[#9AA3AE] hover:text-white'}`}>
-          Empty
-        </button>
-        <button type="button" onClick={() => {
-            setRateLimitBanner({
-                visible: true,
-                message: 'GitHub Rate Limit Reached',
-                remaining: 0,
-            });
-            setViewState('normal');
-        }} className="px-2 py-0.5 rounded text-[#9AA3AE] hover:text-white transition-colors">
-          Rate Limited
-        </button>
-        <button type="button" onClick={() => {
-            setErrorMessage('Connection to Engine Severed');
-            setViewState('error');
-        }} className={`px-2 py-0.5 rounded transition-colors ${viewState === 'error' ? 'bg-red-500/20 text-red-300 font-bold' : 'text-[#9AA3AE] hover:text-white'}`}>
-          Error
-        </button>
+      {/* Low-profile Simulation & State Bar */}
+      <div className="flex items-center justify-between gap-2 px-3 py-1.5 mb-3 bg-white/[0.02] border border-white/5 rounded-xl text-xs font-mono">
+        <div className="flex items-center gap-2 text-neutral-400 text-[11px]">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="font-semibold text-white">Live Candidate Overview</span>
+          <span className="text-neutral-500 hidden sm:inline">• Automated Code Verification</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-[#9AA3AE] text-[10px] uppercase font-bold tracking-wider mr-1 hidden md:inline">Inspect State:</span>
+          <button type="button" onClick={() => {
+              setRateLimitBanner(null);
+              setViewState('normal');
+          }} className={`px-2 py-0.5 rounded text-[11px] transition-colors ${viewState === 'normal' && !rateLimitBanner?.visible ? 'bg-emerald-500/20 text-emerald-300 font-bold' : 'text-[#9AA3AE] hover:text-white'}`}>
+            Normal
+          </button>
+          <button type="button" onClick={() => setViewState('empty')} className={`px-2 py-0.5 rounded text-[11px] transition-colors ${viewState === 'empty' ? 'bg-amber-500/20 text-amber-300 font-bold' : 'text-[#9AA3AE] hover:text-white'}`}>
+            Empty
+          </button>
+          <button type="button" onClick={() => {
+              setRateLimitBanner({
+                  visible: true,
+                  message: 'GitHub Rate Limit Reached',
+                  remaining: 0,
+              });
+              setViewState('normal');
+          }} className="px-2 py-0.5 rounded text-[11px] text-[#9AA3AE] hover:text-white transition-colors">
+            Rate Limited
+          </button>
+          <button type="button" onClick={() => {
+              setErrorMessage('Connection to Engine Severed');
+              setViewState('error');
+          }} className={`px-2 py-0.5 rounded text-[11px] transition-colors ${viewState === 'error' ? 'bg-red-500/20 text-red-300 font-bold' : 'text-[#9AA3AE] hover:text-white'}`}>
+            Error
+          </button>
+        </div>
       </div>
 
       {/* ===================================================================== */}
@@ -408,148 +415,131 @@ export const DashboardPage = () => {
               </div>
             </div>)}
 
-          {/* Task 3b: Connected Repositories Live HUD Strip */}
-          <div className="w-full p-4 rounded-xl bg-[#12161B]/80 border border-white/10 backdrop-blur-xl">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 mb-3 border-b border-white/10 font-mono text-xs">
-              <div className="flex items-center gap-2">
-                <Github className="w-4 h-4 text-[#38BDF8]"/>
-                <span className="font-bold text-white text-sm">Connected Repositories & Real Live Identity</span>
+          {/* Sleek Executive Live Repository & Identity Strip */}
+          <div className="w-full px-4 py-3 rounded-2xl bg-gradient-to-r from-[#12161B] via-white/[0.02] to-[#12161B] border border-white/10 backdrop-blur-xl shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-3 font-mono text-xs">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-[#38BDF8] shrink-0">
+                <Github className="w-4 h-4" />
               </div>
-              <div className="flex items-center gap-2">
-                <button type="button" onClick={() => handleManualCheckNow()} disabled={isCheckingNow} className="flex items-center gap-1.5 px-3 py-1 rounded bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-semibold hover:bg-emerald-500/30 transition-colors disabled:opacity-50" title="Trigger immediate re-assessment on connected repository">
-                  <RefreshCw className={`w-3.5 h-3.5 ${isCheckingNow ? 'animate-spin' : ''}`}/>
-                  <span>Check Now</span>
-                </button>
-                <button type="button" onClick={() => setIsRepoSelectorOpen(true)} className="flex items-center gap-1.5 px-3 py-1 rounded bg-violet-500/20 border border-violet-500/40 text-violet-300 font-semibold hover:bg-violet-500/30 transition-colors" title="Discover, search, and analyze your GitHub repositories">
-                  <FolderGit2 className="w-3.5 h-3.5 text-violet-300"/>
-                  <span>Switch / Analyze Repo</span>
-                </button>
-                <button type="button" onClick={() => setIsIntakeOpen(true)} className="text-xs text-[#9AA3AE] hover:text-white underline underline-offset-2 ml-1">
-                  + Ingest Posting
-                </button>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-white font-bold text-sm">
+                    {displayRepos[0]?.owner || repository?.owner || 'developer'}/{displayRepos[0]?.name || repository?.name || 'repository'}
+                  </span>
+                  <span className="px-1.5 py-0.5 rounded text-[10px] bg-white/10 text-neutral-300">
+                    branch: {displayRepos[0]?.default_branch || repository?.defaultBranch || 'main'}
+                  </span>
+                  <span className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-bold">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    LIVE SYNC
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-[11px] text-[#9AA3AE] mt-0.5">
+                  <span>Head Commit:</span>
+                  <span className="text-[#38BDF8] font-bold">
+                    0x{(displayRepos[0]?.last_commit_sha || connectedHeadSha || '9f3c2ab').slice(0, 7)}
+                  </span>
+                  <span className="text-neutral-500">•</span>
+                  <span>Synced: {displayRepos[0]?.last_synced_at ? new Date(displayRepos[0].last_synced_at).toLocaleTimeString() : 'Just now'}</span>
+                </div>
               </div>
             </div>
 
-            <div className="space-y-3 font-mono text-xs">
-              {displayRepos.length > 0 ? (displayRepos.map((repo) => (<div key={repo.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-lg bg-black/40 border border-white/10 hover:border-emerald-500/30 transition-all">
-                    <div className="flex items-center gap-3">
-                      <div className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34D399]"/>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-white font-bold text-sm">{repo.owner}/{repo.name}</span>
-                          <span className="px-1.5 py-0.5 rounded text-[10px] bg-white/10 text-[#9AA3AE]">
-                            branch: {repo.default_branch}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-[11px] text-[#9AA3AE] mt-0.5">
-                          <span>Head SHA:</span>
-                          <span className="text-[#38BDF8] font-bold">
-                            0x{(repo.last_commit_sha || connectedHeadSha || '9f3c2ab').slice(0, 7)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3 self-start sm:self-auto">
-                      <div className="text-right">
-                        <div className="flex items-center gap-1.5 justify-end">
-                          <span className="text-[10px] text-[#9AA3AE]">Trigger:</span>
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${repo.last_sync_trigger === 'webhook'
-                    ? 'bg-purple-500/20 text-purple-300'
-                    : repo.last_sync_trigger === 'poll'
-                        ? 'bg-blue-500/20 text-blue-300'
-                        : 'bg-emerald-500/20 text-emerald-300'}`}>
-                            {repo.last_sync_trigger || 'check-now'}
-                          </span>
-                        </div>
-                        <span className="text-[10px] text-[#9AA3AE] block mt-0.5">
-                          Synced: {repo.last_synced_at ? new Date(repo.last_synced_at).toLocaleTimeString() : 'Just now'}
-                        </span>
-                      </div>
-
-                      <button type="button" onClick={() => handleManualPoll(repo.id)} disabled={pollingRepoId === repo.id} className="p-1.5 rounded bg-white/5 hover:bg-white/10 text-white transition-colors" title="Poll GitHub conditional ETag">
-                        <RefreshCw className={`w-3.5 h-3.5 ${pollingRepoId === repo.id ? 'animate-spin' : ''}`}/>
-                      </button>
-                    </div>
-                  </div>))) : (<div className="flex items-center justify-between p-3 rounded-lg bg-black/40 border border-white/10">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"/>
-                    <span className="text-white font-semibold">Active Ledger Head:</span>
-                    <span className="text-emerald-300 font-bold">{connectedHeadSha || '9f3c2ab'}</span>
-                    <span className="text-white/40 text-[11px]">(Live verification cluster connected)</span>
-                  </div>
-                  <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] font-bold">
-                    SYNCD: JUST NOW
-                  </span>
-                </div>)}
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => handleManualCheckNow()}
+                disabled={isCheckingNow}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-semibold hover:bg-emerald-500/30 transition-all disabled:opacity-50 shadow-[0_0_12px_rgba(52,211,153,0.2)]"
+                title="Trigger immediate re-assessment on connected repository"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 ${isCheckingNow ? 'animate-spin' : ''}`} />
+                <span>Check Now</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsRepoSelectorOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-neutral-200 font-semibold hover:bg-white/10 hover:text-white transition-all"
+                title="Discover, search, and analyze your GitHub repositories"
+              >
+                <FolderGit2 className="w-3.5 h-3.5 text-violet-300" />
+                <span>Switch / Analyze Repo</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsIntakeOpen(true)}
+                className="text-xs text-[#9AA3AE] hover:text-white underline underline-offset-2 ml-1"
+              >
+                + Ingest Posting
+              </button>
             </div>
           </div>
 
-          {/* SIGNATURE VERIFICATION & FORENSIC INTELLIGENCE DECK (Un-hidden on /app) */}
-          <div className="w-full rounded-2xl bg-gradient-to-b from-[#131D32] to-[#0D1322] border border-[#25324A] p-4 sm:p-5 shadow-xl font-sans">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 mb-4 border-b border-white/10 font-mono text-xs">
+          {/* Compact, Non-bulky Forensic Intelligence Bar */}
+          <div className="w-full rounded-2xl bg-gradient-to-r from-[#111827] via-[#0E1522] to-[#111827] border border-white/10 p-3 shadow-lg font-sans">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 font-mono text-xs">
               <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-emerald-400 animate-pulse" />
-                <span className="font-bold text-white text-sm">Live Verification & Intelligence Engine</span>
-                <span className="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold uppercase">
-                  ACTIVE HUD
+                <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="font-bold text-white text-xs">Forensic Intelligence & Invariant Tools</span>
+                <span className="px-1.5 py-0.2 rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 text-[9px] font-bold uppercase">
+                  READY
                 </span>
               </div>
 
-              <div className="flex items-center gap-2 overflow-x-auto scrollbar-none">
+              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
                 <button
                   type="button"
                   onClick={() => setDashboardDeckTab(dashboardDeckTab === 'roast' ? 'none' : 'roast')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all ${
                     dashboardDeckTab === 'roast'
                       ? 'bg-rose-500 text-white shadow-[0_0_12px_rgba(244,63,94,0.4)]'
                       : 'bg-white/5 hover:bg-white/10 text-[#9AA3AE] hover:text-white'
                   }`}
                 >
-                  <Flame className="w-3.5 h-3.5 text-rose-300" />
+                  <Flame className="w-3 h-3 text-rose-300" />
                   <span>Resume Truth Roast</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setDashboardDeckTab(dashboardDeckTab === 'cadence' ? 'none' : 'cadence')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all ${
                     dashboardDeckTab === 'cadence'
                       ? 'bg-cyan-500 text-[#0A0C0F] shadow-[0_0_12px_rgba(56,189,248,0.4)]'
                       : 'bg-white/5 hover:bg-white/10 text-[#9AA3AE] hover:text-white'
                   }`}
                 >
-                  <Brain className="w-3.5 h-3.5 text-cyan-300" />
+                  <Brain className="w-3 h-3 text-cyan-300" />
                   <span>AI Cognitive Cadence</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setDashboardDeckTab(dashboardDeckTab === 'contracts' ? 'none' : 'contracts')}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition-all ${
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all ${
                     dashboardDeckTab === 'contracts'
                       ? 'bg-emerald-500 text-[#0A0C0F] shadow-[0_0_12px_rgba(52,211,153,0.4)]'
                       : 'bg-white/5 hover:bg-white/10 text-[#9AA3AE] hover:text-white'
                   }`}
                 >
-                  <FileText className="w-3.5 h-3.5 text-emerald-300" />
+                  <FileText className="w-3 h-3 text-emerald-300" />
                   <span>Commit Contracts</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setDashboardDeckTab(dashboardDeckTab === 'none' ? 'roast' : 'none')}
-                  className="p-1.5 text-[#9AA3AE] hover:text-white transition-colors"
-                  title={dashboardDeckTab === 'none' ? 'Expand Intelligence Deck' : 'Collapse Intelligence Deck'}
+                  className="p-1 text-[#9AA3AE] hover:text-white transition-colors"
+                  title={dashboardDeckTab === 'none' ? 'Expand Deck' : 'Collapse Deck'}
                 >
-                  {dashboardDeckTab === 'none' ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+                  {dashboardDeckTab === 'none' ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />}
                 </button>
               </div>
             </div>
 
-            {/* Active Feature Surface */}
+            {/* Expanded Content only when toggled */}
             {dashboardDeckTab === 'roast' && (
-              <div className="pt-2 animate-in fade-in duration-200">
+              <div className="pt-3 mt-3 border-t border-white/10 animate-in fade-in duration-200">
                 <ResumeTruthRoastCard
                   repository={repository}
                   candidate={{ name: repository?.owner || '307vedanttt', username: repository?.owner || '307vedanttt' }}
@@ -558,7 +548,7 @@ export const DashboardPage = () => {
             )}
 
             {dashboardDeckTab === 'cadence' && (
-              <div className="pt-2 animate-in fade-in duration-200">
+              <div className="pt-3 mt-3 border-t border-white/10 animate-in fade-in duration-200">
                 <CognitiveCadenceCard
                   repository={repository}
                   commits={commits || []}
@@ -568,8 +558,8 @@ export const DashboardPage = () => {
             )}
 
             {dashboardDeckTab === 'contracts' && (
-              <div className="pt-2 p-5 rounded-xl bg-black/40 border border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-xs animate-in fade-in duration-200">
-                <div className="space-y-1.5">
+              <div className="pt-3 mt-3 border-t border-white/10 p-4 rounded-xl bg-black/40 border border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-xs animate-in fade-in duration-200">
+                <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="text-emerald-400 font-bold text-sm">Active Invariant Contract #CTR-809</span>
                     <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px] uppercase font-bold">Recommended Next Step</span>
