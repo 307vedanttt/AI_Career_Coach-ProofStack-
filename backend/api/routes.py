@@ -8,6 +8,7 @@ import secrets
 import hmac
 import logging
 import httpx
+import re
 from urllib.parse import quote_plus
 
 logger = logging.getLogger("proofstack.routes")
@@ -2032,16 +2033,23 @@ async def get_authenticated_user(request: Request, db: AsyncSession) -> User:
         # Check if the API key itself is a signed session token
         unpacked_id = verify_signed_data(api_key, settings.APP_SESSION_SECRET, max_age=7 * 24 * 3600)
         if unpacked_id:
-            stmt = select(User).options(selectinload(User.repos)).where(User.id == unpacked_id)
+            target_id = unpacked_id.replace("apikey:", "") if unpacked_id.startswith("apikey:") else unpacked_id
+            stmt = select(User).options(selectinload(User.repos)).where(User.id == target_id)
             user = (await db.execute(stmt)).scalars().first()
             if user:
                 return user
-                
-        # Authenticate with the default / primary user session
-        default_user = await get_or_create_default_user(db)
-        stmt = select(User).options(selectinload(User.repos)).where(User.id == default_user.id)
-        user = (await db.execute(stmt)).scalars().first()
-        return user or default_user
+
+        # In non-production environments, support developer/mock verification tokens
+        if api_key.startswith("ps_live_") or api_key.startswith("ghp_"):
+            if settings.ENVIRONMENT == "production":
+                raise HTTPException(status_code=401, detail="In production, API keys must be cryptographically signed.")
+            default_user = await get_or_create_default_user(db)
+            stmt = select(User).options(selectinload(User.repos)).where(User.id == default_user.id)
+            user = (await db.execute(stmt)).scalars().first()
+            return user or default_user
+
+        # Explicit failure for invalid/unrecognized keys (no silent fallthrough)
+        raise HTTPException(status_code=401, detail="Invalid API key or authentication token")
 
     raise HTTPException(status_code=401, detail="User account not found")
 
@@ -2071,8 +2079,10 @@ async def github_oauth_start(request: Request):
     client_id = settings.GITHUB_CLIENT_ID or "mock_client_id_proofstack"
     redirect_uri = settings.GITHUB_REDIRECT_URI or f"{settings.PUBLIC_BASE_URL}/auth/github/callback"
     
-    # Dev bypass for offline reviewer evaluation
+    # Dev bypass for offline reviewer evaluation (strictly forbidden in production)
     if request.query_params.get("dev") == "1":
+        if settings.ENVIRONMENT == "production":
+            raise HTTPException(status_code=403, detail="Developer bypass is disabled in production environments.")
         auth_url = f"{redirect_uri}?state={state}&code=user_proofstack_reviewer"
     else:
         auth_url = (
@@ -2101,6 +2111,9 @@ async def github_oauth_start(request: Request):
 @router.get("/api/auth/dev-login")
 async def dev_login(request: Request, response: Response, db: AsyncSession = Depends(get_db)):
     """Instant local/reviewer login that creates a real user session and sets proofstack_session & ps_csrf_token."""
+    if settings.ENVIRONMENT == "production":
+        raise HTTPException(status_code=403, detail="Developer bypass login is disabled in production environments.")
+
     user = await get_or_create_default_user(db)
     signed_session = sign_data(user.id, settings.APP_SESSION_SECRET)
     csrf_token = generate_csrf_token()
@@ -2886,7 +2899,13 @@ async def get_ledger_blocks(db: AsyncSession = Depends(get_db)):
 
 @router.post("/scanner/run", response_model=RepoScanResponse)
 async def run_public_scanner(request: RepoScanRequest):
-    clean_user = request.username.strip().lstrip("@") or "octocat"
+    raw_user = request.username.strip().lstrip("@") or "octocat"
+    if not re.match(r"^[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}$", raw_user):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid GitHub username format. Allowed: 1-39 alphanumeric characters or single non-consecutive hyphens."
+        )
+    clean_user = raw_user
     top_repo = f"{clean_user}/service-repo"
     org_name = clean_user
     verified_files = ["src/core/router.py", "tests/test_router.py", "src/auth/token.go"]
@@ -2985,13 +3004,18 @@ async def trigger_demo_push(db: AsyncSession = Depends(get_db)):
 
 # --- Settings & API Keys Management ---
 @router.get("/settings", response_model=SettingsResponse)
-async def get_settings():
-    masked_llm = "not set"
-    if settings.LLM_API_KEY:
-        masked_llm = f"{settings.LLM_API_KEY[:4]}...{settings.LLM_API_KEY[-4:]}" if len(settings.LLM_API_KEY) > 8 else "***configured***"
-    masked_gh = "not set"
-    if settings.GITHUB_TOKEN:
-        masked_gh = f"{settings.GITHUB_TOKEN[:4]}...{settings.GITHUB_TOKEN[-4:]}" if len(settings.GITHUB_TOKEN) > 8 else "***configured***"
+async def get_settings(request: Request = None, db: AsyncSession = Depends(get_db)):
+    """Retrieve system settings. Protected in production; hides private token fragments."""
+    if request:
+        try:
+            _ = await get_authenticated_user(request, db)
+        except HTTPException:
+            if settings.ENVIRONMENT == "production":
+                raise HTTPException(status_code=401, detail="Authentication required to view system settings.")
+
+    # Secure masking: Never leak key substrings or prefixes/suffixes
+    masked_llm = "***configured***" if settings.LLM_API_KEY else "not set"
+    masked_gh = "***configured***" if settings.GITHUB_TOKEN else "not set"
 
     return SettingsResponse(
         llm_provider=settings.LLM_PROVIDER,
@@ -3004,7 +3028,9 @@ async def get_settings():
     )
 
 @router.post("/settings", response_model=SettingsResponse)
-async def update_settings(req: SettingsUpdateRequest):
+async def update_settings(req: SettingsUpdateRequest, request: Request, db: AsyncSession = Depends(get_db)):
+    """Update system settings. Enforces server-side authentication and authorization."""
+    _ = await get_authenticated_user(request, db)
     import os
     if req.llm_provider is not None:
         settings.LLM_PROVIDER = req.llm_provider.strip().lower()
@@ -3052,7 +3078,7 @@ async def update_settings(req: SettingsUpdateRequest):
     except Exception as e:
         pass
 
-    return await get_settings()
+    return await get_settings(request=request, db=db)
 
 
 # =========================================================================
@@ -3120,9 +3146,6 @@ async def get_latest_resume(
 
     stmt = select(ResumeExtraction).where(ResumeExtraction.user_id == user.id).order_by(desc(ResumeExtraction.created_at))
     extraction = (await db.execute(stmt)).scalars().first()
-    if not extraction:
-        stmt_any = select(ResumeExtraction).order_by(desc(ResumeExtraction.created_at))
-        extraction = (await db.execute(stmt_any)).scalars().first()
 
     if not extraction:
         return {
@@ -3246,26 +3269,17 @@ async def analyze_resume_ats(
             file_bytes=uploaded_bytes
         )
         extraction_id = proc.get("id") or proc.get("resume_id")
-        stmt_rec = select(ResumeExtraction).where(ResumeExtraction.id == extraction_id)
+        stmt_rec = select(ResumeExtraction).where(ResumeExtraction.id == extraction_id, ResumeExtraction.user_id == user.id)
         extraction = (await db.execute(stmt_rec)).scalar_one_or_none()
     elif resume_id == "latest":
         stmt_rec = select(ResumeExtraction).where(ResumeExtraction.user_id == user.id).order_by(desc(ResumeExtraction.created_at))
         extraction = (await db.execute(stmt_rec)).scalars().first()
-        if not extraction:
-            # Fallback to any recent resume extraction
-            stmt_any = select(ResumeExtraction).order_by(desc(ResumeExtraction.created_at))
-            extraction = (await db.execute(stmt_any)).scalars().first()
     else:
         stmt_rec = select(ResumeExtraction).where(
             (ResumeExtraction.id == resume_id) | (ResumeExtraction.file_sha256 == resume_id),
             ResumeExtraction.user_id == user.id
         )
         extraction = (await db.execute(stmt_rec)).scalar_one_or_none()
-        if not extraction:
-            stmt_loose = select(ResumeExtraction).where(
-                (ResumeExtraction.id == resume_id) | (ResumeExtraction.file_sha256 == resume_id)
-            )
-            extraction = (await db.execute(stmt_loose)).scalar_one_or_none()
 
     if not extraction:
         raise HTTPException(status_code=404, detail=f"Resume '{resume_id}' not found for user.")
@@ -3445,13 +3459,6 @@ async def get_latest_resume_ats(
     query = query.order_by(desc(AtsRun.created_at))
 
     run = (await db.execute(query)).scalars().first()
-    if not run:
-        # Fallback to any recent AtsRun for this resume
-        if resume_id != "latest":
-            query_loose = select(AtsRun).where(
-                (AtsRun.resume_id == resume_id) | (AtsRun.resume_hash == resume_id)
-            ).order_by(desc(AtsRun.created_at))
-            run = (await db.execute(query_loose)).scalars().first()
 
     if not run:
         raise HTTPException(status_code=404, detail="No ATS analysis found for this resume.")
@@ -3497,16 +3504,14 @@ async def get_deep_resume_forensic(
     except Exception:
         user = await get_or_create_default_user(db)
 
-    # 1. Fetch resume extraction
+    # 1. Fetch resume extraction scoped strictly to requesting user
     if resume_id == "latest":
         stmt = select(ResumeExtraction).where(ResumeExtraction.user_id == user.id).order_by(desc(ResumeExtraction.created_at))
         extraction = (await db.execute(stmt)).scalars().first()
-        if not extraction:
-            stmt_any = select(ResumeExtraction).order_by(desc(ResumeExtraction.created_at))
-            extraction = (await db.execute(stmt_any)).scalars().first()
     else:
         stmt = select(ResumeExtraction).where(
-            (ResumeExtraction.id == resume_id) | (ResumeExtraction.file_sha256 == resume_id)
+            ((ResumeExtraction.id == resume_id) | (ResumeExtraction.file_sha256 == resume_id)),
+            ResumeExtraction.user_id == user.id
         )
         extraction = (await db.execute(stmt)).scalars().first()
 
@@ -3839,8 +3844,8 @@ async def get_system_diagnostics(request: Request, db: AsyncSession = Depends(ge
         "error": None
     }
 
-    # 7. Dev-only preview of latest extracted resume text (Task 4e)
-    stmt_ext = select(ResumeExtraction).order_by(desc(ResumeExtraction.created_at)).limit(1)
+    # 7. Resume preview scoped strictly to requesting user's own extraction
+    stmt_ext = select(ResumeExtraction).where(ResumeExtraction.user_id == user.id).order_by(desc(ResumeExtraction.created_at)).limit(1)
     latest_ext = (await db.execute(stmt_ext)).scalars().first()
     latest_resume_preview = None
     if latest_ext:
@@ -3874,8 +3879,8 @@ async def get_system_diagnostics(request: Request, db: AsyncSession = Depends(ge
 @router.get("/realtime-jobs")
 async def get_realtime_jobs(
     candidate: str = Query("Omb2121"),
-    max_age_hours: int = Query(2),
-    min_coverage: int = Query(80)
+    max_age_hours: int = Query(2, ge=1, le=24),
+    min_coverage: int = Query(80, ge=0, le=100)
 ):
     """
     Real-Time Job Aggregation & AST Code Matching Engine:

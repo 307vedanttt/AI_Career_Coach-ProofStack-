@@ -83,9 +83,34 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+import secrets
 from fastapi import Request
 from fastapi.responses import JSONResponse
-from backend.services.security import verify_csrf_token
+from backend.services.security import verify_csrf_token, redact_sensitive
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """
+    Global exception handler preventing stack traces, schema details, or server paths
+    from leaking to external clients. Sensitive tokens are redacted in logs.
+    """
+    if isinstance(exc, HTTPException):
+        return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
+    
+    incident_id = secrets.token_hex(8)
+    err_msg = redact_sensitive(str(exc))
+    logger.error(
+        f"[SECURITY/UNHANDLED_EXCEPTION] [Incident: {incident_id}] "
+        f"{request.method} {request.url.path} - Error: {err_msg}",
+        exc_info=True
+    )
+    return JSONResponse(
+        status_code=500,
+        content={
+            "detail": "An internal server error occurred. The incident has been logged securely.",
+            "incident_id": incident_id
+        }
+    )
 
 @app.middleware("http")
 async def security_headers_middleware(request: Request, call_next):
@@ -114,7 +139,8 @@ async def csrf_protect_middleware(request: Request, call_next):
     # Only enforce on state-changing methods: POST, PUT, PATCH, DELETE
     if request.method in ("POST", "PUT", "PATCH", "DELETE"):
         path = request.url.path
-        # Exclude webhooks, demo simulation, dev login, settings, and scanner
+        # Exclude public webhooks, demo pushes, dev login, and public scanners from CSRF
+        # Settings endpoints (/api/settings) MUST require CSRF verification
         exempt_prefixes = (
             "/webhooks",
             "/api/webhooks",
@@ -122,8 +148,6 @@ async def csrf_protect_middleware(request: Request, call_next):
             "/demo",
             "/api/scanner/run",
             "/scanner/run",
-            "/api/settings",
-            "/settings",
             "/api/auth/dev-login",
             "/auth/dev-login",
             "/api/auth/api-key",

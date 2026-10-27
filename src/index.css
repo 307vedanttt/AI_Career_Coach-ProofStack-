@@ -283,6 +283,59 @@ html.demo-mode .glass-panel,
   animation: laser-sweep 3s ease-in-out infinite;
 }
 
+/* Rubber Ink Stamps */
+.mini-stamp {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  line-height: 14px;
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  border-radius: 3px;
+  transform: rotate(-3deg);
+  white-space: nowrap;
+}
+
+.stamp-proven {
+  color: #10B981;
+  border: 1.5px double #10B981;
+  background: rgba(16, 185, 129, 0.12);
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
+}
+
+.stamp-basic {
+  color: #F59E0B;
+  border: 1.5px solid #F59E0B;
+  background: rgba(245, 158, 11, 0.12);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.25);
+}
+
+.stamp-unclear {
+  color: #8B5CF6;
+  border: 1.5px solid #8B5CF6;
+  background: rgba(139, 92, 246, 0.12);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.25);
+}
+
+.stamp-attack, .stamp-refused {
+  color: #F43F5E;
+  border: 1.5px double #F43F5E;
+  background: rgba(244, 63, 94, 0.12);
+  box-shadow: 0 0 14px rgba(244, 63, 94, 0.3);
+}
+
+/* Glass Command Center Panels */
+.command-card {
+  background: linear-gradient(135deg, rgba(20, 26, 38, 0.75) 0%, rgba(11, 14, 21, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(20px);
+}
+
 
 
 

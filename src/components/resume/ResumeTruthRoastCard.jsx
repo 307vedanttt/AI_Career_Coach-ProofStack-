@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
   Flame, 
@@ -219,8 +220,12 @@ Inspect my proof: http://localhost:5173/p/${candidateHandle}`;
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 font-mono">
               {provenSkills.map((item, idx) => (
-                <div 
+                <motion.div 
                   key={idx} 
+                  initial={{ opacity: 0, y: 14 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-20px' }}
+                  transition={{ duration: 0.35, delay: idx * 0.06 }}
                   className="p-4 rounded-xl bg-[#12151C] border border-emerald-500/20 hover:border-emerald-500/40 transition-all space-y-2 group"
                 >
                   <div className="flex items-center justify-between">
@@ -238,7 +243,7 @@ Inspect my proof: http://localhost:5173/p/${candidateHandle}`;
                     <FileCode className="w-3 h-3" />
                     <span>Physical proof at <code className="text-white">{item.file}</code></span>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
@@ -254,8 +259,12 @@ Inspect my proof: http://localhost:5173/p/${candidateHandle}`;
 
             <div className="space-y-3 font-mono">
               {hollowClaims.map((item, idx) => (
-                <div 
+                <motion.div 
                   key={idx} 
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-20px' }}
+                  transition={{ duration: 0.35, delay: idx * 0.08 }}
                   className="p-4 rounded-xl bg-[#141216] border border-rose-500/20 hover:border-rose-500/40 transition-all space-y-3"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
@@ -294,7 +303,7 @@ Inspect my proof: http://localhost:5173/p/${candidateHandle}`;
                       Fix with Commit Contract
                     </Button>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>

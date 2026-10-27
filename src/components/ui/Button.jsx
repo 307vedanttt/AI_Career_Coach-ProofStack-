@@ -6,6 +6,8 @@ export const Button = React.forwardRef(({ children, variant = 'solid_ink', size 
         solid_paper: 'bg-[#F8FAFC] hover:bg-white text-[#0F172A] border border-[#CBD5E1] shadow-[0_2px_8px_rgba(0,0,0,0.12)] hover:shadow-[0_4px_14px_rgba(0,0,0,0.18)] active:scale-[0.985]',
         // 2. solid ink: obsidian carbon #0F172A, text slate-50, high contrast
         solid_ink: 'bg-[#0F172A] hover:bg-slate-900 text-white border border-white/10 shadow-[0_4px_12px_rgba(0,0,0,0.4)] active:scale-[0.985]',
+        // primary engineering blue
+        primary: 'bg-blue-600 hover:bg-blue-500 text-white font-semibold border border-blue-500/80 shadow-sm active:scale-[0.985]',
         // 3. ghost: translucent glass border
         ghost: 'bg-white/[0.04] hover:bg-white/[0.08] text-[#F1F5F9] border border-white/10 active:scale-[0.985]',
         // 4. quiet text: minimal text button

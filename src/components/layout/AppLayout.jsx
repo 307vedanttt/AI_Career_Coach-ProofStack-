@@ -12,6 +12,7 @@ import { RepositorySelectorModal } from '../repository/RepositorySelectorModal';
 import { RefusedSignalsDrawer } from '../drawer/RefusedSignalsDrawer';
 import { FeaturesHubModal } from '../common/FeaturesHubModal';
 import { ProofStackLogo } from '../common/ProofStackLogo';
+import { DossierScrollHud } from '../ui/motion/DossierScrollHud';
 export const AppLayout = ({ children, metrics = initialMetrics, onSimulatePush, isLoading, appState = 'normal', onResetState, }) => {
     const { user, logout, deleteMyData } = useAuth();
     const navigate = useNavigate();
@@ -25,7 +26,29 @@ export const AppLayout = ({ children, metrics = initialMetrics, onSimulatePush, 
     const [isFeaturesModalOpen, setIsFeaturesModalOpen] = useState(false);
     const [liveDiagnostics, setLiveDiagnostics] = useState(null);
     const [liveRefusedCount, setLiveRefusedCount] = useState(null);
+    const [headerScrollPercent, setHeaderScrollPercent] = useState(0);
+    const [isScrolled, setIsScrolled] = useState(false);
     const { repository, resetDemoData, connectedRepos, switchRepository } = useProofStack();
+
+    useEffect(() => {
+        let ticking = false;
+        const onScroll = () => {
+            if (!ticking) {
+                window.requestAnimationFrame(() => {
+                    const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+                    const total = scrollHeight - clientHeight;
+                    const pct = total > 0 ? (scrollTop / total) * 100 : 0;
+                    setHeaderScrollPercent(Math.min(100, Math.max(0, Math.round(pct))));
+                    setIsScrolled(scrollTop > 20);
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        };
+        window.addEventListener('scroll', onScroll, { passive: true });
+        onScroll();
+        return () => window.removeEventListener('scroll', onScroll);
+    }, []);
     useEffect(() => {
         let isMounted = true;
         const fetchRefusals = async () => {
@@ -293,54 +316,28 @@ export const AppLayout = ({ children, metrics = initialMetrics, onSimulatePush, 
 
       {/* MAIN CONTENT WRAPPER (Offset by 64px rail on desktop) */}
       <div className="w-full lg:pl-16 min-h-screen flex flex-col relative z-10">
-        {/* PERSISTENT DEMO NOTICE & REPOSITORY CONTEXT BANNER */}
-        <div className="w-full bg-[#090A0D]/95 backdrop-blur-md border-b border-white/[0.08] px-4 py-1.5 flex flex-wrap items-center justify-between text-xs font-mono text-[#8C919D] gap-2 sticky top-0 z-40">
-          <div className="flex items-center gap-2">
-            {repository.connectionState === 'live_connected' ? (<>
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0"/>
-                <span className="text-emerald-400 font-bold tracking-wider">[LIVE VERIFICATION ACTIVE]</span>
-                <span className="hidden md:inline text-neutral-300">Real GitHub repository AST audit for {repository.fullName}.</span>
-              </>) : (<>
-                <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse shrink-0"/>
-                <span className="text-amber-300 font-bold tracking-wider">[DEMO MODE — SAMPLE DATA]</span>
-                <span className="hidden md:inline text-[#8C919D]">This is an evidence simulation, not a live GitHub audit.</span>
-              </>)}
-          </div>
-          <div className="flex items-center gap-3">
-            {connectedRepos && connectedRepos.length > 0 && (<div className="flex items-center gap-1.5 bg-[#12141A] border border-white/[0.08] rounded-md px-2.5 py-1 shadow-inner hover:border-white/20 transition-colors">
-                <GitFork className="w-3.5 h-3.5 text-emerald-400 shrink-0"/>
-                <select id="global-repo-selector" aria-label="Repository Selector" value={repository.id} onChange={(e) => switchRepository(e.target.value)} className="bg-transparent text-emerald-300 font-mono text-xs focus:outline-none cursor-pointer max-w-[210px] sm:max-w-[320px] truncate" title="Switch active repository">
-                  {connectedRepos.map((r) => (<option key={r.id} value={r.id} className="bg-[#12141A] text-emerald-300 font-mono">
-                      {r.owner}/{r.name} {r.isFork ? '(Fork)' : ''}
-                    </option>))}
-                  {!connectedRepos.some((r) => r.id === repository.id) && (<option value={repository.id} className="bg-[#12141A] text-emerald-300 font-mono">
-                      {repository.fullName}
-                    </option>)}
-                </select>
-              </div>)}
-            <button onClick={() => setConnectModalOpen(true)} className="hover:text-white text-neutral-300 hover:text-white flex items-center gap-1 font-mono text-xs transition-colors" title="Browse, search, and analyze any GitHub repository">
-              <Github className="w-3 h-3 text-neutral-400"/> Switch / Analyze Repos
-            </button>
-            <span className="text-white/10">·</span>
-            <button onClick={resetDemoData} className="flex items-center gap-1 hover:text-rose-300 text-neutral-400 transition-colors" title="Reset session and reload live repository analysis">
-              <RotateCcw className="w-3 h-3"/> Reset Session
-            </button>
-          </div>
-        </div>
 
-        {/* TOP BAR (Every page after landing page) */}
-        <header className="min-h-14 h-auto py-2.5 px-4 sm:px-6 lg:px-8 border-b border-white/[0.08] bg-[#090A0D]/90 backdrop-blur-xl flex flex-wrap sm:flex-nowrap items-center justify-between sticky top-7 z-30 gap-3">
-          {/* LEFT: 44px Round Ink-White Back Button + Logo + Breadcrumbs */}
-          <div className="flex items-center gap-3">
+        {/* TOP BAR (Clean, modern Linear/Vercel-style header with laser scroll progress) */}
+        <header className={`h-14 px-4 sm:px-6 lg:px-8 border-b border-white/[0.08] bg-[#090A0D]/90 backdrop-blur-xl flex items-center justify-between sticky top-0 z-30 gap-3 transition-shadow ${
+          isScrolled ? 'shadow-xl shadow-black/40 border-white/[0.12]' : ''
+        }`}>
+          {/* Laser Scroll Progress Tracker on Header Bottom */}
+          <div 
+            className="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 shadow-[0_0_8px_#34D399] transition-all duration-75 pointer-events-none" 
+            style={{ width: `${headerScrollPercent}%` }}
+          />
+
+          {/* LEFT: Back Button + Logo + Breadcrumbs + Clean Repo Selector */}
+          <div className="flex items-center gap-3 min-w-0">
             <BackButton />
 
             {/* Mobile Logo Mark */}
-            <Link to="/" className="lg:hidden w-8 h-8 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center" title="ProofStack Home">
+            <Link to="/" className="lg:hidden w-8 h-8 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center shrink-0" title="ProofStack Home">
               <Terminal className="w-4 h-4 text-emerald-400"/>
             </Link>
 
             {/* Dynamic Breadcrumbs */}
-            <nav aria-label="Breadcrumbs" className="flex items-center gap-1.5 text-xs font-mono">
+            <nav aria-label="Breadcrumbs" className="flex items-center gap-1.5 text-xs font-mono shrink-0">
               <span className="font-display font-bold text-white hidden md:inline">ProofStack</span>
               <span className="text-white/20 hidden md:inline">/</span>
               {breadcrumbs.map((crumb, idx) => {
@@ -355,126 +352,63 @@ export const AppLayout = ({ children, metrics = initialMetrics, onSimulatePush, 
                   </React.Fragment>);
         })}
             </nav>
-            {/* Linear-Style Unified Feature Switcher */}
-            <div className="hidden sm:inline-flex items-center bg-[#12141A] border border-white/[0.08] p-0.5 rounded-lg text-[11px] font-mono shrink-0">
+
+            <span className="text-white/10 hidden sm:inline">|</span>
+
+            {/* Active Repository Context Selector */}
+            <div className="hidden sm:flex items-center gap-2 bg-[#12141A] border border-white/[0.08] rounded-lg px-2.5 py-1 text-xs font-mono">
+              <span className={`w-2 h-2 rounded-full shrink-0 ${repository.connectionState === 'live_connected' ? 'bg-emerald-400 animate-pulse' : 'bg-emerald-400'}`} />
+              {connectedRepos && connectedRepos.length > 0 ? (
+                <select
+                  id="global-repo-selector"
+                  aria-label="Repository Selector"
+                  value={repository.id}
+                  onChange={(e) => switchRepository(e.target.value)}
+                  className="bg-transparent text-emerald-300 font-mono text-xs focus:outline-none cursor-pointer max-w-[180px] md:max-w-[260px] truncate"
+                  title="Switch active repository"
+                >
+                  {connectedRepos.map((r) => (
+                    <option key={r.id} value={r.id} className="bg-[#12141A] text-emerald-300 font-mono">
+                      {r.owner}/{r.name} {r.isFork ? '(Fork)' : ''}
+                    </option>
+                  ))}
+                  {!connectedRepos.some((r) => r.id === repository.id) && (
+                    <option value={repository.id} className="bg-[#12141A] text-emerald-300 font-mono">
+                      {repository.fullName}
+                    </option>
+                  )}
+                </select>
+              ) : (
+                <span className="text-emerald-300 font-semibold truncate max-w-[180px]">{repository.fullName}</span>
+              )}
               <button
                 type="button"
-                onClick={() => setIsFeaturesModalOpen(true)}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-neutral-300 hover:text-white hover:bg-white/[0.06] transition-all font-semibold"
-                title="Open Feature Hub & Capability Matrix"
-                data-testid="features-hub-top-btn"
+                onClick={() => setConnectModalOpen(true)}
+                className="text-neutral-400 hover:text-white transition-colors p-0.5 ml-0.5"
+                title="Switch or Analyze Repositories"
               >
-                <Sparkles className="w-3 h-3 text-cyan-400"/>
-                <span>All Features</span>
+                <GitFork className="w-3 h-3" />
               </button>
-              <Link
-                to="/resume"
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-neutral-400 hover:text-rose-300 hover:bg-white/[0.06] transition-all font-medium"
-                title="Open Resume Truth Roast & Reality Card"
-              >
-                <Flame className="w-3 h-3 text-rose-400" />
-                <span>Truth Roast</span>
-              </Link>
-              <Link
-                to="/app/audit"
-                className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-neutral-400 hover:text-emerald-300 hover:bg-white/[0.06] transition-all font-medium"
-                title="Inspect AI Ghostwrite & Cognitive Cadence Forensics"
-              >
-                <Brain className="w-3 h-3 text-emerald-400" />
-                <span>AI Cadence</span>
-              </Link>
             </div>
           </div>
 
-          {/* CENTER: Current Page Title (Only visible on wide 2xl displays where space permits) */}
-          <div className="hidden 2xl:block text-center font-display text-sm font-bold text-white/90 truncate tracking-tight">
-            {pageTitle}
-          </div>
-
-          {/* RIGHT: Health Dots, Notifications, Theme Toggle, User Avatar Menu */}
-          <div className="order-2 sm:order-3 flex items-center gap-2 sm:gap-3 ml-auto">
-            {/* Live Health Dots with Status Tooltip linking to Diagnostics */}
-            <Link to="/diagnostics" className={`hidden xl:flex items-center gap-2 px-3 py-1 rounded-md font-mono text-[11px] transition-colors border ${liveDiagnostics?.status === 'degraded' || liveDiagnostics?.status === 'failing'
-            ? 'bg-rose-500/10 border-rose-500/30 text-rose-300'
-            : 'bg-[#12141A] border-white/[0.08] hover:border-white/20 text-[#8C919D]'}`} title={liveDiagnostics
-            ? `Cluster Diagnostics: ${liveDiagnostics.status.toUpperCase()} | GH: ${liveDiagnostics.checks.github.passed ? 'OK' : liveDiagnostics.checks.github.error || 'FAIL'} | DB: ${liveDiagnostics.checks.database.passed ? 'OK' : 'FAIL'} | LLM: ${liveDiagnostics.checks.llm.passed ? 'OK' : 'FAIL'}`
-            : 'View Live Cluster Diagnostics (/diagnostics)'} data-testid="health-strip-link">
-              {/* GitHub Health Pill */}
-              <span className="flex items-center gap-1.5" title={liveDiagnostics?.checks.github.error || `GitHub: ${liveDiagnostics?.checks.github.rate_limit_remaining ?? 5000} req left`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${liveDiagnostics
-            ? liveDiagnostics.checks.github.passed
-                ? 'bg-emerald-400 animate-pulse'
-                : liveDiagnostics.checks.github.rate_limit_remaining === 0
-                    ? 'bg-amber-400'
-                    : 'bg-red-400'
-            : metrics.health.github
-                ? 'bg-emerald-400 animate-pulse'
-                : 'bg-red-400'}`}/>
-                <span>
-                  GH
-                  {liveDiagnostics?.checks.github.rate_limit_remaining !== undefined
-            ? ` ${liveDiagnostics.checks.github.rate_limit_remaining}`
-            : ''}
-                </span>
-              </span>
-
-              <span className="text-white/20">·</span>
-
-              {/* Webhook Health Pill */}
-              <span className="flex items-center gap-1.5" title={liveDiagnostics?.checks.webhook.error || 'Webhook Pipeline: Active'}>
-                <span className={`w-1.5 h-1.5 rounded-full ${liveDiagnostics
-            ? liveDiagnostics.checks.webhook.passed
-                ? 'bg-emerald-400 animate-pulse'
-                : 'bg-red-400'
-            : metrics.health.webhook
-                ? 'bg-emerald-400 animate-pulse'
-                : 'bg-red-400'}`}/>
-                <span>Hook</span>
-              </span>
-
-              <span className="text-white/20">·</span>
-
-              {/* Database Read/Write Pill */}
-              <span className="flex items-center gap-1.5" title={liveDiagnostics?.checks.database.error || `Database WAL: ${liveDiagnostics?.checks.database.latency_ms ?? 0.8}ms`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${liveDiagnostics
-            ? liveDiagnostics.checks.database.passed
-                ? 'bg-emerald-400'
-                : 'bg-red-400'
-            : 'bg-emerald-400'}`}/>
-                <span>
-                  DB
-                  {liveDiagnostics?.checks.database?.latency_ms !== undefined
-            ? ` ${liveDiagnostics.checks.database.latency_ms}ms`
-            : ''}
-                </span>
-              </span>
-
-              <span className="text-white/20">·</span>
-
-              {/* Engine Pill */}
-              <span className="flex items-center gap-1.5" title={liveDiagnostics?.checks.llm.error || 'AST & LLM Verification Engine'}>
-                <span className={`w-1.5 h-1.5 rounded-full ${liveDiagnostics
-            ? liveDiagnostics.checks.llm.passed
-                ? 'bg-emerald-400'
-                : 'bg-amber-400'
-            : metrics.health.model
-                ? 'bg-emerald-400'
-                : 'bg-amber-400'}`}/>
-                <span>
-                  {liveDiagnostics?.checks.llm.provider === 'none'
-            ? 'AST'
-            : liveDiagnostics?.checks.llm.provider
-                ? liveDiagnostics.checks.llm.provider.toUpperCase().slice(0, 4)
-                : 'Engine'}
-                </span>
-              </span>
+          {/* RIGHT: Notifications & User Avatar Menu */}
+          <div className="flex items-center gap-2 sm:gap-3 ml-auto">
+            {/* Quick Link: Resume Reality Check */}
+            <Link
+              to="/resume"
+              className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/[0.04] border border-white/[0.08] hover:border-rose-500/40 text-neutral-300 hover:text-rose-300 text-xs font-mono transition-all"
+              title="Open Resume Reality Check"
+            >
+              <Flame className="w-3.5 h-3.5 text-rose-400" />
+              <span>Truth Roast</span>
             </Link>
 
-            {/* Notification Bell with Badge & Dropdown */}
+            {/* Notification Bell */}
             <div className="relative" ref={notifRef}>
-              <button type="button" onClick={() => setNotificationsOpen((prev) => !prev)} className="relative w-9 h-9 rounded-full bg-white/[0.04] border border-white/10 hover:border-white/30 flex items-center justify-center text-[#9AA3AE] hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-400" aria-label="View notifications and real-time ledger alerts">
+              <button type="button" onClick={() => setNotificationsOpen((prev) => !prev)} className="relative w-8 h-8 rounded-full bg-white/[0.04] border border-white/10 hover:border-white/30 flex items-center justify-center text-[#9AA3AE] hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-400" aria-label="View notifications">
                 <Bell className="w-4 h-4"/>
-                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_#34D399]"/>
+                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_#34D399]"/>
               </button>
 
               {notificationsOpen && (<div className="absolute right-0 mt-2 w-72 sm:w-80 rounded-xl bg-[#12161B] border border-white/15 shadow-2xl p-4 z-50 font-mono text-xs backdrop-blur-2xl" data-testid="notifications-popover">
@@ -564,11 +498,6 @@ export const AppLayout = ({ children, metrics = initialMetrics, onSimulatePush, 
                   </button>
                 </div>)}
             </div>
-
-            {/* Hollow Signals Refused Counter */}
-            <button type="button" onClick={() => setRefusedDrawerOpen(true)} className="hover:scale-105 active:scale-95 transition-transform cursor-pointer focus:outline-none" title="Click to view refused signals ledger">
-              <CounterChip label="Hollow signals refused" count={liveRefusedCount ?? metrics.hollowSignalsRefused} variant={(liveRefusedCount ?? metrics.hollowSignalsRefused) > 0 ? 'attack' : 'neutral'}/>
-            </button>
 
             {/* Quick Demo Script Button: Simulate Push */}
             {onSimulatePush && (<Button variant="solid_paper" size="sm" onClick={onSimulatePush} isLoading={isLoading} icon={<Zap className="w-3.5 h-3.5 text-[#14171A]"/>} aria-label="Simulate Inbound Push Event" className="hidden md:inline-flex">
@@ -673,5 +602,8 @@ export const AppLayout = ({ children, metrics = initialMetrics, onSimulatePush, 
       <RefusedSignalsDrawer isOpen={refusedDrawerOpen} onClose={() => setRefusedDrawerOpen(false)} repoId={repository?.id || 'default'}/>
       {/* All Features & Capability Matrix Hub Modal */}
       <FeaturesHubModal isOpen={isFeaturesModalOpen} onClose={() => setIsFeaturesModalOpen(false)} />
+
+      {/* Cyber Dossier Scroll Waypoint HUD & Back to Top Gauge */}
+      <DossierScrollHud />
     </div>);
 };

@@ -3,13 +3,15 @@ export const DecryptedText = ({ text, speed = 35, maxIterations = 12, characters
     const [displayText, setDisplayText] = useState(text);
     const isScramblingRef = useRef(false);
     const containerRef = useRef(null);
-    const scramble = () => {
-        if (isScramblingRef.current)
-            return;
-        isScramblingRef.current = true;
+    useEffect(() => {
+        let isMounted = true;
         let iteration = 0;
         const length = text.length;
         const interval = setInterval(() => {
+            if (!isMounted) {
+                clearInterval(interval);
+                return;
+            }
             setDisplayText(text
                 .split('')
                 .map((char, index) => {
@@ -24,14 +26,17 @@ export const DecryptedText = ({ text, speed = 35, maxIterations = 12, characters
             if (iteration >= length) {
                 clearInterval(interval);
                 isScramblingRef.current = false;
-                setDisplayText(text);
+                if (isMounted) setDisplayText(text);
             }
             iteration += 1 / (maxIterations / length);
         }, speed);
-    };
-    useEffect(() => {
-        scramble();
-    }, [text]);
+
+        return () => {
+            isMounted = false;
+            clearInterval(interval);
+            isScramblingRef.current = false;
+        };
+    }, [text, speed, maxIterations, characters]);
     const handleMouseEnter = () => {
         if (animateOnHover) {
             scramble();

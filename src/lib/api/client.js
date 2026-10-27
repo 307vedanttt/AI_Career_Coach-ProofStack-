@@ -620,6 +620,119 @@ function getDeterministicFallback(endpoint, options = {}) {
             parsed_requirements: defaultRequirements,
         };
     }
+    // 6. Contracts endpoints
+    if (ep.includes('/contracts')) {
+        if (method === 'POST') {
+            if (ep.includes('dry-run')) {
+                return {
+                    contract_id: 'ctr-001',
+                    before_percentage: 58,
+                    after_percentage: 72,
+                    status: 'fulfilled',
+                    delta_summary: '+14% coverage gain achieved via static invariant satisfaction',
+                    checklist_results: {
+                        'check-1': true,
+                        'check-2': true,
+                        'check-3': true
+                    }
+                };
+            }
+            return {
+                id: `ctr-${Date.now()}`,
+                title: 'Automated Testing Invariants & Assertion Boundaries',
+                target_requirement: 'Automated Testing & Jest',
+                current_state: 'Demonstrated (basic)',
+                predicted_target_state: 'Demonstrated (strong)',
+                acceptance_checks: [
+                    'Write integration test for HTTP 422 schema validation failure',
+                    'Verify error response body contains structured error details',
+                    'Ensure test suite executes cleanly with zero skipped tests'
+                ],
+                requirements_must_not_change: ['SQL Persistence', 'FastAPI REST Architecture'],
+                effort_class: 'small',
+                status: 'open',
+                task_description: 'Write negative invariant integration tests asserting response boundaries on input failure.',
+                suggested_file_path: 'tests/test_api_invariants.py',
+                recommendation_skeleton: 'def test_invalid_input_rejection():\n    response = client.post("/v1/tasks", json={})\n    assert response.status_code == 422\n'
+            };
+        }
+        // GET /api/contracts
+        return [
+            {
+                id: 'ctr-001',
+                title: 'SQL Database Persistence & Parameterized Queries',
+                description: 'Implements SQLite repository pattern with parameterized query access and schema migration.',
+                requirement_name: 'SQL Persistence',
+                current_state: 'Not demonstrated in this scope',
+                predicted_target_state: 'Demonstrated (strong)',
+                points_delta: 14,
+                effort_class: 'medium',
+                acceptance_checks: [
+                    'Declare relational schema model with typed columns and primary key in backend/models/schema.py',
+                    'Execute parameterized SQL queries within reachable route logic in backend/api/routes.py'
+                ],
+                acceptance_checks_json: [
+                    { rule_id: 'sql.orm_model_declared', label: 'Declare Relational ORM Model', description: 'Declare a relational ORM model or migration schema with typed columns and primary key.', detector: 'sql_detector', passed: false, file: null, line: null, reason: null },
+                    { rule_id: 'sql.executed_query_reachable', label: 'Reachable Query Execution', description: 'Execute database queries or repository calls within reachable application business logic.', detector: 'sql_detector', passed: false, file: null, line: null, reason: null }
+                ],
+                requirements_expected_to_change: ['SQL Persistence'],
+                requirements_must_not_change: ['FastAPI REST Architecture', 'Zero-Trust Authentication'],
+                must_not_move_json: ['FastAPI REST Architecture', 'Zero-Trust Authentication'],
+                status: 'open',
+                ci_status: 'passed',
+                task_description: 'Define a relational database entity with typed primary key and columns for SQL Persistence, and query it in a reachable module.',
+                suggested_file_path: 'backend/models/schema.py',
+                recommendation_skeleton: '# RECOMMENDATION ONLY - SKELETON NEVER COUNTS AS EVIDENCE\nfrom sqlalchemy import Column, Integer, String\nfrom backend.models.models import Base\n\nclass ManagedRecord(Base):\n    __tablename__ = "managed_records"\n    id = Column(Integer, primary_key=True, index=True)\n    title = Column(String(255), nullable=False)\n',
+                gain_arithmetic: '+14% potential coverage gain',
+                verdict: 'Open'
+            },
+            {
+                id: 'ctr-002',
+                title: 'Automated Testing Invariants & Boundary Validation',
+                description: 'Implements integration tests asserting error handling, 422 schema validation, and negative invariants.',
+                requirement_name: 'Automated Testing & Jest',
+                current_state: 'Demonstrated (basic)',
+                predicted_target_state: 'Demonstrated (strong)',
+                points_delta: 12,
+                effort_class: 'small',
+                acceptance_checks: [
+                    'Write integration test for HTTP 422 when required schema fields are missing',
+                    'Assert structured RFC 7807 problem details in error response body',
+                    'Ensure test suite executes cleanly with zero skipped tests'
+                ],
+                acceptance_checks_json: [
+                    { rule_id: 'test.negative_boundary', label: 'Negative Boundary Test', description: 'Write integration test asserting HTTP 422 on invalid input.', detector: 'test_detector', passed: false, file: null, line: null, reason: null }
+                ],
+                requirements_expected_to_change: ['Automated Testing & Jest'],
+                requirements_must_not_change: ['Git Provenance', 'Full-Stack Architecture'],
+                must_not_move_json: ['Git Provenance', 'Full-Stack Architecture'],
+                status: 'open',
+                ci_status: 'passed',
+                task_description: 'Implement automated integration test verifying negative invariant handling on bad inputs.',
+                suggested_file_path: 'tests/test_api_invariants.py',
+                recommendation_skeleton: 'def test_bad_input():\n    res = client.post("/tasks", json={})\n    assert res.status_code == 422\n',
+                gain_arithmetic: '+12% potential coverage gain',
+                verdict: 'Open'
+            }
+        ];
+    }
+    // 7. Coverage endpoint
+    if (ep.includes('/coverage')) {
+        return {
+            job_id: 'job-latest',
+            commit_sha: 'd7e9f1a',
+            evidence_coverage: 72.0,
+            coverage_pct: 72,
+            assessed_count: 5,
+            total_count: 6,
+            numerator: 5,
+            denominator: 6,
+            required_count: 5,
+            preferred_count: 1,
+            unclear_count: 0,
+            excluded_count: 0
+        };
+    }
     return null;
 }
 apiClient.get = async (url, init) => {
