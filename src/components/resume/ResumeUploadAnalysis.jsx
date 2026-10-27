@@ -66,6 +66,8 @@ export const ResumeUploadAnalysis = ({ onUploadSuccess }) => {
         let isMounted = true;
         getLatestResume().then((latest) => {
             if (!isMounted || !latest || !latest.success || !latest.skills || latest.skills.length === 0) return;
+            const hasLocalUpload = typeof window !== 'undefined' && localStorage.getItem('ps_latest_resume');
+            if (!hasLocalUpload && latest.id === 'res-default-latest') return;
             setUploadResult(latest);
             setFileName(latest.file_name || 'candidate_resume.pdf');
             setFileSize(`${((latest.file_size_bytes || 1024) / 1024).toFixed(1)} KB`);
